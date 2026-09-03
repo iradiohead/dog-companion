@@ -27,15 +27,15 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
     var prompt: String {
         switch self {
         case .anime:
-            return "cute dog, anime illustration, soft lines, expressive eyes, vibrant colors, high quality, detailed fur"
+            return "将照片中的狗狗转换为可爱的日系动漫插画风格，保留毛色、花纹和品种特征，线条柔和，眼睛有神，色彩鲜明，高质量，适合虚拟宠物头像"
         case .flatCartoon:
-            return "cute dog, flat vector cartoon, clean shapes, modern app illustration, bold colors, simple background"
+            return "将照片中的狗狗转换为扁平卡通插画风格，保留毛色和品种特征，简洁造型，现代应用插画感，色彩明快，干净背景"
         case .watercolor:
-            return "cute dog, watercolor painting, warm tones, hand-painted texture, artistic, soft edges"
+            return "将照片中的狗狗转换为水彩手绘风格，保留毛色和品种特征，温暖色调，手绘质感，艺术感，柔和边缘"
         }
     }
 
     var negativePrompt: String {
-        "blurry, low quality, distorted, deformed, ugly, bad anatomy, human, text, watermark"
+        "模糊，低画质，变形，畸形，丑陋，人体，文字，水印，低分辨率，手指畸形，AI感过重"
     }
 }

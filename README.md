@@ -6,7 +6,7 @@
 
 - macOS + Xcode 15+
 - iOS 17+ 真机或模拟器（相机功能需真机）
-- [Replicate](https://replicate.com) 账号与 API Token
+- [阿里云百炼](https://www.aliyun.com/product/bailian) 账号与 API Key（新用户有免费额度）
 
 ## 快速开始
 
@@ -16,20 +16,23 @@
 open DogCompanion/DogCompanion.xcodeproj
 ```
 
-### 2. 配置 API Token
+### 2. 配置 API Key
 
 ```bash
 cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Secrets.plist
 ```
 
-编辑 `Secrets.plist`，将 `YOUR_TOKEN_HERE` 替换为你的 Replicate API Token：
+1. 登录 [百炼控制台](https://bailian.console.aliyun.com/)，开通服务
+2. 在「API Key 管理」创建 Key
+3. 编辑 `Secrets.plist`：
 
 ```xml
-<key>REPLICATE_API_TOKEN</key>
-<string>r8_xxxxxxxx</string>
+<key>DASHSCOPE_API_KEY</key>
+<string>sk-xxxxxxxx</string>
 ```
 
-> `Secrets.plist` 已在 `.gitignore` 中，不会提交到 Git。
+> `Secrets.plist` 已在 `.gitignore` 中，不会提交到 Git。  
+> 新用户开通百炼后 **90 天内可免费生成约 50 张图**（以控制台为准）。
 
 ### 3. 配置签名
 
@@ -47,7 +50,8 @@ cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Sec
 |------|----------|
 | `requires a development team` | Signing & Capabilities → 选择 Development Team |
 | `Build input file cannot be found: Secrets.plist` | 运行 `cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Secrets.plist`（项目已加自动复制脚本，Clean 后重编） |
-| `404` / `模型未找到` | 社区模型需用 `version` 调用 API；拉取最新代码，并在 `Secrets.plist` 中配置 `REPLICATE_MODEL_VERSION` |
+| `未配置阿里云百炼 API Key` | 在 `Secrets.plist` 填入 `DASHSCOPE_API_KEY` |
+| `额度不足` | 百炼控制台领取免费额度或充值 |
 | `Cannot find 'UIApplication' in scope` | 拉取最新代码（已修复） |
 | Xcode 版本过低 | 需要 **Xcode 15+**（iOS 17 / SwiftData / @Observable） |
 
@@ -61,7 +65,7 @@ DogCompanion/
 │   ├── Companion.swift            # SwiftData 实体
 │   └── StyleTemplate.swift        # 三种漫画风格
 ├── Services/
-│   ├── GenerationService.swift  # Replicate API 调用
+│   ├── GenerationService.swift    # 通义万相 API 调用
 │   └── SecretsProvider.swift      # 读取 Secrets.plist
 ├── ViewModels/
 │   ├── CreationViewModel.swift    # 创建流程状态机
@@ -103,5 +107,5 @@ xcodebuild test -project DogCompanion/DogCompanion.xcodeproj -scheme DogCompanio
 ## 上架前注意
 
 1. **API Key 不能打包进客户端** — 需搭建后端代理（见 ADR-0001）
-2. **隐私政策** — 需说明照片会发送至 Replicate 进行处理
+2. **隐私政策** — 需说明照片会发送至阿里云百炼进行处理
 3. **App Icon** — 已包含默认图标，可在 `Assets.xcassets/AppIcon` 中替换为自定义设计

@@ -12,13 +12,13 @@ enum GenerationError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingAPIToken:
-            return "未配置 Replicate API Token。请复制 Secrets.plist.example 为 Secrets.plist 并填入密钥。"
+            return "未配置阿里云百炼 API Key。请复制 Secrets.plist.example 为 Secrets.plist 并填入 DASHSCOPE_API_KEY。"
         case .invalidImage:
             return "无法读取照片，请换一张试试。"
         case .networkError(let message):
             return message
         case .rateLimited(let retryAfter):
-            return "请求过于频繁，请约 \(retryAfter) 秒后再试。也可在 replicate.com 账户绑定付款方式以提高限额。"
+            return "请求过于频繁，请约 \(retryAfter) 秒后再试。"
         case .generationFailed(let message):
             return "生成失败：\(message)"
         case .invalidResponse:
@@ -29,16 +29,13 @@ enum GenerationError: LocalizedError {
 
 struct GenerationService {
     private let session: URLSession
-    private let maxRateLimitRetries = 3
-    private let rateLimitBufferSeconds: TimeInterval = 1
-    private static var cachedModelVersion: String?
 
     init(session: URLSession = .shared) {
         self.session = session
     }
 
     func generateComicPortrait(from image: UIImage, style: StyleTemplate) async throws -> Data {
-        guard let token = SecretsProvider.replicateAPIToken else {
+        guard let apiKey = SecretsProvider.dashScopeAPIKey else {
             throw GenerationError.missingAPIToken
         }
 
@@ -46,152 +43,111 @@ struct GenerationService {
             throw GenerationError.invalidImage
         }
 
-        return try await performGeneration(
+        let imageURL = try await createWanxiangImage(
             imageData: jpegData,
             style: style,
-            token: token
+            apiKey: apiKey
         )
+        return try await downloadImage(from: imageURL)
     }
 
-    private func performGeneration(imageData: Data, style: StyleTemplate, token: String) async throws -> Data {
+    private func createWanxiangImage(
+        imageData: Data,
+        style: StyleTemplate,
+        apiKey: String
+    ) async throws -> URL {
         let base64 = imageData.base64EncodedString()
         let dataURI = "data:image/jpeg;base64,\(base64)"
 
-        let predictionID = try await createPrediction(
-            imageURI: dataURI,
-            style: style,
-            token: token
-        )
+        let endpoint = "\(SecretsProvider.dashScopeBaseURL)/api/v1/services/aigc/multimodal-generation/generation"
+        guard let url = URL(string: endpoint) else {
+            throw GenerationError.invalidResponse
+        }
 
-        let outputURL = try await pollPrediction(id: predictionID, token: token)
-        return try await downloadImage(from: outputURL)
-    }
-
-    private func createPrediction(imageURI: String, style: StyleTemplate, token: String) async throws -> String {
-        let version = try await resolveModelVersion(token: token)
-        let url = URL(string: "https://api.replicate.com/v1/predictions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
 
         let body: [String: Any] = [
-            "version": version,
+            "model": SecretsProvider.dashScopeModel,
             "input": [
-                "image": imageURI,
-                "prompt": style.prompt,
+                "messages": [
+                    [
+                        "role": "user",
+                        "content": [
+                            ["text": style.prompt],
+                            ["image": dataURI]
+                        ]
+                    ]
+                ]
+            ],
+            "parameters": [
                 "negative_prompt": style.negativePrompt,
-                "num_outputs": 1,
-                "num_inference_steps": 30
+                "enable_interleave": false,
+                "n": 1,
+                "size": "1K",
+                "watermark": false,
+                "prompt_extend": true
             ]
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        var lastRateLimitError: GenerationError?
-
-        for attempt in 0..<maxRateLimitRetries {
-            let (data, response) = try await session.data(for: request)
-
-            do {
-                try validateHTTP(response: response, data: data)
-            } catch let error as GenerationError {
-                if case .rateLimited(let retryAfter) = error {
-                    lastRateLimitError = error
-                    guard attempt < maxRateLimitRetries - 1 else {
-                        throw error
-                    }
-                    let waitSeconds = TimeInterval(retryAfter) + rateLimitBufferSeconds
-                    try await Task.sleep(nanoseconds: UInt64(waitSeconds * 1_000_000_000))
-                    continue
-                }
-                throw error
-            }
-
-            guard
-                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                let id = json["id"] as? String
-            else {
-                throw GenerationError.invalidResponse
-            }
-
-            return id
-        }
-
-        throw lastRateLimitError ?? GenerationError.generationFailed("创建生成任务失败")
-    }
-
-    private func resolveModelVersion(token: String) async throws -> String {
-        if let cached = Self.cachedModelVersion {
-            return cached
-        }
-
-        let configuredVersion = SecretsProvider.replicateModelVersion
-        if !configuredVersion.isEmpty {
-            Self.cachedModelVersion = configuredVersion
-            return configuredVersion
-        }
-
-        let slug = SecretsProvider.replicateModelSlug
-        let url = URL(string: "https://api.replicate.com/v1/models/\(slug)")!
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
         let (data, response) = try await session.data(for: request)
         try validateHTTP(response: response, data: data)
 
+        if let apiError = parseAPIError(from: data) {
+            throw apiError
+        }
+
+        return try extractImageURL(from: data)
+    }
+
+    private func extractImageURL(from data: Data) throws -> URL {
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw GenerationError.invalidResponse
+        }
+
         guard
-            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let latestVersion = json["latest_version"] as? [String: Any],
-            let version = latestVersion["id"] as? String
+            let output = json["output"] as? [String: Any],
+            let choices = output["choices"] as? [[String: Any]],
+            let firstChoice = choices.first,
+            let message = firstChoice["message"] as? [String: Any],
+            let content = message["content"] as? [[String: Any]]
         else {
-            throw GenerationError.generationFailed("无法获取模型版本，请检查 REPLICATE_MODEL 配置。")
+            throw GenerationError.invalidResponse
         }
 
-        Self.cachedModelVersion = version
-        return version
-    }
-
-    private func pollPrediction(id: String, token: String) async throws -> URL {
-        let url = URL(string: "https://api.replicate.com/v1/predictions/\(id)")!
-
-        for _ in 0..<60 {
-            var request = URLRequest(url: url)
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-            let (data, response) = try await session.data(for: request)
-            try validateHTTP(response: response, data: data)
-
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw GenerationError.invalidResponse
+        for item in content {
+            if let imageString = item["image"] as? String, let url = URL(string: imageString) {
+                return url
             }
-
-            let status = json["status"] as? String ?? ""
-
-            switch status {
-            case "succeeded":
-                return try extractOutputURL(from: json)
-            case "failed", "canceled":
-                let detail = (json["error"] as? String) ?? "生成过程出错"
-                throw GenerationError.generationFailed(detail)
-            default:
-                try await Task.sleep(nanoseconds: 2_000_000_000)
-            }
-        }
-
-        throw GenerationError.generationFailed("生成超时，请稍后重试")
-    }
-
-    private func extractOutputURL(from json: [String: Any]) throws -> URL {
-        if let outputString = json["output"] as? String, let url = URL(string: outputString) {
-            return url
-        }
-
-        if let outputArray = json["output"] as? [String], let first = outputArray.first, let url = URL(string: first) {
-            return url
         }
 
         throw GenerationError.invalidResponse
+    }
+
+    private func parseAPIError(from data: Data) -> GenerationError? {
+        guard
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let code = json["code"] as? String,
+            let message = json["message"] as? String
+        else {
+            return nil
+        }
+
+        switch code {
+        case "Throttling", "Throttling.RateQuota":
+            return .rateLimited(retryAfter: 10)
+        case "Arrearage", "InsufficientQuota", "QuotaExceeded":
+            return .generationFailed("阿里云百炼额度不足。新用户可在百炼控制台领取 50 张免费额度，或前往充值后重试。")
+        case "InvalidApiKey", "AuthenticationError":
+            return .generationFailed("API Key 无效，请检查 Secrets.plist 中的 DASHSCOPE_API_KEY。")
+        default:
+            return .generationFailed("\(message)")
+        }
     }
 
     private func downloadImage(from url: URL) async throws -> Data {
@@ -219,41 +175,23 @@ struct GenerationService {
         }
 
         if http.statusCode == 429 {
-            let retryAfter = parseRetryAfter(from: data)
-            throw GenerationError.rateLimited(retryAfter: retryAfter)
+            throw GenerationError.rateLimited(retryAfter: 10)
         }
 
-        if http.statusCode == 404 {
-            throw GenerationError.generationFailed(
-                "Replicate 模型未找到（404）。请检查 Secrets.plist 中的 REPLICATE_MODEL 是否正确。"
-            )
+        if http.statusCode == 401 {
+            throw GenerationError.generationFailed("API Key 无效或未授权，请检查 DASHSCOPE_API_KEY。")
         }
 
-        if http.statusCode == 402 {
-            throw GenerationError.generationFailed(
-                "Replicate 账户余额不足。请前往 replicate.com/account/billing 充值，等待几分钟后重试。"
-            )
+        if http.statusCode == 402 || http.statusCode == 403 {
+            throw GenerationError.generationFailed("阿里云百炼额度不足或权限受限，请前往百炼控制台检查余额与权限。")
         }
 
         guard (200...299).contains(http.statusCode) else {
+            if let apiError = parseAPIError(from: data) {
+                throw apiError
+            }
             let message = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
             throw GenerationError.networkError("网络错误：\(message)")
         }
-    }
-
-    private func parseRetryAfter(from data: Data) -> Int {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return 6
-        }
-
-        if let seconds = json["retry_after"] as? Int {
-            return max(1, seconds)
-        }
-
-        if let seconds = json["retry_after"] as? Double {
-            return max(1, Int(seconds.rounded(.up)))
-        }
-
-        return 6
     }
 }
