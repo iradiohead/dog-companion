@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import Observation
 
 struct PhotoPickerView<VM>: View where VM: ComicGenerationFlow & Observable {
     @Bindable var viewModel: VM

@@ -33,11 +33,22 @@ cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Sec
 
 ### 3. 配置签名
 
-在 Xcode 中选择 **DogCompanion** target → **Signing & Capabilities** → 选择你的 Development Team。
+在 Xcode 中选择 **DogCompanion** target → **Signing & Capabilities** → 勾选 **Automatically manage signing** → 选择你的 **Development Team**。
+
+> 若报错 `Signing for "DogCompanion" requires a development team`，就是这一步没配。模拟器一般也需要选 Personal Team。
 
 ### 4. 运行
 
 选择真机或模拟器，按 `Cmd + R` 运行。
+
+## 构建失败排查
+
+| 报错 | 解决办法 |
+|------|----------|
+| `requires a development team` | Signing & Capabilities → 选择 Development Team |
+| `Build input file cannot be found: Secrets.plist` | 运行 `cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Secrets.plist`（项目已加自动复制脚本，Clean 后重编） |
+| `Cannot find 'UIApplication' in scope` | 拉取最新代码（已修复） |
+| Xcode 版本过低 | 需要 **Xcode 15+**（iOS 17 / SwiftData / @Observable） |
 
 ## 项目结构
 

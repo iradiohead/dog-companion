@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 
 struct StylePickerView<VM>: View where VM: ComicGenerationFlow & Observable {
     @Bindable var viewModel: VM
