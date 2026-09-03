@@ -229,6 +229,12 @@ struct GenerationService {
             )
         }
 
+        if http.statusCode == 402 {
+            throw GenerationError.generationFailed(
+                "Replicate 账户余额不足。请前往 replicate.com/account/billing 充值，等待几分钟后重试。"
+            )
+        }
+
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
             throw GenerationError.networkError("网络错误：\(message)")
