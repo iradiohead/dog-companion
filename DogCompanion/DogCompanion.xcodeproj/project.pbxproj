@@ -32,24 +32,15 @@
 		B10000000000000000000001 /* VitalStatsCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* VitalStatsCalculatorTests.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		C20000000000000000000001 /* Prepare Secrets */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/DogCompanion/Secrets.plist.example",
-			);
-			name = "Prepare Secrets";
-			outputPaths = (
-				"$(SRCROOT)/DogCompanion/Secrets.plist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "SECRETS=\"${SRCROOT}/DogCompanion/Secrets.plist\"\nEXAMPLE=\"${SRCROOT}/DogCompanion/Secrets.plist.example\"\nif [ ! -f \"$SECRETS\" ]; then\n  cp \"$EXAMPLE\" \"$SECRETS\"\n  echo \"warning: Secrets.plist missing — copied from Secrets.plist.example\"\nfi\n";
+/* Begin PBXContainerItemProxy section */
+		B90000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A60000000000000000000001;
+			remoteInfo = DogCompanion;
 		};
-/* End PBXShellScriptBuildPhase section */
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		A20000000000000000000001 /* DogCompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogCompanionApp.swift; sourceTree = "<group>"; };
@@ -134,22 +125,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A5000000000000000000000C /* Protocols */ = {
-			isa = PBXGroup;
-			children = (
-				A20000000000000000000014 /* ComicGenerationFlow.swift */,
-			);
-			path = Protocols;
-			sourceTree = "<group>";
-		};
-		B50000000000000000000001 /* DogCompanionTests */ = {
-			isa = PBXGroup;
-			children = (
-				B20000000000000000000001 /* VitalStatsCalculatorTests.swift */,
-			);
-			path = DogCompanionTests;
-			sourceTree = "<group>";
-		};
 		A50000000000000000000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -226,12 +201,28 @@
 			path = Home;
 			sourceTree = "<group>";
 		};
+		A5000000000000000000000C /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000014 /* ComicGenerationFlow.swift */,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
 		A5000000000000000000000D /* Regeneration */ = {
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000017 /* RegenerationFlowView.swift */,
 			);
 			path = Regeneration;
+			sourceTree = "<group>";
+		};
+		B50000000000000000000001 /* DogCompanionTests */ = {
+			isa = PBXGroup;
+			children = (
+				B20000000000000000000001 /* VitalStatsCalculatorTests.swift */,
+			);
+			path = DogCompanionTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -274,24 +265,6 @@
 		};
 /* End PBXNativeTarget section */
 
-/* Begin PBXContainerItemProxy section */
-		B90000000000000000000001 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A90000000000000000000001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A60000000000000000000001;
-			remoteInfo = DogCompanion;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXTargetDependency section */
-		B90000000000000000000002 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A60000000000000000000001 /* DogCompanion */;
-			targetProxy = B90000000000000000000001 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin PBXProject section */
 		A90000000000000000000001 /* Project object */ = {
 			isa = PBXProject;
@@ -311,7 +284,7 @@
 			};
 			buildConfigurationList = A80000000000000000000001 /* Build configuration list for PBXProject "DogCompanion" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = zh-Hans;
+			developmentRegion = "zh-Hans";
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
@@ -340,6 +313,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C20000000000000000000001 /* Prepare Secrets */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/DogCompanion/Secrets.plist.example",
+			);
+			name = "Prepare Secrets";
+			outputPaths = (
+				"$(SRCROOT)/DogCompanion/Secrets.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SECRETS=\"${SRCROOT}/DogCompanion/Secrets.plist\"\nEXAMPLE=\"${SRCROOT}/DogCompanion/Secrets.plist.example\"\nif [ ! -f \"$SECRETS\" ]; then\n  cp \"$EXAMPLE\" \"$SECRETS\"\n  echo \"warning: Secrets.plist missing — copied from Secrets.plist.example\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A70000000000000000000001 /* Sources */ = {
@@ -378,6 +370,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B90000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A60000000000000000000001 /* DogCompanion */;
+			targetProxy = B90000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AA0000000000000000000001 /* Debug */ = {
@@ -432,7 +432,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = K8APHTLF7W;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DogCompanion/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "狗狗伙伴";
@@ -459,7 +459,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = K8APHTLF7W;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DogCompanion/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "狗狗伙伴";
