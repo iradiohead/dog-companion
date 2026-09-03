@@ -47,6 +47,7 @@ cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Sec
 |------|----------|
 | `requires a development team` | Signing & Capabilities → 选择 Development Team |
 | `Build input file cannot be found: Secrets.plist` | 运行 `cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Secrets.plist`（项目已加自动复制脚本，Clean 后重编） |
+| `404` / `模型未找到` | 社区模型需用 `version` 调用 API；拉取最新代码，并在 `Secrets.plist` 中配置 `REPLICATE_MODEL_VERSION` |
 | `Cannot find 'UIApplication' in scope` | 拉取最新代码（已修复） |
 | Xcode 版本过低 | 需要 **Xcode 15+**（iOS 17 / SwiftData / @Observable） |
 

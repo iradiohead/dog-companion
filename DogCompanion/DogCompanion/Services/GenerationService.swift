@@ -16,7 +16,7 @@ enum GenerationError: LocalizedError {
         case .invalidImage:
             return "无法读取照片，请换一张试试。"
         case .networkError(let message):
-            return "网络错误：\(message)"
+            return message
         case .rateLimited(let retryAfter):
             return "请求过于频繁，请约 \(retryAfter) 秒后再试。也可在 replicate.com 账户绑定付款方式以提高限额。"
         case .generationFailed(let message):
@@ -31,6 +31,7 @@ struct GenerationService {
     private let session: URLSession
     private let maxRateLimitRetries = 3
     private let rateLimitBufferSeconds: TimeInterval = 1
+    private static var cachedModelVersion: String?
 
     init(session: URLSession = .shared) {
         self.session = session
@@ -67,13 +68,15 @@ struct GenerationService {
     }
 
     private func createPrediction(imageURI: String, style: StyleTemplate, token: String) async throws -> String {
-        let url = URL(string: "https://api.replicate.com/v1/models/\(SecretsProvider.replicateModel)/predictions")!
+        let version = try await resolveModelVersion(token: token)
+        let url = URL(string: "https://api.replicate.com/v1/predictions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body: [String: Any] = [
+            "version": version,
             "input": [
                 "image": imageURI,
                 "prompt": style.prompt,
@@ -116,6 +119,37 @@ struct GenerationService {
         }
 
         throw lastRateLimitError ?? GenerationError.generationFailed("创建生成任务失败")
+    }
+
+    private func resolveModelVersion(token: String) async throws -> String {
+        if let cached = Self.cachedModelVersion {
+            return cached
+        }
+
+        let configuredVersion = SecretsProvider.replicateModelVersion
+        if !configuredVersion.isEmpty {
+            Self.cachedModelVersion = configuredVersion
+            return configuredVersion
+        }
+
+        let slug = SecretsProvider.replicateModelSlug
+        let url = URL(string: "https://api.replicate.com/v1/models/\(slug)")!
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await session.data(for: request)
+        try validateHTTP(response: response, data: data)
+
+        guard
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let latestVersion = json["latest_version"] as? [String: Any],
+            let version = latestVersion["id"] as? String
+        else {
+            throw GenerationError.generationFailed("无法获取模型版本，请检查 REPLICATE_MODEL 配置。")
+        }
+
+        Self.cachedModelVersion = version
+        return version
     }
 
     private func pollPrediction(id: String, token: String) async throws -> URL {
@@ -189,9 +223,15 @@ struct GenerationService {
             throw GenerationError.rateLimited(retryAfter: retryAfter)
         }
 
+        if http.statusCode == 404 {
+            throw GenerationError.generationFailed(
+                "Replicate 模型未找到（404）。请检查 Secrets.plist 中的 REPLICATE_MODEL 是否正确。"
+            )
+        }
+
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
-            throw GenerationError.networkError(message)
+            throw GenerationError.networkError("网络错误：\(message)")
         }
     }
 
