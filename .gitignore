@@ -5,8 +5,5 @@ DerivedData/
 *.xcscmblueprint
 xcuserdata/
 
-# Secrets
-DogCompanion/DogCompanion/Secrets.plist
-
 # macOS
 .DS_Store
