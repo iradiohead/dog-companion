@@ -5,6 +5,7 @@ enum GenerationError: LocalizedError {
     case missingAPIToken
     case invalidImage
     case networkError(String)
+    case rateLimited(retryAfter: Int)
     case generationFailed(String)
     case invalidResponse
 
@@ -16,6 +17,8 @@ enum GenerationError: LocalizedError {
             return "无法读取照片，请换一张试试。"
         case .networkError(let message):
             return "网络错误：\(message)"
+        case .rateLimited(let retryAfter):
+            return "请求过于频繁，请约 \(retryAfter) 秒后再试。也可在 replicate.com 账户绑定付款方式以提高限额。"
         case .generationFailed(let message):
             return "生成失败：\(message)"
         case .invalidResponse:
@@ -26,7 +29,8 @@ enum GenerationError: LocalizedError {
 
 struct GenerationService {
     private let session: URLSession
-    private let maxRetries = 2
+    private let maxRateLimitRetries = 3
+    private let rateLimitBufferSeconds: TimeInterval = 1
 
     init(session: URLSession = .shared) {
         self.session = session
@@ -41,24 +45,11 @@ struct GenerationService {
             throw GenerationError.invalidImage
         }
 
-        var lastError: Error = GenerationError.generationFailed("未知错误")
-
-        for attempt in 0...maxRetries {
-            do {
-                return try await performGeneration(
-                    imageData: jpegData,
-                    style: style,
-                    token: token
-                )
-            } catch {
-                lastError = error
-                if attempt < maxRetries {
-                    try await Task.sleep(nanoseconds: UInt64(1_000_000_000 * (attempt + 1)))
-                }
-            }
-        }
-
-        throw lastError
+        return try await performGeneration(
+            imageData: jpegData,
+            style: style,
+            token: token
+        )
     }
 
     private func performGeneration(imageData: Data, style: StyleTemplate, token: String) async throws -> Data {
@@ -94,17 +85,37 @@ struct GenerationService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await session.data(for: request)
-        try validateHTTP(response: response, data: data)
+        var lastRateLimitError: GenerationError?
 
-        guard
-            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let id = json["id"] as? String
-        else {
-            throw GenerationError.invalidResponse
+        for attempt in 0..<maxRateLimitRetries {
+            let (data, response) = try await session.data(for: request)
+
+            do {
+                try validateHTTP(response: response, data: data)
+            } catch let error as GenerationError {
+                if case .rateLimited(let retryAfter) = error {
+                    lastRateLimitError = error
+                    guard attempt < maxRateLimitRetries - 1 else {
+                        throw error
+                    }
+                    let waitSeconds = TimeInterval(retryAfter) + rateLimitBufferSeconds
+                    try await Task.sleep(nanoseconds: UInt64(waitSeconds * 1_000_000_000))
+                    continue
+                }
+                throw error
+            }
+
+            guard
+                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                let id = json["id"] as? String
+            else {
+                throw GenerationError.invalidResponse
+            }
+
+            return id
         }
 
-        return id
+        throw lastRateLimitError ?? GenerationError.generationFailed("创建生成任务失败")
     }
 
     private func pollPrediction(id: String, token: String) async throws -> URL {
@@ -150,9 +161,22 @@ struct GenerationService {
     }
 
     private func downloadImage(from url: URL) async throws -> Data {
-        let (data, response) = try await session.data(from: url)
-        try validateHTTP(response: response, data: data)
-        return data
+        var lastError: Error = GenerationError.invalidResponse
+
+        for attempt in 0..<2 {
+            do {
+                let (data, response) = try await session.data(from: url)
+                try validateHTTP(response: response, data: data)
+                return data
+            } catch {
+                lastError = error
+                if attempt == 0 {
+                    try await Task.sleep(nanoseconds: 1_000_000_000)
+                }
+            }
+        }
+
+        throw lastError
     }
 
     private func validateHTTP(response: URLResponse, data: Data) throws {
@@ -160,9 +184,30 @@ struct GenerationService {
             throw GenerationError.invalidResponse
         }
 
+        if http.statusCode == 429 {
+            let retryAfter = parseRetryAfter(from: data)
+            throw GenerationError.rateLimited(retryAfter: retryAfter)
+        }
+
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
             throw GenerationError.networkError(message)
         }
+    }
+
+    private func parseRetryAfter(from data: Data) -> Int {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return 6
+        }
+
+        if let seconds = json["retry_after"] as? Int {
+            return max(1, seconds)
+        }
+
+        if let seconds = json["retry_after"] as? Double {
+            return max(1, Int(seconds.rounded(.up)))
+        }
+
+        return 6
     }
 }
