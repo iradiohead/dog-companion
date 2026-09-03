@@ -1,0 +1,529 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* DogCompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* DogCompanionApp.swift */; };
+		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
+		A10000000000000000000003 /* Companion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* Companion.swift */; };
+		A10000000000000000000004 /* StyleTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* StyleTemplate.swift */; };
+		A10000000000000000000005 /* GenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* GenerationService.swift */; };
+		A10000000000000000000006 /* SecretsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* SecretsProvider.swift */; };
+		A10000000000000000000007 /* VitalStatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* VitalStatsCalculator.swift */; };
+		A10000000000000000000008 /* CreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CreationViewModel.swift */; };
+		A10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HomeViewModel.swift */; };
+		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
+		A1000000000000000000000B /* PhotoPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* PhotoPickerView.swift */; };
+		A1000000000000000000000C /* StylePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* StylePickerView.swift */; };
+		A1000000000000000000000D /* GeneratingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* GeneratingView.swift */; };
+		A1000000000000000000000E /* NamingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* NamingView.swift */; };
+		A1000000000000000000000F /* CreationFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* CreationFlowView.swift */; };
+		A10000000000000000000010 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* HomeView.swift */; };
+		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Assets.xcassets */; };
+		A10000000000000000000012 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* Secrets.plist */; };
+		A10000000000000000000013 /* ComicGenerationFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* ComicGenerationFlow.swift */; };
+		A10000000000000000000014 /* RegenerationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* RegenerationPolicy.swift */; };
+		A10000000000000000000015 /* RegenerationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* RegenerationViewModel.swift */; };
+		A10000000000000000000016 /* RegenerationFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* RegenerationFlowView.swift */; };
+		B10000000000000000000001 /* VitalStatsCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* VitalStatsCalculatorTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000001 /* DogCompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogCompanionApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* Companion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Companion.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* StyleTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleTemplate.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* GenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationService.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* SecretsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretsProvider.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* VitalStatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalStatsCalculator.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* CreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationViewModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
+		A2000000000000000000000B /* PhotoPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPickerView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* StylePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StylePickerView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000D /* GeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratingView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000E /* NamingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamingView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000F /* CreationFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationFlowView.swift; sourceTree = "<group>"; };
+		A20000000000000000000010 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A20000000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000000000000000000012 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
+		A20000000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000000000000000000014 /* ComicGenerationFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComicGenerationFlow.swift; sourceTree = "<group>"; };
+		A20000000000000000000015 /* RegenerationPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegenerationPolicy.swift; sourceTree = "<group>"; };
+		A20000000000000000000016 /* RegenerationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegenerationViewModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000017 /* RegenerationFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegenerationFlowView.swift; sourceTree = "<group>"; };
+		A30000000000000000000001 /* DogCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DogCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B20000000000000000000001 /* VitalStatsCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalStatsCalculatorTests.swift; sourceTree = "<group>"; };
+		B30000000000000000000001 /* DogCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DogCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A40000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B40000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A50000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A50000000000000000000002 /* DogCompanion */,
+				B50000000000000000000001 /* DogCompanionTests */,
+				A50000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A50000000000000000000002 /* DogCompanion */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000001 /* DogCompanionApp.swift */,
+				A20000000000000000000002 /* ContentView.swift */,
+				A50000000000000000000004 /* Models */,
+				A5000000000000000000000C /* Protocols */,
+				A50000000000000000000005 /* Services */,
+				A50000000000000000000006 /* Utilities */,
+				A50000000000000000000007 /* ViewModels */,
+				A50000000000000000000008 /* Views */,
+				A20000000000000000000011 /* Assets.xcassets */,
+				A20000000000000000000013 /* Info.plist */,
+				A20000000000000000000012 /* Secrets.plist */,
+			);
+			path = DogCompanion;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A30000000000000000000001 /* DogCompanion.app */,
+				B30000000000000000000001 /* DogCompanionTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A5000000000000000000000C /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000014 /* ComicGenerationFlow.swift */,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
+		B50000000000000000000001 /* DogCompanionTests */ = {
+			isa = PBXGroup;
+			children = (
+				B20000000000000000000001 /* VitalStatsCalculatorTests.swift */,
+			);
+			path = DogCompanionTests;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000003 /* Companion.swift */,
+				A20000000000000000000004 /* StyleTemplate.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000005 /* GenerationService.swift */,
+				A20000000000000000000006 /* SecretsProvider.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000006 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000007 /* VitalStatsCalculator.swift */,
+				A20000000000000000000015 /* RegenerationPolicy.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000007 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000008 /* CreationViewModel.swift */,
+				A20000000000000000000009 /* HomeViewModel.swift */,
+				A20000000000000000000016 /* RegenerationViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000008 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A50000000000000000000009 /* Components */,
+				A5000000000000000000000A /* Creation */,
+				A5000000000000000000000B /* Home */,
+				A5000000000000000000000D /* Regeneration */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000009 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000A /* SharedComponents.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A5000000000000000000000A /* Creation */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000000F /* CreationFlowView.swift */,
+				A2000000000000000000000B /* PhotoPickerView.swift */,
+				A2000000000000000000000C /* StylePickerView.swift */,
+				A2000000000000000000000D /* GeneratingView.swift */,
+				A2000000000000000000000E /* NamingView.swift */,
+			);
+			path = Creation;
+			sourceTree = "<group>";
+		};
+		A5000000000000000000000B /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000010 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		A5000000000000000000000D /* Regeneration */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000017 /* RegenerationFlowView.swift */,
+			);
+			path = Regeneration;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A60000000000000000000001 /* DogCompanion */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A80000000000000000000003 /* Build configuration list for PBXNativeTarget "DogCompanion" */;
+			buildPhases = (
+				A70000000000000000000001 /* Sources */,
+				A40000000000000000000001 /* Frameworks */,
+				A70000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DogCompanion;
+			productName = DogCompanion;
+			productReference = A30000000000000000000001 /* DogCompanion.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B60000000000000000000001 /* DogCompanionTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B80000000000000000000001 /* Build configuration list for PBXNativeTarget "DogCompanionTests" */;
+			buildPhases = (
+				B70000000000000000000001 /* Sources */,
+				B40000000000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B90000000000000000000002 /* PBXTargetDependency */,
+			);
+			name = DogCompanionTests;
+			productName = DogCompanionTests;
+			productReference = B30000000000000000000001 /* DogCompanionTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		B90000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A60000000000000000000001;
+			remoteInfo = DogCompanion;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		B90000000000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A60000000000000000000001 /* DogCompanion */;
+			targetProxy = B90000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXProject section */
+		A90000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A60000000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					B60000000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = A60000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = A80000000000000000000001 /* Build configuration list for PBXProject "DogCompanion" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = zh-Hans;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = A50000000000000000000001;
+			productRefGroup = A50000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A60000000000000000000001 /* DogCompanion */,
+				B60000000000000000000001 /* DogCompanionTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A70000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000011 /* Assets.xcassets in Resources */,
+				A10000000000000000000012 /* Secrets.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A70000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* DogCompanionApp.swift in Sources */,
+				A10000000000000000000002 /* ContentView.swift in Sources */,
+				A10000000000000000000003 /* Companion.swift in Sources */,
+				A10000000000000000000004 /* StyleTemplate.swift in Sources */,
+				A10000000000000000000005 /* GenerationService.swift in Sources */,
+				A10000000000000000000006 /* SecretsProvider.swift in Sources */,
+				A10000000000000000000007 /* VitalStatsCalculator.swift in Sources */,
+				A10000000000000000000008 /* CreationViewModel.swift in Sources */,
+				A10000000000000000000009 /* HomeViewModel.swift in Sources */,
+				A1000000000000000000000A /* SharedComponents.swift in Sources */,
+				A1000000000000000000000B /* PhotoPickerView.swift in Sources */,
+				A1000000000000000000000C /* StylePickerView.swift in Sources */,
+				A1000000000000000000000D /* GeneratingView.swift in Sources */,
+				A1000000000000000000000E /* NamingView.swift in Sources */,
+				A1000000000000000000000F /* CreationFlowView.swift in Sources */,
+				A10000000000000000000010 /* HomeView.swift in Sources */,
+				A10000000000000000000013 /* ComicGenerationFlow.swift in Sources */,
+				A10000000000000000000014 /* RegenerationPolicy.swift in Sources */,
+				A10000000000000000000015 /* RegenerationViewModel.swift in Sources */,
+				A10000000000000000000016 /* RegenerationFlowView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B70000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000001 /* VitalStatsCalculatorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DogCompanion/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "狗狗伙伴";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kejin.dogcompanion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DogCompanion/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "狗狗伙伴";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kejin.dogcompanion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		BB0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kejin.dogcompanion.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DogCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DogCompanion";
+			};
+			name = Debug;
+		};
+		BB0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kejin.dogcompanion.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DogCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DogCompanion";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A80000000000000000000001 /* Build configuration list for PBXProject "DogCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000001 /* Debug */,
+				AA0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A80000000000000000000003 /* Build configuration list for PBXNativeTarget "DogCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000003 /* Debug */,
+				AA0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B80000000000000000000001 /* Build configuration list for PBXNativeTarget "DogCompanionTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB0000000000000000000001 /* Debug */,
+				BB0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A90000000000000000000001 /* Project object */;
+}
