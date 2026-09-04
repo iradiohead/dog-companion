@@ -51,13 +51,12 @@ struct GenerationService {
         }
 
         let cutoutData = try await mattingService.extractCutout(from: portraitImage)
-        let extras = await generateActionPoses(from: image, style: style)
         return GenerationResult(
             comicPortraitData: portraitData,
             cutoutData: cutoutData,
-            cutoutRunAData: extras.runA,
-            cutoutRunBData: extras.runB,
-            cutoutLandData: extras.land
+            cutoutRunAData: nil,
+            cutoutRunBData: nil,
+            cutoutLandData: nil
         )
     }
 
@@ -77,30 +76,6 @@ struct GenerationService {
             apiKey: apiKey
         )
         return try await downloadImage(from: imageURL)
-    }
-
-    func generateActionPoses(from image: UIImage, style: StyleTemplate) async -> (runA: Data?, runB: Data?, land: Data?) {
-        let runA = await poseCutoutWithRetry(from: image, style: style, pose: .runA)
-        let runB = await poseCutoutWithRetry(from: image, style: style, pose: .runB)
-        let land = await poseCutoutWithRetry(from: image, style: style, pose: .land)
-        return (runA, runB, land)
-    }
-
-    private func poseCutoutWithRetry(from image: UIImage, style: StyleTemplate, pose: CompanionPose) async -> Data? {
-        for attempt in 0..<3 {
-            do {
-                let portrait = try await generateComicPortrait(from: image, style: style, pose: pose)
-                guard let poseImage = UIImage(data: portrait) else { return nil }
-                return try await mattingService.extractCutout(from: poseImage)
-            } catch GenerationError.rateLimited(let retryAfter) {
-                try? await Task.sleep(nanoseconds: UInt64(max(retryAfter, 1) * 1_000_000_000))
-            } catch {
-                if attempt < 2 {
-                    try? await Task.sleep(nanoseconds: 800_000_000)
-                }
-            }
-        }
-        return nil
     }
 
     private func createWanxiangImage(

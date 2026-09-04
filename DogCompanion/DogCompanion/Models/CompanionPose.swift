@@ -66,7 +66,7 @@ struct PoseTravel: Equatable {
     var shadowOpacity: Double
 
     static let hidden = PoseTravel(
-        x: -PosePlayback.runDistance,
+        x: -PosePlayback.hopDistance,
         y: 0,
         scaleX: 1,
         scaleY: 1,
@@ -96,22 +96,20 @@ struct PoseSnapshot: Equatable {
 }
 
 enum PosePlayback {
-    static let runDuration: TimeInterval = 1.75
-    static let crouchDuration: TimeInterval = 0.28
-    static let jumpDuration: TimeInterval = 0.72
-    static let landDuration: TimeInterval = 0.28
-    static let settleDuration: TimeInterval = 0.22
-    static let runDistance: CGFloat = 220
-    static let jumpHeight: CGFloat = 36
-    static let farScale: CGFloat = 0.40
-    static let farLift: CGFloat = 32
+    static let crouchDuration: TimeInterval = 0.16
+    static let jumpDuration: TimeInterval = 0.55
+    static let landDuration: TimeInterval = 0.16
+    static let settleDuration: TimeInterval = 0.14
+    static let hopDistance: CGFloat = 72
+    static let jumpHeight: CGFloat = 44
+    static var runDistance: CGFloat { hopDistance }
 
     static var runningInDuration: TimeInterval {
-        runDuration + crouchDuration + jumpDuration + landDuration + settleDuration
+        crouchDuration + jumpDuration + landDuration + settleDuration
     }
 
-    static var crouchStart: TimeInterval { runDuration }
-    static var jumpStart: TimeInterval { runDuration + crouchDuration }
+    static var crouchStart: TimeInterval { 0 }
+    static var jumpStart: TimeInterval { crouchDuration }
     static var landStart: TimeInterval { jumpStart + jumpDuration }
 
     static func pose(state: CompanionMotionState, elapsed: TimeInterval) -> CompanionPose {
@@ -121,7 +119,7 @@ enum PosePlayback {
     static func travel(
         state: CompanionMotionState,
         elapsed: TimeInterval,
-        runDistance distance: CGFloat = Self.runDistance
+        runDistance distance: CGFloat = Self.hopDistance
     ) -> PoseTravel {
         snapshot(state: state, elapsed: elapsed, runDistance: distance).travel
     }
@@ -129,7 +127,7 @@ enum PosePlayback {
     static func snapshot(
         state: CompanionMotionState,
         elapsed: TimeInterval,
-        runDistance distance: CGFloat = Self.runDistance
+        runDistance distance: CGFloat = Self.hopDistance
     ) -> PoseSnapshot {
         switch state {
         case .away:
@@ -137,89 +135,70 @@ enum PosePlayback {
             travel.x = -distance
             return PoseSnapshot(pose: .sit, travel: travel)
         case .runningIn:
-            return runInSnapshot(elapsed: elapsed, distance: distance)
+            return hopOnSnapshot(elapsed: elapsed, distance: distance)
         case .idle:
             return idleSnapshot(elapsed: elapsed)
         case .reacting:
-            return hopSnapshot(elapsed: elapsed, height: 28, duration: 0.72)
+            return hopSnapshot(elapsed: elapsed, height: 22, duration: 0.72)
         case .celebrating:
             return celebratingSnapshot(elapsed: elapsed)
         }
     }
 
-    private static func runInSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
+    private static func hopOnSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
         let startX = -distance
-        let hopStartX = startX * 0.12
-        let crouchEnd = runDuration + crouchDuration
+        let crouchEnd = crouchDuration
         let jumpEnd = crouchEnd + jumpDuration
         let landEnd = jumpEnd + landDuration
         var travel = PoseTravel.rest()
-        travel.opacity = min(1.0, elapsed / 0.16)
-
-        if elapsed <= runDuration {
-            let t = unit(elapsed / runDuration)
-            let approach = easeOutCubic(t)
-            let size = lerp(Double(farScale), 1.0, approach)
-            let damp = 1.0 - smoothstep((t - 0.82) / 0.18)
-            let stride = sin(elapsed * 8.0)
-            travel.x = startX + (hopStartX - startX) * cg(approach)
-            travel.y = -farLift * cg(1.0 - approach) - cg(8.0 * abs(stride) * damp)
-            let runScaleX = 1.04 + 0.05 * stride
-            let runScaleY = 1.0 - 0.04 * abs(stride)
-            travel.scaleX = cg(size * (runScaleX * damp + 1.0 * (1.0 - damp)))
-            travel.scaleY = cg(size * (runScaleY * damp + 1.0 * (1.0 - damp)))
-            travel.rotationDegrees = cg(-10.0 * damp)
-            travel.shadowScale = cg(lerp(0.55, 1.0, approach))
-            travel.shadowOpacity = 0.16 * lerp(0.4, 1.0, approach)
-            let pose: CompanionPose = t < 0.48 ? .runA : .runB
-            return PoseSnapshot(pose: pose, travel: travel)
-        }
+        travel.opacity = min(1.0, elapsed / 0.10)
 
         if elapsed <= crouchEnd {
-            let crouch = smoothstep((elapsed - runDuration) / crouchDuration)
-            travel.x = hopStartX
-            travel.scaleX = cg(lerp(1.0, 1.12, crouch))
-            travel.scaleY = cg(lerp(1.0, 0.86, crouch))
-            travel.rotationDegrees = cg(lerp(0, 9.0, crouch))
-            travel.shadowScale = cg(lerp(1.0, 1.14, crouch))
+            let crouch = smoothstep(elapsed / crouchDuration)
+            travel.x = startX
+            travel.scaleX = cg(lerp(1.0, 1.14, crouch))
+            travel.scaleY = cg(lerp(1.0, 0.82, crouch))
+            travel.rotationDegrees = cg(lerp(0, 8.0, crouch))
+            travel.shadowScale = cg(lerp(1.0, 1.16, crouch))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
         if elapsed <= jumpEnd {
             let t = unit((elapsed - crouchEnd) / jumpDuration)
             let arc = sin(Double.pi * t)
-            travel.x = hopStartX * cg(1.0 - t)
+            travel.x = startX * cg(1.0 - t)
             travel.y = -jumpHeight * cg(arc)
-            if t < 0.22 {
-                let u = smoothstep(t / 0.22)
-                travel.scaleX = cg(lerp(1.12, 0.94, u))
-                travel.scaleY = cg(lerp(0.86, 1.10, u))
-                travel.rotationDegrees = cg(lerp(9.0, -8.0, u))
+            if t < 0.28 {
+                let u = smoothstep(t / 0.28)
+                travel.scaleX = cg(lerp(1.14, 0.90, u))
+                travel.scaleY = cg(lerp(0.82, 1.14, u))
+                travel.rotationDegrees = cg(lerp(8.0, -12.0, u))
             } else {
-                let u = smoothstep((t - 0.22) / 0.78)
-                travel.scaleX = cg(lerp(0.94, 1.10, u))
-                travel.scaleY = cg(lerp(1.10, 0.88, u))
-                travel.rotationDegrees = cg(lerp(-8.0, 6.0, u))
+                let u = smoothstep((t - 0.28) / 0.72)
+                travel.scaleX = cg(lerp(0.90, 1.12, u))
+                travel.scaleY = cg(lerp(1.14, 0.86, u))
+                travel.rotationDegrees = cg(lerp(-12.0, 6.0, u))
             }
-            travel.shadowScale = cg(1.0 - 0.32 * arc)
-            travel.shadowOpacity = 0.16 * (0.45 + 0.55 * (1.0 - arc))
+            travel.shadowScale = cg(1.0 - 0.38 * arc)
+            travel.shadowOpacity = 0.16 * (0.4 + 0.6 * (1.0 - arc))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
         if elapsed <= landEnd {
             let t = unit((elapsed - jumpEnd) / landDuration)
-            if t < 0.4 {
-                let u = smoothstep(t / 0.4)
-                travel.scaleX = cg(lerp(1.10, 1.16, u))
-                travel.scaleY = cg(lerp(0.88, 0.82, u))
+            travel.x = 0
+            if t < 0.45 {
+                let u = smoothstep(t / 0.45)
+                travel.scaleX = cg(lerp(1.12, 1.18, u))
+                travel.scaleY = cg(lerp(0.86, 0.80, u))
                 travel.rotationDegrees = cg(lerp(6.0, 3.0, u))
             } else {
-                let u = smoothstep((t - 0.4) / 0.6)
-                travel.scaleX = cg(lerp(1.16, 1.03, u))
-                travel.scaleY = cg(lerp(0.82, 0.97, u))
+                let u = smoothstep((t - 0.45) / 0.55)
+                travel.scaleX = cg(lerp(1.18, 1.04, u))
+                travel.scaleY = cg(lerp(0.80, 0.97, u))
                 travel.rotationDegrees = cg(lerp(3.0, 1.0, u))
             }
-            travel.shadowScale = cg(lerp(1.14, 1.04, t))
+            travel.shadowScale = cg(lerp(1.16, 1.04, t))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
@@ -227,7 +206,7 @@ enum PosePlayback {
         return PoseSnapshot(
             pose: .sit,
             travel: .rest(
-                scaleX: cg(lerp(1.03, 1.0, settle)),
+                scaleX: cg(lerp(1.04, 1.0, settle)),
                 scaleY: cg(lerp(0.97, 1.0, settle)),
                 rotation: cg(lerp(1.0, 0, settle))
             )
@@ -274,16 +253,11 @@ enum PosePlayback {
             return idleSnapshot(elapsed: elapsed)
         }
         let cycle = elapsed.truncatingRemainder(dividingBy: hopLength)
-        return hopSnapshot(elapsed: cycle, height: 24, duration: hopLength)
+        return hopSnapshot(elapsed: cycle, height: 20, duration: hopLength)
     }
 
     private static func unit(_ value: TimeInterval) -> Double {
         min(1.0, max(0.0, value))
-    }
-
-    private static func easeOutCubic(_ t: Double) -> Double {
-        let x = 1.0 - unit(t)
-        return 1.0 - x * x * x
     }
 
     private static func lerp(_ a: Double, _ b: Double, _ t: Double) -> Double {

@@ -33,9 +33,7 @@ struct SceneView: View {
                 MotionView(
                     poses: poses,
                     motionState: motionState,
-                    runDistance: restFrame == .zero
-                        ? PosePlayback.runDistance
-                        : max(180, restFrame.midX - 20),
+                    hopDistance: PosePlayback.hopDistance,
                     onTap: onCompanionTap
                 )
                 .frame(width: geo.size.width, height: 280, alignment: .bottom)

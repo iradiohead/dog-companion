@@ -11,29 +11,23 @@ enum CompanionMotionState: Equatable {
 struct MotionView: View {
     let poses: PoseCutoutSet
     let motionState: CompanionMotionState
-    var runDistance: CGFloat = PosePlayback.runDistance
+    var hopDistance: CGFloat = PosePlayback.hopDistance
     let onTap: () -> Void
 
     @State private var motionStarted = Date()
     @State private var sitImage: PlatformImage?
-    @State private var runAImage: PlatformImage?
-    @State private var runBImage: PlatformImage?
-    @State private var landImage: PlatformImage?
 
     init(
         poses: PoseCutoutSet,
         motionState: CompanionMotionState,
-        runDistance: CGFloat = PosePlayback.runDistance,
+        hopDistance: CGFloat = PosePlayback.hopDistance,
         onTap: @escaping () -> Void
     ) {
         self.poses = poses
         self.motionState = motionState
-        self.runDistance = runDistance
+        self.hopDistance = hopDistance
         self.onTap = onTap
         _sitImage = State(initialValue: poses.sit.flatMap(PlatformImage.from))
-        _runAImage = State(initialValue: poses.runA.flatMap(PlatformImage.from))
-        _runBImage = State(initialValue: poses.runB.flatMap(PlatformImage.from))
-        _landImage = State(initialValue: poses.land.flatMap(PlatformImage.from))
     }
 
     var body: some View {
@@ -42,18 +36,18 @@ struct MotionView: View {
             let snapshot = PosePlayback.snapshot(
                 state: motionState,
                 elapsed: elapsed,
-                runDistance: runDistance
+                runDistance: hopDistance
             )
             character(snapshot, elapsed: elapsed)
                 .transaction { $0.animation = nil }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .onAppear {
-            loadImages(from: poses)
+            sitImage = poses.sit.flatMap(PlatformImage.from)
             motionStarted = Date()
         }
         .onChange(of: poses) { _, newPoses in
-            loadImages(from: newPoses)
+            sitImage = newPoses.sit.flatMap(PlatformImage.from)
         }
         .onChange(of: motionState) { _, _ in
             motionStarted = Date()
@@ -61,12 +55,7 @@ struct MotionView: View {
     }
 
     private func character(_ snapshot: PoseSnapshot, elapsed: TimeInterval) -> some View {
-        var travel = snapshot.travel
-        if isMissingRunArt(for: snapshot.pose) {
-            travel.scaleX *= 1.20
-            travel.scaleY *= 0.76
-            travel.rotationDegrees -= 16
-        }
+        let travel = snapshot.travel
         return ZStack(alignment: .bottom) {
             Ellipse()
                 .fill(Color.black.opacity(travel.shadowOpacity * travel.opacity))
@@ -75,13 +64,12 @@ struct MotionView: View {
                 .blur(radius: 0.5)
 
             Group {
-                if let image = image(for: snapshot.pose) {
+                if let sitImage {
                     CompanionRigView(
-                        image: image,
-                        state: CompanionRigMotion.rigState(from: motionState, elapsed: elapsed),
+                        image: sitImage,
+                        state: CompanionRigMotion.rigState(from: motionState),
                         elapsed: elapsed,
-                        isPaused: motionState == .away,
-                        sliceParts: shouldSlice(snapshot.pose, image: image)
+                        isPaused: motionState == .away
                     )
                 } else if motionState != .away {
                     Image(systemName: "dog.fill")
@@ -98,43 +86,5 @@ struct MotionView: View {
             .opacity(travel.opacity)
             .onTapGesture(perform: onTap)
         }
-    }
-
-    private func image(for pose: CompanionPose) -> PlatformImage? {
-        switch pose {
-        case .sit:
-            return sitImage
-        case .runA:
-            return runAImage ?? runBImage ?? sitImage
-        case .runB, .runC, .runD:
-            return runBImage ?? runAImage ?? sitImage
-        case .land:
-            return landImage ?? sitImage
-        }
-    }
-
-    private func shouldSlice(_ pose: CompanionPose, image: PlatformImage) -> Bool {
-        switch pose {
-        case .runA, .runB, .runC, .runD:
-            return image === sitImage
-        case .sit, .land:
-            return true
-        }
-    }
-
-    private func isMissingRunArt(for pose: CompanionPose) -> Bool {
-        switch pose {
-        case .runA, .runB, .runC, .runD:
-            return runAImage == nil && runBImage == nil
-        default:
-            return false
-        }
-    }
-
-    private func loadImages(from poses: PoseCutoutSet) {
-        sitImage = poses.sit.flatMap(PlatformImage.from)
-        runAImage = poses.runA.flatMap(PlatformImage.from)
-        runBImage = poses.runB.flatMap(PlatformImage.from)
-        landImage = poses.land.flatMap(PlatformImage.from)
     }
 }

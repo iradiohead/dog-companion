@@ -3,14 +3,10 @@ import UIKit
 @testable import DogCompanion
 
 final class PosePlaybackTests: XCTestCase {
-    func testRunInUsesRunArtThenSits() {
-        XCTAssertEqual(PosePlayback.pose(state: .runningIn, elapsed: 0.1), .runA)
+    func testHopOnUsesSitPoseTheWholeWay() {
+        XCTAssertEqual(PosePlayback.pose(state: .runningIn, elapsed: 0.05), .sit)
         XCTAssertEqual(
-            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.runDuration * 0.7),
-            .runB
-        )
-        XCTAssertEqual(
-            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.crouchStart + 0.05),
+            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.jumpStart + 0.2),
             .sit
         )
         XCTAssertEqual(
@@ -25,26 +21,22 @@ final class PosePlaybackTests: XCTestCase {
     }
 
     func testCrouchBeforeJump() {
-        let crouch = PosePlayback.travel(state: .runningIn, elapsed: PosePlayback.crouchStart + 0.15)
-        XCTAssertLessThan(crouch.scaleY, 0.98)
-        XCTAssertGreaterThan(crouch.scaleX, 1.02)
-        XCTAssertLessThan(crouch.x, -10)
+        let crouch = PosePlayback.travel(
+            state: .runningIn,
+            elapsed: PosePlayback.crouchDuration * 0.9
+        )
+        XCTAssertLessThan(crouch.scaleY, 0.90)
+        XCTAssertGreaterThan(crouch.scaleX, 1.08)
+        XCTAssertEqual(crouch.x, -PosePlayback.hopDistance, accuracy: 1)
         XCTAssertGreaterThan(crouch.opacity, 0.5)
     }
 
-    func testRunInStartsSmallAndFarLeft() {
+    func testHopStartsOneStepLeftNotFarAway() {
         let start = PosePlayback.travel(state: .runningIn, elapsed: 0.05)
-        XCTAssertLessThan(start.x, -150)
-        XCTAssertLessThan(start.scaleY, 0.55)
+        XCTAssertLessThan(start.x, -50)
+        XCTAssertGreaterThan(start.x, -90)
+        XCTAssertGreaterThan(start.scaleY, 0.85)
         XCTAssertGreaterThan(start.opacity, 0.2)
-    }
-
-    func testRunInGrowsWhileMovingRight() {
-        let early = PosePlayback.travel(state: .runningIn, elapsed: 0.2)
-        let late = PosePlayback.travel(state: .runningIn, elapsed: PosePlayback.runDuration - 0.05)
-        XCTAssertGreaterThan(late.x, early.x)
-        XCTAssertGreaterThan(late.scaleY, early.scaleY)
-        XCTAssertGreaterThan(late.scaleY, 0.85)
     }
 
     func testJumpTravelsFromLeftToTheMat() {
@@ -77,7 +69,7 @@ final class PosePlaybackTests: XCTestCase {
             state: .runningIn,
             elapsed: PosePlayback.landStart + 0.03
         )
-        XCTAssertLessThan(land.scaleY, 0.97)
+        XCTAssertLessThan(land.scaleY, 0.90)
         XCTAssertEqual(land.x, 0, accuracy: 0.5)
 
         let settled = PosePlayback.snapshot(state: .runningIn, elapsed: PosePlayback.runningInDuration)
@@ -86,10 +78,10 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertEqual(settled.travel.y, 0, accuracy: 0.5)
     }
 
-    func testAwayStartsOffscreenLeft() {
+    func testAwayStaysBesideTheMatHidden() {
         let away = PosePlayback.travel(state: .away, elapsed: 0)
         XCTAssertEqual(away.opacity, 0, accuracy: 0.01)
-        XCTAssertLessThan(away.x, -80)
+        XCTAssertEqual(away.x, -PosePlayback.hopDistance, accuracy: 0.5)
     }
 
     func testPosePromptsDescribeDifferentActions() {
@@ -126,21 +118,20 @@ final class PosePlaybackTests: XCTestCase {
         }
     }
 
-    func testJumpDurationIsASingleBeat() {
+    func testHopOnDurationIsAboutOneSecond() {
         XCTAssertEqual(
             PosePlayback.runningInDuration,
-            PosePlayback.runDuration
-                + PosePlayback.crouchDuration
+            PosePlayback.crouchDuration
                 + PosePlayback.jumpDuration
                 + PosePlayback.landDuration
                 + PosePlayback.settleDuration,
             accuracy: 0.001
         )
-        XCTAssertGreaterThan(PosePlayback.runningInDuration, 2.8)
-        XCTAssertLessThan(PosePlayback.runningInDuration, 3.8)
+        XCTAssertGreaterThan(PosePlayback.runningInDuration, 0.9)
+        XCTAssertLessThan(PosePlayback.runningInDuration, 1.15)
     }
 
-    func testIdleTravelStaysStillWhileMeshWarps() {
+    func testIdleTravelStaysStillWhilePartsBreathe() {
         let a = PosePlayback.travel(state: .idle, elapsed: 0)
         let b = PosePlayback.travel(state: .idle, elapsed: 1.0)
         XCTAssertEqual(a.scaleY, 1, accuracy: 0.0001)
