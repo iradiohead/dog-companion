@@ -65,10 +65,11 @@ struct MotionView: View {
 
             Group {
                 if let sitImage {
-                    Image(platformImage: sitImage)
-                        .interpolation(.high)
-                        .resizable()
-                        .scaledToFit()
+                    CompanionMeshView(
+                        image: sitImage,
+                        breathEnabled: motionState == .idle,
+                        isPaused: motionState == .away
+                    )
                 } else if motionState != .away {
                     Image(systemName: "dog.fill")
                         .resizable()

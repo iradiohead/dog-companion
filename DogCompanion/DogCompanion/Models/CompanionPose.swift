@@ -196,15 +196,8 @@ enum PosePlayback {
         )
     }
 
-    private static func idleSnapshot(elapsed: TimeInterval) -> PoseSnapshot {
-        let breath = sin(elapsed * 1.55)
-        return PoseSnapshot(
-            pose: .sit,
-            travel: .rest(
-                scaleX: cg(1.0 - 0.008 * breath),
-                scaleY: cg(1.0 + 0.01 * breath)
-            )
-        )
+    private static func idleSnapshot(elapsed _: TimeInterval) -> PoseSnapshot {
+        PoseSnapshot(pose: .sit, travel: .rest())
     }
 
     private static func hopSnapshot(elapsed: TimeInterval, height: CGFloat, duration: TimeInterval) -> PoseSnapshot {

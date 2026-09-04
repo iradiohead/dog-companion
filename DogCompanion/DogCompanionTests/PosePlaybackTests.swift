@@ -115,10 +115,11 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertLessThan(PosePlayback.runningInDuration, 2.0)
     }
 
-    func testIdleBreathChangesScaleSlowly() {
+    func testIdleTravelStaysStillWhileMeshWarps() {
         let a = PosePlayback.travel(state: .idle, elapsed: 0)
         let b = PosePlayback.travel(state: .idle, elapsed: 1.0)
-        XCTAssertGreaterThan(abs(a.scaleY - b.scaleY), 0.001)
-        XCTAssertLessThan(abs(a.scaleY - b.scaleY), 0.03)
+        XCTAssertEqual(a.scaleY, 1, accuracy: 0.0001)
+        XCTAssertEqual(b.scaleY, 1, accuracy: 0.0001)
+        XCTAssertEqual(a.x, 0, accuracy: 0.0001)
     }
 }

@@ -27,6 +27,11 @@
 		A10000000000000000000023 /* HandDrawnTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* HandDrawnTexture.swift */; };
 		A10000000000000000000024 /* CompanionPose.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* CompanionPose.swift */; };
 		A10000000000000000000025 /* PoseFrameSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* PoseFrameSynthesizer.swift */; };
+		A10000000000000000000026 /* CompanionMeshDeform.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000026 /* CompanionMeshDeform.swift */; };
+		A10000000000000000000027 /* CompanionMeshView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000027 /* CompanionMeshView.swift */; };
+		A10000000000000000000028 /* CompanionBreath.metal in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000028 /* CompanionBreath.metal */; };
+		A10000000000000000000029 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* Metal.framework */; };
+		A1000000000000000000002A /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* MetalKit.framework */; };
 		A10000000000000000000008 /* CreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CreationViewModel.swift */; };
 		A10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HomeViewModel.swift */; };
 		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
@@ -46,6 +51,7 @@
 		B10000000000000000000003 /* HandDrawnPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* HandDrawnPaletteTests.swift */; };
 		B10000000000000000000004 /* CutoutImageProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* CutoutImageProcessorTests.swift */; };
 		B10000000000000000000005 /* PosePlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* PosePlaybackTests.swift */; };
+		B10000000000000000000006 /* CompanionMeshDeformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000006 /* CompanionMeshDeformTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +85,11 @@
 		A20000000000000000000023 /* HandDrawnTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnTexture.swift; sourceTree = "<group>"; };
 		A20000000000000000000024 /* CompanionPose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPose.swift; sourceTree = "<group>"; };
 		A20000000000000000000025 /* PoseFrameSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseFrameSynthesizer.swift; sourceTree = "<group>"; };
+		A20000000000000000000026 /* CompanionMeshDeform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionMeshDeform.swift; sourceTree = "<group>"; };
+		A20000000000000000000027 /* CompanionMeshView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionMeshView.swift; sourceTree = "<group>"; };
+		A20000000000000000000028 /* CompanionBreath.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CompanionBreath.metal; sourceTree = "<group>"; };
+		A20000000000000000000029 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		A2000000000000000000002A /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		A20000000000000000000008 /* CreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationViewModel.swift; sourceTree = "<group>"; };
 		A20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
@@ -100,6 +111,7 @@
 		B20000000000000000000003 /* HandDrawnPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnPaletteTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000004 /* CutoutImageProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutoutImageProcessorTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000005 /* PosePlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PosePlaybackTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000006 /* CompanionMeshDeformTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionMeshDeformTests.swift; sourceTree = "<group>"; };
 		B30000000000000000000001 /* DogCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DogCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -108,6 +120,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000029 /* Metal.framework in Frameworks */,
+				A1000000000000000000002A /* MetalKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,6 +141,7 @@
 				A50000000000000000000002 /* DogCompanion */,
 				B50000000000000000000001 /* DogCompanionTests */,
 				A50000000000000000000003 /* Products */,
+				A5000000000000000000000F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -141,6 +156,7 @@
 				A50000000000000000000006 /* Utilities */,
 				A50000000000000000000007 /* ViewModels */,
 				A50000000000000000000008 /* Views */,
+				A5000000000000000000000E /* Shaders */,
 				A20000000000000000000011 /* Assets.xcassets */,
 				A20000000000000000000013 /* Info.plist */,
 				A20000000000000000000012 /* Secrets.plist */,
@@ -186,6 +202,7 @@
 				A2000000000000000000001B /* GiftUnlockPolicy.swift */,
 				A20000000000000000000020 /* PlatformImage.swift */,
 				A20000000000000000000025 /* PoseFrameSynthesizer.swift */,
+				A20000000000000000000026 /* CompanionMeshDeform.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -216,6 +233,7 @@
 			children = (
 				A2000000000000000000000A /* SharedComponents.swift */,
 				A2000000000000000000001C /* MotionView.swift */,
+				A20000000000000000000027 /* CompanionMeshView.swift */,
 				A2000000000000000000001D /* SceneView.swift */,
 				A2000000000000000000001E /* FocusTimerView.swift */,
 				A2000000000000000000001F /* ScenePickerView.swift */,
@@ -262,6 +280,23 @@
 			path = Regeneration;
 			sourceTree = "<group>";
 		};
+		A5000000000000000000000E /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000028 /* CompanionBreath.metal */,
+			);
+			path = Shaders;
+			sourceTree = "<group>";
+		};
+		A5000000000000000000000F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000029 /* Metal.framework */,
+				A2000000000000000000002A /* MetalKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		B50000000000000000000001 /* DogCompanionTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -269,6 +304,7 @@
 				B20000000000000000000003 /* HandDrawnPaletteTests.swift */,
 				B20000000000000000000004 /* CutoutImageProcessorTests.swift */,
 				B20000000000000000000005 /* PosePlaybackTests.swift */,
+				B20000000000000000000006 /* CompanionMeshDeformTests.swift */,
 			);
 			path = DogCompanionTests;
 			sourceTree = "<group>";
@@ -406,6 +442,9 @@
 				A10000000000000000000023 /* HandDrawnTexture.swift in Sources */,
 				A10000000000000000000024 /* CompanionPose.swift in Sources */,
 				A10000000000000000000025 /* PoseFrameSynthesizer.swift in Sources */,
+				A10000000000000000000026 /* CompanionMeshDeform.swift in Sources */,
+				A10000000000000000000027 /* CompanionMeshView.swift in Sources */,
+				A10000000000000000000028 /* CompanionBreath.metal in Sources */,
 				A10000000000000000000008 /* CreationViewModel.swift in Sources */,
 				A10000000000000000000009 /* HomeViewModel.swift in Sources */,
 				A1000000000000000000000A /* SharedComponents.swift in Sources */,
@@ -430,6 +469,7 @@
 				B10000000000000000000003 /* HandDrawnPaletteTests.swift in Sources */,
 				B10000000000000000000004 /* CutoutImageProcessorTests.swift in Sources */,
 				B10000000000000000000005 /* PosePlaybackTests.swift in Sources */,
+				B10000000000000000000006 /* CompanionMeshDeformTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
