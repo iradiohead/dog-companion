@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 enum CompanionMotionState {
     case idle
@@ -24,8 +23,8 @@ struct MotionView: View {
 
     var body: some View {
         Group {
-            if let imageData, let uiImage = UIImage(data: imageData) {
-                Image(uiImage: uiImage)
+            if let imageData, let uiImage = PlatformImage.from(data: imageData) {
+                Image(platformImage: uiImage)
                     .resizable()
                     .scaledToFit()
                     .scaleEffect(scale)

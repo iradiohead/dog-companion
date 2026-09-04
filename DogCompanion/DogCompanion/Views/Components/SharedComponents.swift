@@ -1,5 +1,8 @@
 import SwiftUI
 
+#if !targetEnvironment(macCatalyst)
+import UIKit
+
 struct CameraPicker: UIViewControllerRepresentable {
     @Environment(\.dismiss) private var dismiss
     let onImagePicked: (UIImage) -> Void
@@ -39,3 +42,4 @@ struct CameraPicker: UIViewControllerRepresentable {
         }
     }
 }
+#endif

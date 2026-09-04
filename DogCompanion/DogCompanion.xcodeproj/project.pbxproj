@@ -21,6 +21,7 @@
 		A1000000000000000000001C /* SceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001D /* SceneView.swift */; };
 		A1000000000000000000001D /* FocusTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001E /* FocusTimerView.swift */; };
 		A1000000000000000000001E /* ScenePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001F /* ScenePickerView.swift */; };
+		A10000000000000000000020 /* PlatformImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* PlatformImage.swift */; };
 		A10000000000000000000008 /* CreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CreationViewModel.swift */; };
 		A10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HomeViewModel.swift */; };
 		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
@@ -64,6 +65,7 @@
 		A2000000000000000000001D /* SceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneView.swift; sourceTree = "<group>"; };
 		A2000000000000000000001E /* FocusTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerView.swift; sourceTree = "<group>"; };
 		A2000000000000000000001F /* ScenePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenePickerView.swift; sourceTree = "<group>"; };
+		A20000000000000000000020 /* PlatformImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformImage.swift; sourceTree = "<group>"; };
 		A20000000000000000000008 /* CreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationViewModel.swift; sourceTree = "<group>"; };
 		A20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 			children = (
 				A20000000000000000000015 /* RegenerationPolicy.swift */,
 				A2000000000000000000001B /* GiftUnlockPolicy.swift */,
+				A20000000000000000000020 /* PlatformImage.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -373,6 +376,7 @@
 				A1000000000000000000001C /* SceneView.swift in Sources */,
 				A1000000000000000000001D /* FocusTimerView.swift in Sources */,
 				A1000000000000000000001E /* ScenePickerView.swift in Sources */,
+				A10000000000000000000020 /* PlatformImage.swift in Sources */,
 				A10000000000000000000008 /* CreationViewModel.swift in Sources */,
 				A10000000000000000000009 /* HomeViewModel.swift in Sources */,
 				A1000000000000000000000A /* SharedComponents.swift in Sources */,
@@ -472,8 +476,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MACCATALYST_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kejin.dogcompanion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -499,9 +506,11 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MACCATALYST_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kejin.dogcompanion;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SUPPORTS_MACCATALYST = YES;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};

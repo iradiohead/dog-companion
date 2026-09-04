@@ -8,5 +8,8 @@ struct DogCompanionApp: App {
             ContentView()
         }
         .modelContainer(for: Companion.self)
+        #if targetEnvironment(macCatalyst)
+        .defaultSize(width: 420, height: 780)
+        #endif
     }
 }

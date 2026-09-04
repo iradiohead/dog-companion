@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import UIKit
 
 struct NamingView: View {
     @Bindable var viewModel: CreationViewModel
@@ -12,8 +11,8 @@ struct NamingView: View {
             Spacer()
 
             if let data = viewModel.generatedCutoutData ?? viewModel.generatedPortraitData,
-               let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage)
+               let uiImage = PlatformImage.from(data: data) {
+                Image(platformImage: uiImage)
                     .resizable()
                     .scaledToFit()
                     .frame(height: 200)

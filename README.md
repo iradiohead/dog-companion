@@ -7,7 +7,8 @@
 ## 环境要求
 
 - macOS + Xcode 15+
-- iOS 17+ 真机或模拟器（相机功能需真机）
+- **iPhone / iPad**：iOS 17+
+- **MacBook**：macOS 14+（通过 Mac Catalyst 运行）
 - [阿里云百炼](https://www.aliyun.com/product/bailian) 账号与 API Key（新用户有免费额度）
 
 ## 快速开始
@@ -42,7 +43,9 @@ cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Sec
 
 ### 4. 运行
 
-选择真机或模拟器，按 `Cmd + R` 运行。
+**iPhone / 模拟器：** 选择真机或模拟器，按 `Cmd + R`。
+
+**MacBook：** 在 Xcode 顶部设备菜单选择 **My Mac (Mac Catalyst)**，然后 `Cmd + R`。Mac 版从相册/文件选图，无拍照按钮。
 
 > **注意**：数据模型已更新。若从旧版升级，请删除 App 后重新安装。
 
