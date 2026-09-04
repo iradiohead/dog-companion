@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct NamingView: View {
     @Bindable var viewModel: CreationViewModel
@@ -10,15 +11,19 @@ struct NamingView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            if let data = viewModel.generatedPortraitData {
-                ComicPortraitView(portraitData: data, hunger: 80, mood: 80)
+            if let data = viewModel.generatedCutoutData ?? viewModel.generatedPortraitData,
+               let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 200)
                     .padding(.horizontal)
             }
 
             VStack(spacing: 8) {
                 Text("给你的狗狗起个名字")
                     .font(.title.bold())
-                Text("这个名字会陪伴你们一起成长")
+                Text("它会陪你一起专注")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -43,7 +48,7 @@ struct NamingView: View {
                     viewModel.errorMessage = error.localizedDescription
                 }
             } label: {
-                Text("开始养狗狗")
+                Text("开始专注之旅")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()

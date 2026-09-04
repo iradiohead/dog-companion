@@ -5,7 +5,7 @@ import Observation
 struct PhotoPickerView<VM>: View where VM: ComicGenerationFlow & Observable {
     @Bindable var viewModel: VM
     var title: String = "拍下你的狗狗"
-    var subtitle: String = "我们会根据照片生成专属的漫画形象"
+    var subtitle: String = "我们会根据照片生成你的专属专注伙伴"
 
     @State private var selectedItem: PhotosPickerItem?
     @State private var showCamera = false

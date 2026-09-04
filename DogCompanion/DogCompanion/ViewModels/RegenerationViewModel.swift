@@ -20,6 +20,7 @@ final class RegenerationViewModel: ComicGenerationFlow {
     private let companion: Companion
     private let generationService = GenerationService()
     private var generatedPortraitData: Data?
+    private var generatedCutoutData: Data?
 
     init(companion: Companion) {
         self.companion = companion
@@ -62,7 +63,9 @@ final class RegenerationViewModel: ComicGenerationFlow {
         errorMessage = nil
 
         do {
-            generatedPortraitData = try await generationService.generateComicPortrait(from: image, style: style)
+            let result = try await generationService.generateCompanionAssets(from: image, style: style)
+            generatedPortraitData = result.comicPortraitData
+            generatedCutoutData = result.cutoutData
             sourceImage = nil
             applyRegeneration()
             isComplete = true
@@ -80,8 +83,11 @@ final class RegenerationViewModel: ComicGenerationFlow {
     }
 
     private func applyRegeneration() {
-        guard let portraitData = generatedPortraitData, let style = selectedStyle else { return }
+        guard let portraitData = generatedPortraitData,
+              let cutoutData = generatedCutoutData,
+              let style = selectedStyle else { return }
         companion.comicPortraitData = portraitData
+        companion.cutoutData = cutoutData
         companion.styleTemplateRaw = style.rawValue
         companion.regenerationCount += 1
     }

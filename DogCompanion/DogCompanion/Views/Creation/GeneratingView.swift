@@ -3,12 +3,12 @@ import Observation
 
 struct GeneratingView<VM>: View where VM: ComicGenerationFlow & Observable {
     @Bindable var viewModel: VM
-    var title: String = "正在生成漫画形象"
+    var title: String = "正在生成你的专注伙伴"
 
     private let messages = [
         "正在分析毛色花纹…",
         "正在勾勒可爱线条…",
-        "正在添加漫画魔法…",
+        "正在抠出你的狗狗…",
         "马上就好啦…"
     ]
 

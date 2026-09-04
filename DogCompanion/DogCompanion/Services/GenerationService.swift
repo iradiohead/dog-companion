@@ -27,11 +27,28 @@ enum GenerationError: LocalizedError {
     }
 }
 
+struct GenerationResult {
+    let comicPortraitData: Data
+    let cutoutData: Data
+}
+
 struct GenerationService {
     private let session: URLSession
+    private let mattingService: MattingService
 
-    init(session: URLSession = .shared) {
+    init(session: URLSession = .shared, mattingService: MattingService = MattingService()) {
         self.session = session
+        self.mattingService = mattingService
+    }
+
+    func generateCompanionAssets(from image: UIImage, style: StyleTemplate) async throws -> GenerationResult {
+        let portraitData = try await generateComicPortrait(from: image, style: style)
+        guard let portraitImage = UIImage(data: portraitData) else {
+            throw GenerationError.invalidImage
+        }
+
+        let cutoutData = try await mattingService.extractCutout(from: portraitImage)
+        return GenerationResult(comicPortraitData: portraitData, cutoutData: cutoutData)
     }
 
     func generateComicPortrait(from image: UIImage, style: StyleTemplate) async throws -> Data {

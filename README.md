@@ -1,6 +1,8 @@
 # 狗狗伙伴 (Dog Companion)
 
-在 iPhone 上养一只虚拟狗狗：拍一张真狗照片，AI 自动生成相似的漫画形象，然后通过喂食、玩耍、散步来照顾它。
+在 iPhone 上养一只属于你的专注伙伴：拍一张真狗照片，AI 生成漫画形象并抠图，然后它会在房间里陪你番茄钟专注。
+
+灵感来自 [Cat On Chair](https://catonchair.app/)，但狗狗来自你自己的照片。
 
 ## 环境要求
 
@@ -38,62 +40,37 @@ cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Sec
 
 在 Xcode 中选择 **DogCompanion** target → **Signing & Capabilities** → 勾选 **Automatically manage signing** → 选择你的 **Development Team**。
 
-> 若报错 `Signing for "DogCompanion" requires a development team`，就是这一步没配。模拟器一般也需要选 Personal Team。
-
 ### 4. 运行
 
 选择真机或模拟器，按 `Cmd + R` 运行。
 
-## 构建失败排查
+> **注意**：数据模型已更新。若从旧版升级，请删除 App 后重新安装。
 
-| 报错 | 解决办法 |
-|------|----------|
-| `requires a development team` | Signing & Capabilities → 选择 Development Team |
-| `Build input file cannot be found: Secrets.plist` | 运行 `cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Secrets.plist`（项目已加自动复制脚本，Clean 后重编） |
-| `未配置阿里云百炼 API Key` | 在 `Secrets.plist` 填入 `DASHSCOPE_API_KEY` |
-| `额度不足` | 百炼控制台领取免费额度或充值 |
-| `Cannot find 'UIApplication' in scope` | 拉取最新代码（已修复） |
-| Xcode 版本过低 | 需要 **Xcode 15+**（iOS 17 / SwiftData / @Observable） |
+## 核心功能
+
+| 功能 | 说明 |
+|------|------|
+| 照片 → 漫画 → 抠图 | 通义万相生成 + Vision 端上抠图 |
+| 场景 + 动画 | 狗狗在房间里呼吸、跳上垫子、点击有反应 |
+| 番茄钟专注 | 默认 25 分钟，狗狗陪你专注 |
+| 礼物解锁 | 完成专注解锁新场景和家具 |
+| 换造型 | 重新拍照生成，每只狗限 3 次 |
 
 ## 项目结构
 
 ```
 DogCompanion/
-├── DogCompanionApp.swift          # App 入口
-├── ContentView.swift              # 路由：无 Companion → 创建流程，有 → 主页
-├── Models/
-│   ├── Companion.swift            # SwiftData 实体
-│   └── StyleTemplate.swift        # 三种漫画风格
-├── Services/
-│   ├── GenerationService.swift    # 通义万相 API 调用
-│   └── SecretsProvider.swift      # 读取 Secrets.plist
-├── ViewModels/
-│   ├── CreationViewModel.swift    # 创建流程状态机
-│   └── HomeViewModel.swift        # 养成逻辑
+├── Models/          # Companion, SceneCatalog, FocusSessionState
+├── Services/        # GenerationService, MattingService
+├── ViewModels/      # Creation, Home (focus timer), Regeneration
 ├── Views/
-│   ├── Creation/                  # 拍照 → 选风格 → 生成 → 起名
-│   ├── Home/                      # 主页
-│   └── Components/                # 共用 UI 组件
-└── Utilities/
-    └── VitalStatsCalculator.swift # 饱食度/心情衰减与 Care Action
+│   ├── Creation/    # 拍照 → 选风格 → 生成 → 起名
+│   ├── Home/        # 场景 + 专注计时
+│   └── Components/  # SceneView, MotionView, FocusTimerView
+└── Utilities/       # GiftUnlockPolicy, RegenerationPolicy
 ```
 
-## 玩法说明
-
-| 属性 | 规则 |
-|------|------|
-| 饱食度 | 喂食 +30；散步 −10；每 4 小时被动 −20 |
-| 心情 | 玩耍 +30；散步 +20；每 6 小时被动 −20 |
-
-三种漫画风格：日系动漫、扁平卡通、水彩手绘。
-
-## v1.1 功能
-
-- **换造型（Regeneration）**：主页右上角可重新拍照生成漫画形象，每只狗限 3 次
-
 ## 运行测试
-
-在 Xcode 中按 `Cmd + U`，或：
 
 ```bash
 xcodebuild test -project DogCompanion/DogCompanion.xcodeproj -scheme DogCompanion -destination 'platform=iOS Simulator,name=iPhone 16'
@@ -102,10 +79,10 @@ xcodebuild test -project DogCompanion/DogCompanion.xcodeproj -scheme DogCompanio
 ## 设计文档
 
 - 领域词汇：`CONTEXT.md`
-- 架构决策：`docs/adr/`
+- 架构决策：`docs/adr/`（含 pivot 决策 ADR-0005）
 
 ## 上架前注意
 
 1. **API Key 不能打包进客户端** — 需搭建后端代理（见 ADR-0001）
 2. **隐私政策** — 需说明照片会发送至阿里云百炼进行处理
-3. **App Icon** — 已包含默认图标，可在 `Assets.xcassets/AppIcon` 中替换为自定义设计
+3. **Widget** — v1.1 计划加入静态主屏 Widget

@@ -13,7 +13,14 @@
 		A10000000000000000000004 /* StyleTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* StyleTemplate.swift */; };
 		A10000000000000000000005 /* GenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* GenerationService.swift */; };
 		A10000000000000000000006 /* SecretsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* SecretsProvider.swift */; };
-		A10000000000000000000007 /* VitalStatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* VitalStatsCalculator.swift */; };
+		A10000000000000000000017 /* MattingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* MattingService.swift */; };
+		A10000000000000000000018 /* SceneCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* SceneCatalog.swift */; };
+		A10000000000000000000019 /* FocusSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001A /* FocusSessionState.swift */; };
+		A1000000000000000000001A /* GiftUnlockPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001B /* GiftUnlockPolicy.swift */; };
+		A1000000000000000000001B /* MotionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001C /* MotionView.swift */; };
+		A1000000000000000000001C /* SceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001D /* SceneView.swift */; };
+		A1000000000000000000001D /* FocusTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001E /* FocusTimerView.swift */; };
+		A1000000000000000000001E /* ScenePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001F /* ScenePickerView.swift */; };
 		A10000000000000000000008 /* CreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CreationViewModel.swift */; };
 		A10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HomeViewModel.swift */; };
 		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
@@ -29,7 +36,7 @@
 		A10000000000000000000014 /* RegenerationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* RegenerationPolicy.swift */; };
 		A10000000000000000000015 /* RegenerationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* RegenerationViewModel.swift */; };
 		A10000000000000000000016 /* RegenerationFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* RegenerationFlowView.swift */; };
-		B10000000000000000000001 /* VitalStatsCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* VitalStatsCalculatorTests.swift */; };
+		B10000000000000000000002 /* GiftUnlockPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* GiftUnlockPolicyTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,7 +56,14 @@
 		A20000000000000000000004 /* StyleTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleTemplate.swift; sourceTree = "<group>"; };
 		A20000000000000000000005 /* GenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationService.swift; sourceTree = "<group>"; };
 		A20000000000000000000006 /* SecretsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretsProvider.swift; sourceTree = "<group>"; };
-		A20000000000000000000007 /* VitalStatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalStatsCalculator.swift; sourceTree = "<group>"; };
+		A20000000000000000000018 /* MattingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MattingService.swift; sourceTree = "<group>"; };
+		A20000000000000000000019 /* SceneCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneCatalog.swift; sourceTree = "<group>"; };
+		A2000000000000000000001A /* FocusSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionState.swift; sourceTree = "<group>"; };
+		A2000000000000000000001B /* GiftUnlockPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftUnlockPolicy.swift; sourceTree = "<group>"; };
+		A2000000000000000000001C /* MotionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionView.swift; sourceTree = "<group>"; };
+		A2000000000000000000001D /* SceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneView.swift; sourceTree = "<group>"; };
+		A2000000000000000000001E /* FocusTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerView.swift; sourceTree = "<group>"; };
+		A2000000000000000000001F /* ScenePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenePickerView.swift; sourceTree = "<group>"; };
 		A20000000000000000000008 /* CreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationViewModel.swift; sourceTree = "<group>"; };
 		A20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
@@ -67,7 +81,7 @@
 		A20000000000000000000016 /* RegenerationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegenerationViewModel.swift; sourceTree = "<group>"; };
 		A20000000000000000000017 /* RegenerationFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegenerationFlowView.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* DogCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DogCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B20000000000000000000001 /* VitalStatsCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalStatsCalculatorTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000002 /* GiftUnlockPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftUnlockPolicyTests.swift; sourceTree = "<group>"; };
 		B30000000000000000000001 /* DogCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DogCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -130,6 +144,8 @@
 			children = (
 				A20000000000000000000003 /* Companion.swift */,
 				A20000000000000000000004 /* StyleTemplate.swift */,
+				A20000000000000000000019 /* SceneCatalog.swift */,
+				A2000000000000000000001A /* FocusSessionState.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -139,6 +155,7 @@
 			children = (
 				A20000000000000000000005 /* GenerationService.swift */,
 				A20000000000000000000006 /* SecretsProvider.swift */,
+				A20000000000000000000018 /* MattingService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -146,8 +163,8 @@
 		A50000000000000000000006 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000007 /* VitalStatsCalculator.swift */,
 				A20000000000000000000015 /* RegenerationPolicy.swift */,
+				A2000000000000000000001B /* GiftUnlockPolicy.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -177,6 +194,10 @@
 			isa = PBXGroup;
 			children = (
 				A2000000000000000000000A /* SharedComponents.swift */,
+				A2000000000000000000001C /* MotionView.swift */,
+				A2000000000000000000001D /* SceneView.swift */,
+				A2000000000000000000001E /* FocusTimerView.swift */,
+				A2000000000000000000001F /* ScenePickerView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -220,7 +241,7 @@
 		B50000000000000000000001 /* DogCompanionTests */ = {
 			isa = PBXGroup;
 			children = (
-				B20000000000000000000001 /* VitalStatsCalculatorTests.swift */,
+				B20000000000000000000002 /* GiftUnlockPolicyTests.swift */,
 			);
 			path = DogCompanionTests;
 			sourceTree = "<group>";
@@ -344,7 +365,14 @@
 				A10000000000000000000004 /* StyleTemplate.swift in Sources */,
 				A10000000000000000000005 /* GenerationService.swift in Sources */,
 				A10000000000000000000006 /* SecretsProvider.swift in Sources */,
-				A10000000000000000000007 /* VitalStatsCalculator.swift in Sources */,
+				A10000000000000000000017 /* MattingService.swift in Sources */,
+				A10000000000000000000018 /* SceneCatalog.swift in Sources */,
+				A10000000000000000000019 /* FocusSessionState.swift in Sources */,
+				A1000000000000000000001A /* GiftUnlockPolicy.swift in Sources */,
+				A1000000000000000000001B /* MotionView.swift in Sources */,
+				A1000000000000000000001C /* SceneView.swift in Sources */,
+				A1000000000000000000001D /* FocusTimerView.swift in Sources */,
+				A1000000000000000000001E /* ScenePickerView.swift in Sources */,
 				A10000000000000000000008 /* CreationViewModel.swift in Sources */,
 				A10000000000000000000009 /* HomeViewModel.swift in Sources */,
 				A1000000000000000000000A /* SharedComponents.swift in Sources */,
@@ -365,7 +393,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B10000000000000000000001 /* VitalStatsCalculatorTests.swift in Sources */,
+				B10000000000000000000002 /* GiftUnlockPolicyTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

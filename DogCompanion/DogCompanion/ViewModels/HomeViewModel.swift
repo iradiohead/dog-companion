@@ -5,49 +5,120 @@ import SwiftData
 @Observable
 @MainActor
 final class HomeViewModel {
-    private(set) var showFeedAnimation = false
-    private(set) var showPlayAnimation = false
-    private(set) var showWalkAnimation = false
+    private(set) var phase: FocusSessionPhase = .idle
+    private(set) var remainingSeconds: TimeInterval = FocusSessionConfig.defaultDuration
+    private(set) var motionState: CompanionMotionState = .idle
+    private(set) var pendingGiftTitle: String?
+    private(set) var showGiftReveal = false
 
-    func refreshDecay(for companion: Companion) {
-        let result = VitalStatsCalculator.applyDecay(
-            hunger: companion.hunger,
-            mood: companion.mood,
-            lastUpdated: companion.lastUpdated
+    private var timerTask: Task<Void, Never>?
+
+    var formattedRemainingTime: String {
+        let total = max(0, Int(remainingSeconds))
+        let minutes = total / 60
+        let seconds = total % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    var isFocusActive: Bool {
+        phase == .running || phase == .paused
+    }
+
+    func startFocus(with companion: Companion) {
+        guard phase == .idle || phase == .completed else { return }
+        remainingSeconds = FocusSessionConfig.defaultDuration
+        phase = .running
+        motionState = .jumpingIn
+        scheduleJumpToIdle()
+        startTimer(for: companion)
+    }
+
+    func pauseFocus() {
+        guard phase == .running else { return }
+        phase = .paused
+        stopTimer()
+    }
+
+    func resumeFocus(with companion: Companion) {
+        guard phase == .paused else { return }
+        phase = .running
+        startTimer(for: companion)
+    }
+
+    func cancelFocus() {
+        stopTimer()
+        phase = .idle
+        remainingSeconds = FocusSessionConfig.defaultDuration
+        motionState = .idle
+    }
+
+    func completeFocus(for companion: Companion) {
+        stopTimer()
+        phase = .completed
+        motionState = .celebrating
+
+        companion.completedFocusSessions += 1
+        let unlocked = GiftUnlockPolicy.applyRewards(
+            for: companion.completedFocusSessions,
+            to: companion
         )
+        pendingGiftTitle = GiftUnlockPolicy.giftTitle(
+            for: companion.completedFocusSessions,
+            unlockedItems: unlocked
+        )
+        showGiftReveal = true
 
-        if result.hunger != companion.hunger || result.mood != companion.mood {
-            companion.hunger = result.hunger
-            companion.mood = result.mood
-            companion.lastUpdated = .now
+        Task {
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            motionState = .idle
         }
     }
 
-    func feed(_ companion: Companion) {
-        companion.hunger = VitalStatsCalculator.feed(hunger: companion.hunger)
-        companion.lastUpdated = .now
-        triggerAnimation(\.showFeedAnimation)
+    func dismissGift() {
+        showGiftReveal = false
+        phase = .idle
+        remainingSeconds = FocusSessionConfig.defaultDuration
     }
 
-    func play(_ companion: Companion) {
-        companion.mood = VitalStatsCalculator.play(mood: companion.mood)
-        companion.lastUpdated = .now
-        triggerAnimation(\.showPlayAnimation)
-    }
-
-    func walk(_ companion: Companion) {
-        let result = VitalStatsCalculator.walk(hunger: companion.hunger, mood: companion.mood)
-        companion.hunger = result.hunger
-        companion.mood = result.mood
-        companion.lastUpdated = .now
-        triggerAnimation(\.showWalkAnimation)
-    }
-
-    private func triggerAnimation(_ keyPath: ReferenceWritableKeyPath<HomeViewModel, Bool>) {
-        self[keyPath: keyPath] = true
+    func reactToTap() {
+        guard !isFocusActive || phase == .running else { return }
+        motionState = .reacting
         Task {
-            try? await Task.sleep(nanoseconds: 800_000_000)
-            self[keyPath: keyPath] = false
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            if motionState == .reacting {
+                motionState = phase == .running ? .idle : .idle
+            }
+        }
+    }
+
+    private func startTimer(for companion: Companion) {
+        stopTimer()
+        timerTask = Task {
+            while !Task.isCancelled, remainingSeconds > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(FocusSessionConfig.tickInterval * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                if phase == .running {
+                    remainingSeconds = max(0, remainingSeconds - FocusSessionConfig.tickInterval)
+                    if remainingSeconds == 0 {
+                        completeFocus(for: companion)
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    private func stopTimer() {
+        timerTask?.cancel()
+        timerTask = nil
+    }
+
+    private func scheduleJumpToIdle() {
+        Task {
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            if motionState == .jumpingIn {
+                motionState = .idle
+            }
         }
     }
 }
