@@ -141,11 +141,12 @@ final class CompanionRigScene: SKScene {
     }
 
     private func apply(_ transform: CompanionPartTransform) {
+        let torsoY = restY + transform.bodyY
         nodes[.head]?.position = CGPoint(x: 0, y: restY + transform.headY)
-        nodes[.body]?.position = CGPoint(x: 0, y: restY + transform.bodyY)
-        nodes[.tail]?.position = CGPoint(x: 0, y: restY)
-        nodes[.frontLeg]?.position = CGPoint(x: 0, y: restY)
-        nodes[.backLeg]?.position = CGPoint(x: 0, y: restY)
+        nodes[.body]?.position = CGPoint(x: 0, y: torsoY)
+        nodes[.tail]?.position = CGPoint(x: 0, y: torsoY)
+        nodes[.frontLeg]?.position = CGPoint(x: 0, y: torsoY)
+        nodes[.backLeg]?.position = CGPoint(x: 0, y: torsoY)
         nodes[.tail]?.zRotation = transform.tailRotation
         nodes[.frontLeg]?.zRotation = transform.frontLegRotation
         nodes[.backLeg]?.zRotation = transform.backLegRotation

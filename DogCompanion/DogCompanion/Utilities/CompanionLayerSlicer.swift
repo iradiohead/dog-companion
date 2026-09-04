@@ -78,18 +78,18 @@ enum CompanionLayerSlicer {
     ) -> Float {
         switch part {
         case .head:
-            return band(ny, -0.02, 0.0, 0.34, 0.50) * band(nx, 0.10, 0.20, 0.80, 0.90)
+            return band(ny, -0.02, 0.0, 0.36, 0.54) * band(nx, 0.10, 0.20, 0.80, 0.90)
         case .body:
-            return band(ny, 0.20, 0.34, 0.72, 0.90) * band(nx, 0.06, 0.16, 0.84, 0.94)
+            return band(ny, 0.18, 0.32, 0.88, 1.02) * band(nx, 0.04, 0.14, 0.86, 0.96)
         case .frontLeg:
-            return band(ny, 0.56, 0.68, 0.96, 1.05) * band(nx, 0.26, 0.36, 0.64, 0.74)
+            return band(ny, 0.78, 0.86, 0.98, 1.05) * band(nx, 0.30, 0.40, 0.60, 0.70)
         case .backLeg:
-            let vertical = band(ny, 0.52, 0.64, 0.98, 1.05)
-            let left = band(nx, 0.0, 0.04, 0.28, 0.40)
-            let right = band(nx, 0.60, 0.72, 0.96, 1.0)
+            let vertical = band(ny, 0.76, 0.84, 0.98, 1.05)
+            let left = band(nx, 0.0, 0.04, 0.26, 0.40)
+            let right = band(nx, 0.60, 0.74, 0.96, 1.0)
             return min(1.0, vertical * (left + right))
         case .tail:
-            let vertical = band(ny, 0.38, 0.50, 0.86, 0.98)
+            let vertical = band(ny, 0.38, 0.52, 0.86, 0.98)
             if tailOnLeft {
                 return vertical * band(nx, 0.0, 0.0, 0.22, 0.38)
             }
