@@ -1,26 +1,28 @@
-# ADR 0006: Shared paper puppet instead of per-user cutout motion
+# ADR 0006: Owner cutout is scene identity; shared puppet is fallback
 
 ## Status
 
 Accepted
 
-Supersedes the visual pipeline in [ADR 0005](0005-focus-companion-pivot.md): Home Screen Motion is no longer a per-Owner Cutout.
+Supersedes the earlier shared-puppet-as-identity decision in this file. Chair occlusion, front climb, and SpriteKit part motion from that work stay.
 
 ## Decision
 
-Cat On Chair quality comes from one designed character with moving parts, not from swapping AI pose images. Dog Companion keeps a unique Source Photo, but the dog that climbs the chair is a **shared paper-cutout puppet**.
+The Owner must recognize the album dog at a glance on the Home Screen. Motion is the **Owner's sit Cutout**, sliced into head / body / legs / tail and driven in SpriteKit.
 
-**Pipeline:** Source Photo → paper-cutout Comic Portrait → snap coat to a palette → tint bundled SpriteKit parts. No matting, no run/sit/back pose generation.
+**Pipeline:** Source Photo → identity-preserving Comic Portrait (DashScope) → on-device Matting → sit Cutout. Coat palette is sampled but is not the scene identity.
 
-**Puppet:** Bundled PNG layers (fill, line, spots, eye), 3/4-side sitting facing upper-right. Idle breathes, nods, wags, blinks. Climb is the same parts, from in front of the chair up onto the seat.
+**Fallback:** Bundled paper-puppet PNGs appear only when Cutout is missing (legacy Companion, remat in progress, or matting failure).
+
+**Not in v1:** Extra AI sit/run/back pose images, HEVC, Pixi/Live2D/Spine/Rive, Metal mesh, high-frequency flipbook.
 
 **Furniture:** Every seat is a chair/sofa with back, seat, and front layers. The Companion starts in front of the front layer, then sits between back and front.
 
-**Creation:** After Generation, the Owner sees the paper puppet (not only the portrait) and can correct the snapped coat before naming.
+**Creation:** After Generation, the Owner previews **their** sliced Cutout before naming.
 
 ## Consequences
 
-- `coatPaletteRaw` is the Motion identity. `cutoutData` is ignored.
-- Comic Portrait style prompts are paper-cutout, not photoreal/anime polish.
-- Matting remains in the target but is not on the Generation path.
-- Personalization is coat and name, not body silhouette.
+- `cutoutData` is the Motion identity. Shared puppet textures are fallback only.
+- Comic Portrait prompts must keep breed, face, ears, markings, and body — not a generic round paper dog.
+- Matting is on the Generation path again.
+- Personalization is the Cutout silhouette and markings, not a tinted shared body.

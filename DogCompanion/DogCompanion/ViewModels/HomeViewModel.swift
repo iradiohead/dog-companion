@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import UIKit
 
 @Observable
 @MainActor
@@ -89,6 +90,19 @@ final class HomeViewModel {
             if motionState == .reacting {
                 motionState = .idle
             }
+        }
+    }
+
+    func refreshCutoutIfNeeded(for companion: Companion) async {
+        guard CutoutImageProcessor.needsCutoutRefresh(companion.cutoutData),
+              let portraitData = companion.comicPortraitData,
+              let portrait = UIImage(data: portraitData) else {
+            return
+        }
+        do {
+            companion.cutoutData = try await MattingService().extractCutout(from: portrait)
+        } catch {
+            return
         }
     }
 

@@ -3,6 +3,7 @@ import SwiftUI
 struct SceneView: View {
     let scene: SceneBackground
     let furniture: FurnitureItem
+    let sitImage: PlatformImage?
     let palette: CoatPalette
     let motionState: CompanionMotionState
     let isFocusActive: Bool
@@ -125,6 +126,7 @@ struct SceneView: View {
             .zIndex(2)
 
             MotionView(
+                sitImage: sitImage,
                 palette: palette,
                 motionState: motionState,
                 hopDistance: PosePlayback.hopFrontY,

@@ -8,16 +8,16 @@ struct StylePickerView<VM>: View where VM: ComicGenerationFlow & Observable {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 8) {
-                Text("选择纸片风格")
+                Text("选择画风")
                     .font(.title.bold())
-                Text("三种剪纸风，毛色会从照片里取")
+                Text("会尽量保留照片里那只狗的样子")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 32)
 
             if let preview = viewModel.sourceImage {
-                Image(uiImage: preview)
+                Image(platformImage: preview)
                     .resizable()
                     .scaledToFill()
                     .frame(width: 120, height: 120)
@@ -39,7 +39,7 @@ struct StylePickerView<VM>: View where VM: ComicGenerationFlow & Observable {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(style.displayName)
                                     .font(.headline)
-                                Text(style.prompt.components(separatedBy: ",").prefix(2).joined(separator: ", "))
+                                Text(style.shortDescription)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)

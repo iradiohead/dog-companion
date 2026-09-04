@@ -9,7 +9,7 @@ The person using the app to focus with their Companion. No account or login in M
 _Avoid_: User, account, player
 
 **Companion**:
-The Owner's virtual dog. One Companion per Owner in MVP. Has a Comic Portrait, a Coat Palette, and a shared Puppet that lives in a Scene during Focus Sessions.
+The Owner's virtual dog. One Companion per Owner in MVP. Has a Comic Portrait and a Cutout that lives in a Scene during Focus Sessions. Must be recognizable as the Source Photo dog at a glance.
 _Avoid_: Pet, cat, avatar (when referring to the whole entity)
 
 **Source Photo**:
@@ -17,52 +17,52 @@ A photograph of a real dog, taken with the camera or chosen from the photo libra
 _Avoid_: reference image, input photo, original photo
 
 **Comic Portrait**:
-The paper-cutout illustration produced during Generation. Shown in Creation so the Owner recognizes their dog; not the asset that climbs the chair.
+The stylized illustration produced during Generation. Must keep the Source Photo dog's breed, face, ears, markings, and body. Input to Matting.
 _Avoid_: avatar, cartoon image, manga image, 漫画形象
 
 **Coat Palette**:
-One of six snapped coat colors (black, brown, white, orange, gray, spotted) sampled from the Comic Portrait and applied to the shared Puppet.
+One of six snapped coat colors sampled from the Comic Portrait. Stored, but not the Home Screen identity.
 _Avoid_: theme color, tint only
 
 **Puppet**:
-The bundled paper-cutout dog (fill, line, spots, eye layers) rendered in SpriteKit. All Owners share the same parts; only the Coat Palette changes.
-_Avoid_: cutout, sticker, sprite sheet
+Bundled paper-dog PNG layers used only when a Cutout is missing (legacy Companion, remat in progress, or matting failure).
+_Avoid_: shared character, generic dog
 
 **Cutout**:
-Legacy transparent image from matting. Not used for Motion. Ignored if still stored on a Companion.
-_Avoid_: sticker, sprite, matting result, 抠图
+The transparent sit image from Matting. This is the Motion display asset: sliced into head / body / legs / tail and driven in SpriteKit.
+_Avoid_: sticker, sprite, 抠图 (in Owner-facing copy)
 
 **Scene**:
 The composed environment on the Home Screen: a bundled background illustration plus placed Furniture and Decor items.
 _Avoid_: room, stage, environment
 
 **Motion**:
-The Companion's on-screen animation — idle breathing/blink/tail, and climbing onto layered Furniture — driven by the Puppet, not by swapping images.
+The Companion's on-screen animation — idle breathing/tail, and climbing onto layered Furniture — driven by moving parts of the Cutout, not by swapping AI pose images.
 _Avoid_: animation, video, sprite sheet, GIF
 
 **Style Template**:
-One of three preset visual styles applied during Generation. The Owner picks one before Generation.
+One of three preset visual styles applied during Generation. The Owner picks one before Generation. Style must not replace the dog's identity.
 _Avoid_: filter, theme, art style
 
 **Anime Style**:
-A Style Template producing round paper-cutout dogs.
-_Avoid_: manga style, 日系
+A Style Template producing a Japanese-illustration look of the Source Photo dog.
+_Avoid_: manga style, generic chibi mascot
 
 **Flat Cartoon Style**:
-A Style Template producing more geometric paper cutouts.
-_Avoid_: Bitmoji style, 扁平
+A Style Template producing a flat-illustration look of the Source Photo dog.
+_Avoid_: Bitmoji style, generic icon dog
 
 **Watercolor Style**:
-A Style Template producing crayon-textured paper cutouts.
-_Avoid_: painted style, 水彩
+A Style Template producing a watercolor look of the Source Photo dog.
+_Avoid_: painted style that invents a different dog
 
 **Generation**:
-The cloud pipeline that produces a paper-cutout Comic Portrait from a Source Photo and Style Template, then snaps a Coat Palette. The Source Photo is not retained after Generation completes.
+The pipeline that produces a Comic Portrait from a Source Photo and Style Template, then Mattes it into a Cutout. The Source Photo is not retained after Generation completes.
 _Avoid_: rendering, conversion, AI call
 
 **Matting**:
-Legacy background-removal. Not part of Generation anymore.
-_Avoid_: segmentation,抠图, remove background
+On-device background removal that produces the Cutout used on the Home Screen.
+_Avoid_: segmentation, remove background (in Owner-facing copy)
 
 **Focus Session**:
 A timed focus period (Pomodoro) during which the Companion appears in the Scene and keeps the Owner company. Completing a session may yield a Gift.
@@ -81,13 +81,13 @@ A cosmetic Scene item that does not affect Companion Motion (e.g. a plant, pictu
 _Avoid_: decoration, ornament
 
 **Regeneration**:
-Re-running Generation from a new Source Photo, replacing the Comic Portrait and Coat Palette. Limited to 3 times per Companion.
+Re-running Generation from a new Source Photo, replacing the Comic Portrait and Cutout. Limited to 3 times per Companion.
 _Avoid_: refresh, re-roll, redraw
 
 **Creation Flow**:
-The onboarding sequence for a new Companion: pick Source Photo → pick Style Template → wait for Generation → preview the Puppet and correct coat → name the Companion → enter the Home Screen.
+The onboarding sequence for a new Companion: pick Source Photo → pick Style Template → wait for Generation → preview the Owner's Cutout → name the Companion → enter the Home Screen.
 _Avoid_: onboarding, setup wizard
 
 **Home Screen**:
-The main screen when a Companion exists. Displays the Scene with the animated Puppet, Focus Session controls, and Furniture/Decor management.
+The main screen when a Companion exists. Displays the Scene with the animated Cutout, Focus Session controls, and Furniture/Decor management.
 _Avoid_: main view, dashboard

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MotionView: View {
+    let sitImage: PlatformImage?
     let palette: CoatPalette
     let motionState: CompanionMotionState
     var hopDistance: CGFloat = PosePlayback.hopDistance
@@ -39,6 +40,7 @@ struct MotionView: View {
                 .blur(radius: 0.5)
 
             CompanionRigView(
+                image: sitImage,
                 palette: palette,
                 state: CompanionRigMotion.rigState(from: motionState),
                 elapsed: elapsed,

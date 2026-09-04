@@ -16,6 +16,7 @@ final class CreationViewModel: ComicGenerationFlow {
     var sourceImage: UIImage?
     var selectedStyle: StyleTemplate?
     var generatedPortraitData: Data?
+    var generatedCutoutData: Data?
     var selectedPalette: CoatPalette = .brown
     var companionName: String = ""
     var isGenerating = false
@@ -48,6 +49,7 @@ final class CreationViewModel: ComicGenerationFlow {
         do {
             let result = try await generationService.generateCompanionAssets(from: image, style: style)
             generatedPortraitData = result.comicPortraitData
+            generatedCutoutData = result.cutoutData
             selectedPalette = result.coatPalette
             sourceImage = nil
             step = .naming
@@ -66,7 +68,8 @@ final class CreationViewModel: ComicGenerationFlow {
             return
         }
         guard let style = selectedStyle,
-              let portraitData = generatedPortraitData else {
+              let portraitData = generatedPortraitData,
+              let cutoutData = generatedCutoutData else {
             errorMessage = "缺少生成数据，请重新开始"
             step = .photo
             return
@@ -75,6 +78,7 @@ final class CreationViewModel: ComicGenerationFlow {
         let companion = Companion(
             name: trimmed,
             comicPortraitData: portraitData,
+            cutoutData: cutoutData,
             coatPalette: selectedPalette,
             styleTemplate: style
         )
@@ -88,6 +92,7 @@ final class CreationViewModel: ComicGenerationFlow {
         sourceImage = nil
         selectedStyle = nil
         generatedPortraitData = nil
+        generatedCutoutData = nil
         selectedPalette = .brown
         companionName = ""
         isGenerating = false

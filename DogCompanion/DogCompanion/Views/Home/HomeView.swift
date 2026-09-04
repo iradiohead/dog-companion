@@ -10,6 +10,7 @@ struct HomeView: View {
     @State private var showStats = false
     @State private var showTimeline = false
     @State private var selectedTab: HomeTab = .decor
+    @State private var sitImage: PlatformImage?
 
     private var currentScene: SceneBackground {
         SceneCatalog.scene(for: companion.selectedSceneId)
@@ -41,6 +42,7 @@ struct HomeView: View {
                 SceneView(
                     scene: currentScene,
                     furniture: currentFurniture,
+                    sitImage: sitImage,
                     palette: companion.coatPalette,
                     motionState: viewModel.motionState,
                     isFocusActive: viewModel.phase == .running,
@@ -74,6 +76,13 @@ struct HomeView: View {
             GiftRevealView(title: viewModel.pendingGiftTitle ?? "收到礼物啦！") {
                 viewModel.dismissGift()
             }
+        }
+        .task(id: companion.persistentModelID) {
+            await viewModel.refreshCutoutIfNeeded(for: companion)
+            sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
+        }
+        .onChange(of: companion.cutoutData, initial: true) { _, data in
+            sitImage = data.flatMap { PlatformImage.from(data: $0) }
         }
     }
 
@@ -123,8 +132,6 @@ private struct SettingsSheet: View {
                 Section("伙伴") {
                     LabeledContent("名字", value: companion.name)
                     LabeledContent("风格", value: companion.styleTemplate.displayName)
-                    LabeledContent("毛色", value: companion.coatPalette.displayName)
-                    coatPicker
                 }
                 Section {
                     Button("换造型") {
@@ -142,14 +149,6 @@ private struct SettingsSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完成") { dismiss() }
                 }
-            }
-        }
-    }
-
-    private var coatPicker: some View {
-        Picker("更换毛色", selection: $companion.coatPaletteRaw) {
-            ForEach(CoatPalette.allCases) { palette in
-                Text(palette.displayName).tag(palette.rawValue)
             }
         }
     }

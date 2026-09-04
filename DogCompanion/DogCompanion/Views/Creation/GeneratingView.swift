@@ -6,9 +6,9 @@ struct GeneratingView<VM>: View where VM: ComicGenerationFlow & Observable {
     var title: String = "正在生成你的专注伙伴"
 
     private let messages = [
-        "正在分析毛色花纹…",
-        "正在画成纸片狗…",
-        "正在给共用木偶上色…",
+        "正在认出它的样子…",
+        "正在画成你的狗…",
+        "正在抠出透明图层…",
         "马上就好啦…"
     ]
 

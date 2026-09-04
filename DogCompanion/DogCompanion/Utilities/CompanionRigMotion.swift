@@ -26,7 +26,7 @@ struct CompanionPartTransform: Equatable {
     static let identity = CompanionPartTransform()
 }
 
-/// Layered PNG puppet. Idle and the climb onto the mat both move head, body, legs, and tail.
+/// Sliced owner cutout, or bundled puppet fallback. Idle and climb both move head, body, legs, and tail.
 enum CompanionRigMotion {
     static func transform(state: CompanionRigState, time: TimeInterval) -> CompanionPartTransform {
         switch state {
