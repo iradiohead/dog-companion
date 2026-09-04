@@ -7,7 +7,7 @@ import SwiftData
 final class HomeViewModel {
     private(set) var phase: FocusSessionPhase = .idle
     private(set) var remainingSeconds: TimeInterval = FocusSessionConfig.defaultDuration
-    private(set) var motionState: CompanionMotionState = .idle
+    private(set) var motionState: CompanionMotionState = .away
     private(set) var pendingGiftTitle: String?
     private(set) var showGiftReveal = false
 
@@ -28,8 +28,8 @@ final class HomeViewModel {
         guard phase == .idle || phase == .completed else { return }
         remainingSeconds = FocusSessionConfig.defaultDuration
         phase = .running
-        motionState = .jumpingIn
-        scheduleJumpToIdle()
+        motionState = .runningIn
+        scheduleRunInToSit()
         startTimer(for: companion)
     }
 
@@ -49,7 +49,7 @@ final class HomeViewModel {
         stopTimer()
         phase = .idle
         remainingSeconds = FocusSessionConfig.defaultDuration
-        motionState = .idle
+        motionState = .away
     }
 
     func completeFocus(for companion: Companion) {
@@ -78,15 +78,16 @@ final class HomeViewModel {
         showGiftReveal = false
         phase = .idle
         remainingSeconds = FocusSessionConfig.defaultDuration
+        motionState = .away
     }
 
     func reactToTap() {
-        guard !isFocusActive || phase == .running else { return }
+        guard motionState == .idle || motionState == .runningIn else { return }
         motionState = .reacting
         Task {
             try? await Task.sleep(nanoseconds: 900_000_000)
             if motionState == .reacting {
-                motionState = phase == .running ? .idle : .idle
+                motionState = .idle
             }
         }
     }
@@ -128,10 +129,10 @@ final class HomeViewModel {
         timerTask = nil
     }
 
-    private func scheduleJumpToIdle() {
+    private func scheduleRunInToSit() {
         Task {
-            try? await Task.sleep(nanoseconds: 900_000_000)
-            if motionState == .jumpingIn {
+            try? await Task.sleep(nanoseconds: 1_550_000_000)
+            if motionState == .runningIn {
                 motionState = .idle
             }
         }

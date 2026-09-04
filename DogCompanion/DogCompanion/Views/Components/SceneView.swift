@@ -92,13 +92,16 @@ struct SceneView: View {
                             motionState: motionState,
                             onTap: onCompanionTap
                         )
-                        .frame(width: 150, height: 150)
+                        .frame(width: 150, height: 168)
                         .padding(.bottom, 8)
+                        .zIndex(2)
                     }
+                    .frame(width: 190)
 
                     StudyDeskView(topColor: HandDrawnPalette.wood)
                         .scaleEffect(1.05)
                         .padding(.bottom, 2)
+                        .zIndex(1)
                 }
 
                 Spacer(minLength: 12)

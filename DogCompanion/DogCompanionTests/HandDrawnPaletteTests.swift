@@ -31,4 +31,10 @@ final class HandDrawnPaletteTests: XCTestCase {
         _ = HandDrawnPalette.ink.lighter(by: 0.1)
         _ = HandDrawnPalette.wood.darker(by: 0.1)
     }
+
+    func testCompanionMotionStatesExist() {
+        let states: [CompanionMotionState] = [.away, .runningIn, .idle, .reacting, .celebrating]
+        XCTAssertEqual(states.count, 5)
+        XCTAssertNotEqual(CompanionMotionState.away, .runningIn)
+    }
 }
