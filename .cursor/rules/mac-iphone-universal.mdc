@@ -1,0 +1,64 @@
+---
+description: Every change must work on both iPhone and MacBook (Mac Catalyst)
+alwaysApply: true
+---
+
+# Mac + iPhone Universal
+
+Dog Companion ships as **one codebase** for **iPhone** and **MacBook (Mac Catalyst)**. Every UI, feature, and bug fix must work on both — not just the platform you are testing on.
+
+## Project setup
+
+- `SUPPORTS_MACCATALYST = YES` in Xcode target — do not remove
+- Mac destination: **My Mac (Mac Catalyst)**
+- iOS destination: iPhone / Simulator
+- Shared minimum: iOS 17 / macOS 14 (Catalyst)
+
+## Required patterns
+
+### Images
+
+- Use `PlatformImage` (typealias for `UIImage` on Catalyst/iOS), never raw `UIImage` in Views
+- Load with `PlatformImage.from(data:)`
+- Display with `Image(platformImage:)`
+
+### Platform checks
+
+- Use `PlatformCapabilities.isMac` for copy/layout differences
+- Use `PlatformCapabilities.isCameraAvailable` before showing camera UI
+- Wrap camera / `UIImagePickerController` in `#if !targetEnvironment(macCatalyst)`
+
+### UI layout
+
+- Prefer `GeometryReader` and relative sizing (`geo.size.height * 0.28`) over fixed heights that only fit iPhone
+- Full-screen scenes use `.ignoresSafeArea()` on background only; keep controls in safe area with padding
+- Mac: `DogCompanionApp` uses `.defaultSize(width: 420, height: 780)` — new screens should look good in this window and on iPhone full screen
+- Avoid `NavigationStack` large titles if they waste space on Mac; floating overlays (like HomeView top bar) are preferred for the focus room
+
+### APIs
+
+| API | iPhone | Mac Catalyst | Pattern |
+|-----|--------|--------------|---------|
+| PhotosPicker | ✅ | ✅ | Use for all photo picking |
+| Camera | ✅ | ❌ | Guard with `#if !targetEnvironment(macCatalyst)` |
+| Vision matting | ✅ | ✅ | Simulator needs CPU fallback (already in MattingService) |
+| SwiftData | ✅ | ✅ | No platform guard needed |
+
+### Do not
+
+- Add iOS-only frameworks without Catalyst guards (HealthKit widgets, etc.)
+- Hardcode "拍照" as the only photo entry on Mac
+- Break Mac Catalyst build to fix iPhone-only issues — fix both
+
+## Before finishing any task
+
+1. Mentally verify the change on **iPhone** (portrait) and **Mac Catalyst** (resizable window)
+2. If you added UIKit usage, confirm Catalyst compiles
+3. If you added a new View file, add it to `project.pbxproj`
+4. Commit and push (see `auto-push-github` rule)
+
+## Key files
+
+- `Utilities/PlatformImage.swift` — image type + `PlatformCapabilities`
+- `Views/Components/SharedComponents.swift` — camera picker (iOS only)
+- `Views/Creation/PhotoPickerView.swift` — platform-aware photo entry

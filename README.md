@@ -47,6 +47,8 @@ cp DogCompanion/DogCompanion/Secrets.plist.example DogCompanion/DogCompanion/Sec
 
 **MacBook：** 在 Xcode 顶部设备菜单选择 **My Mac (Mac Catalyst)**，然后 `Cmd + R`。Mac 版从相册/文件选图，无拍照按钮。
 
+> **双端通用：** 本项目同时支持 iPhone 与 Mac Catalyst，每次改动需保证两端都能编译运行。约定见 `.cursor/rules/mac-iphone-universal.mdc`。
+
 > **注意**：数据模型已更新。若从旧版升级，请删除 App 后重新安装。
 
 ## 核心功能
