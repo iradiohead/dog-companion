@@ -35,7 +35,7 @@ struct SceneView: View {
                     motionState: motionState,
                     runDistance: restFrame == .zero
                         ? PosePlayback.runDistance
-                        : max(140, restFrame.midX - 36),
+                        : max(96, restFrame.midX - 72),
                     onTap: onCompanionTap
                 )
                 .frame(width: 150, height: 168)
