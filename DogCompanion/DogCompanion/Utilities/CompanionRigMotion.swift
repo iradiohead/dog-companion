@@ -26,7 +26,7 @@ struct CompanionPartTransform: Equatable {
     static let identity = CompanionPartTransform()
 }
 
-/// Sliced owner cutout, or bundled puppet fallback. Idle and climb both move head, body, legs, and tail.
+/// Sliced owner cutout, or bundled puppet fallback. Idle sits on the floor; running-in gallops in from the side.
 enum CompanionRigMotion {
     static func transform(state: CompanionRigState, time: TimeInterval) -> CompanionPartTransform {
         switch state {
@@ -90,12 +90,12 @@ enum CompanionRigMotion {
         }
     }
 
-    static func rigState(from motion: CompanionMotionState, elapsed _: TimeInterval = 0) -> CompanionRigState {
+    static func rigState(from motion: CompanionMotionState, elapsed: TimeInterval = 0) -> CompanionRigState {
         switch motion {
         case .away, .idle, .reacting, .celebrating:
             return .sitting
         case .runningIn:
-            return .jumping
+            return elapsed < PosePlayback.runDuration ? .running : .sitting
         }
     }
 

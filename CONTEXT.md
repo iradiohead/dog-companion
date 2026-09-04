@@ -37,7 +37,7 @@ The composed environment on the Home Screen: a bundled background illustration p
 _Avoid_: room, stage, environment
 
 **Motion**:
-The Companion's on-screen animation — idle breathing/tail, and climbing onto layered Furniture — driven by moving parts of the Cutout, not by swapping AI pose images.
+The Companion's on-screen animation — idle breathing/tail on the rug, and running in from the side when a Focus Session starts — driven by moving parts of the Cutout, not by swapping AI pose images.
 _Avoid_: animation, video, sprite sheet, GIF
 
 **Style Template**:
@@ -73,7 +73,7 @@ A collectible item the Companion leaves after a completed Focus Session. In MVP,
 _Avoid_: reward, prize, loot
 
 **Furniture**:
-A placeable Scene item the Companion climbs onto. Each item is a chair or sofa with back, seat, and front layers. Some items are unlocked by completing Focus Sessions.
+A placeable Scene item. The live room is a rug with a table, floor lamp, and food bowl; the Companion sits on the rug.
 _Avoid_: decor, prop, item
 
 **Decor**:

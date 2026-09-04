@@ -4,7 +4,7 @@ struct MotionView: View {
     let sitImage: PlatformImage?
     let palette: CoatPalette
     let motionState: CompanionMotionState
-    var hopDistance: CGFloat = PosePlayback.hopDistance
+    var runDistance: CGFloat = PosePlayback.runDistance
     let onTap: () -> Void
 
     @State private var motionStarted = Date()
@@ -15,10 +15,9 @@ struct MotionView: View {
             let snapshot = PosePlayback.snapshot(
                 state: motionState,
                 elapsed: elapsed,
-                runDistance: hopDistance
+                runDistance: runDistance
             )
             character(snapshot, elapsed: elapsed)
-                .padding(.bottom, PosePlayback.hopFrontY)
                 .transaction { $0.animation = nil }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -42,7 +41,7 @@ struct MotionView: View {
             CompanionRigView(
                 image: sitImage,
                 palette: palette,
-                state: CompanionRigMotion.rigState(from: motionState),
+                state: CompanionRigMotion.rigState(from: motionState, elapsed: elapsed),
                 elapsed: elapsed,
                 isPaused: motionState == .away
             )

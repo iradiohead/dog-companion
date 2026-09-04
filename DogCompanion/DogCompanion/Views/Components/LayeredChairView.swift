@@ -17,24 +17,8 @@ struct LayeredChairView: View {
             seatLayer.opacity(layer == .seat ? 1 : 0)
             frontLayer.opacity(layer == .front ? 1 : 0)
         }
-        .frame(width: width, height: 148)
+        .frame(width: silhouette.bodyWidth, height: 148)
         .allowsHitTesting(false)
-    }
-
-    private var width: CGFloat {
-        switch silhouette {
-        case .armchair: return 176
-        case .roundBack: return 168
-        case .sofa: return 198
-        }
-    }
-
-    private var backWidth: CGFloat {
-        switch silhouette {
-        case .armchair: return 148
-        case .roundBack: return 132
-        case .sofa: return 176
-        }
     }
 
     private var backLayer: some View {
@@ -48,32 +32,48 @@ struct LayeredChairView: View {
                 WobblyRoundedRectangle(cornerRadius: silhouette == .roundBack ? 52 : 24, wobble: 2.4, seed: 51)
                     .stroke(HandDrawnPalette.ink.opacity(0.38), lineWidth: 2.2)
             }
-            .frame(width: backWidth, height: silhouette == .sofa ? 92 : 86)
+            .frame(width: silhouette.backWidth, height: silhouette == .sofa ? 88 : 86)
             .padding(.bottom, 42)
     }
 
     private var seatLayer: some View {
         VStack(spacing: 0) {
-            WobblyRoundedRectangle(cornerRadius: 22, wobble: 2.2, seed: 60)
-                .fill(color)
-                .overlay {
-                    WatercolorPigment(color: color, highlight: color.lighter(by: 0.12))
-                        .clipShape(WobblyRoundedRectangle(cornerRadius: 22, wobble: 2.2, seed: 60))
-                }
-                .overlay {
-                    WobblyRoundedRectangle(cornerRadius: 20, wobble: 2.0, seed: 61)
-                        .stroke(HandDrawnPalette.ink.opacity(0.32), lineWidth: 1.8)
-                }
-                .frame(width: backWidth + 8, height: 36)
+            cushions
+                .frame(width: silhouette.seatWidth, height: 36)
 
-            HStack(spacing: silhouette == .sofa ? 48 : 40) {
-                chairLeg
-                chairLeg
-                if silhouette == .sofa { chairLeg }
+            HStack(spacing: silhouette == .sofa ? 58 : 40) {
+                ForEach(0..<silhouette.legCount, id: \.self) { _ in
+                    chairLeg
+                }
             }
             .offset(y: -2)
         }
         .padding(.bottom, 2)
+    }
+
+    @ViewBuilder
+    private var cushions: some View {
+        if silhouette == .sofa {
+            HStack(spacing: 6) {
+                seatCushion
+                seatCushion
+            }
+        } else {
+            seatCushion
+        }
+    }
+
+    private var seatCushion: some View {
+        WobblyRoundedRectangle(cornerRadius: 22, wobble: 2.2, seed: 60)
+            .fill(color)
+            .overlay {
+                WatercolorPigment(color: color, highlight: color.lighter(by: 0.12))
+                    .clipShape(WobblyRoundedRectangle(cornerRadius: 22, wobble: 2.2, seed: 60))
+            }
+            .overlay {
+                WobblyRoundedRectangle(cornerRadius: 20, wobble: 2.0, seed: 61)
+                    .stroke(HandDrawnPalette.ink.opacity(0.32), lineWidth: 1.8)
+            }
     }
 
     private var frontLayer: some View {
@@ -84,7 +84,7 @@ struct LayeredChairView: View {
                     WobblyRoundedRectangle(cornerRadius: 16, wobble: 1.6, seed: 71)
                         .stroke(HandDrawnPalette.ink.opacity(0.28), lineWidth: 1.6)
                 }
-                .frame(width: backWidth - 10, height: 18)
+                .frame(width: silhouette.seatWidth - 16, height: 18)
                 .padding(.bottom, 28)
 
             if silhouette != .roundBack {
@@ -93,7 +93,7 @@ struct LayeredChairView: View {
                     Spacer()
                     arm
                 }
-                .frame(width: backWidth + 18)
+                .frame(width: silhouette.bodyWidth - 8)
                 .padding(.bottom, 34)
             }
         }

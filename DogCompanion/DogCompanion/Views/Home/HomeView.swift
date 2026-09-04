@@ -16,10 +16,6 @@ struct HomeView: View {
         SceneCatalog.scene(for: companion.selectedSceneId)
     }
 
-    private var currentFurniture: FurnitureItem {
-        SceneCatalog.furniture(for: companion.selectedFurnitureId)
-    }
-
     var body: some View {
         ZStack {
             PaperBackgroundView()
@@ -39,7 +35,6 @@ struct HomeView: View {
 
                 SceneView(
                     scene: currentScene,
-                    furniture: currentFurniture,
                     sitImage: sitImage,
                     palette: companion.coatPalette,
                     motionState: viewModel.motionState,

@@ -38,7 +38,7 @@ final class CompanionRigTests: XCTestCase {
     }
 
     func testJumpSettlesToRest() {
-        let pose = CompanionRigMotion.transform(state: .jumping, time: PosePlayback.runningInDuration)
+        let pose = CompanionRigMotion.transform(state: .jumping, time: PosePlayback.climbDuration)
         XCTAssertEqual(pose.headY, 0, accuracy: 0.2)
         XCTAssertEqual(pose.frontLegRotation, 0, accuracy: 0.05)
         XCTAssertEqual(pose.bodyScaleX, 1, accuracy: 0.05)
@@ -55,12 +55,12 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(abs(pose.frontLegRotation - pose.backLegRotation), 0.1)
     }
 
-    func testIdleMapsToSittingAndClimbUsesJumping() {
+    func testIdleMapsToSittingAndRunInUsesRunning() {
         XCTAssertEqual(CompanionRigMotion.rigState(from: .idle), .sitting)
-        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .jumping)
+        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .running)
         XCTAssertEqual(
-            CompanionRigMotion.rigState(from: .runningIn, elapsed: PosePlayback.jumpStart),
-            .jumping
+            CompanionRigMotion.rigState(from: .runningIn, elapsed: PosePlayback.runDuration),
+            .sitting
         )
         XCTAssertEqual(CompanionRigMotion.rigState(from: .celebrating), .sitting)
     }

@@ -409,6 +409,123 @@ struct DogMatView: View {
     }
 }
 
+struct PrototypeRugView: View {
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let height = max(geo.size.height, 1)
+            ZStack {
+                fringe(width: width)
+
+                WobblyRoundedRectangle(cornerRadius: height * 0.28, wobble: 3.2, seed: 44)
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                color.lighter(by: 0.12),
+                                color,
+                                color.darker(by: 0.10)
+                            ],
+                            center: UnitPoint(x: 0.42, y: 0.38),
+                            startRadius: 10,
+                            endRadius: max(width, height) * 0.72
+                        )
+                    )
+                    .overlay {
+                        WatercolorPigment(color: color, highlight: color.lighter(by: 0.18))
+                            .clipShape(WobblyRoundedRectangle(cornerRadius: height * 0.28, wobble: 3.2, seed: 44))
+                    }
+                    .overlay {
+                        PencilHatchOverlay(color: color.darker(by: 0.28), opacity: 0.12, density: 18, angle: 12)
+                            .clipShape(WobblyRoundedRectangle(cornerRadius: height * 0.28, wobble: 3.2, seed: 44))
+                    }
+                    .overlay {
+                        WobblyRoundedRectangle(cornerRadius: height * 0.22, wobble: 2.4, seed: 45)
+                            .stroke(HandDrawnPalette.ink.opacity(0.14), lineWidth: 4)
+                            .padding(height * 0.12)
+                    }
+                    .overlay {
+                        WobblyRoundedRectangle(cornerRadius: height * 0.26, wobble: 2.8, seed: 46)
+                            .stroke(HandDrawnPalette.ink.opacity(0.34), lineWidth: 1.7)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+            }
+        }
+        .handDrawnShadow(radius: 8, y: 5)
+    }
+
+    private func fringe(width: CGFloat) -> some View {
+        Canvas { context, size in
+            let count = max(18, Int(width / 14))
+            for index in 0..<count {
+                let x = size.width * (0.06 + CGFloat(index) / CGFloat(count) * 0.88)
+                var top = Path()
+                top.move(to: CGPoint(x: x, y: 4))
+                top.addLine(to: CGPoint(x: x + 1.2, y: 0))
+                context.stroke(top, with: .color(HandDrawnPalette.ink.opacity(0.22)), lineWidth: 1.1)
+
+                var bottom = Path()
+                bottom.move(to: CGPoint(x: x, y: size.height - 4))
+                bottom.addLine(to: CGPoint(x: x - 1.1, y: size.height))
+                context.stroke(bottom, with: .color(HandDrawnPalette.ink.opacity(0.22)), lineWidth: 1.1)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+struct FoodBowlView: View {
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            WobblyEllipse(wobble: 1.1, seed: 90)
+                .fill(HandDrawnPalette.ink.opacity(0.12))
+                .frame(width: 58, height: 12)
+                .offset(y: 2)
+
+            WobblyEllipse(wobble: 1.6, seed: 91)
+                .fill(Color(red: 0.86, green: 0.78, blue: 0.68))
+                .overlay {
+                    WatercolorPigment(
+                        color: Color(red: 0.86, green: 0.78, blue: 0.68),
+                        highlight: Color(red: 0.96, green: 0.90, blue: 0.82)
+                    )
+                    .clipShape(WobblyEllipse(wobble: 1.6, seed: 91))
+                }
+                .overlay {
+                    WobblyEllipse(wobble: 1.8, seed: 92)
+                        .stroke(HandDrawnPalette.ink.opacity(0.38), lineWidth: 1.5)
+                }
+                .frame(width: 54, height: 22)
+
+            WobblyEllipse(wobble: 1.4, seed: 93)
+                .fill(Color(red: 0.62, green: 0.42, blue: 0.28))
+                .overlay {
+                    WobblyEllipse(wobble: 1.2, seed: 94)
+                        .stroke(HandDrawnPalette.ink.opacity(0.22), lineWidth: 1)
+                }
+                .frame(width: 34, height: 10)
+                .offset(y: -6)
+
+            HStack(spacing: 4) {
+                Circle()
+                    .fill(Color(red: 0.78, green: 0.52, blue: 0.28))
+                    .frame(width: 5, height: 5)
+                Circle()
+                    .fill(Color(red: 0.72, green: 0.46, blue: 0.24))
+                    .frame(width: 4, height: 4)
+                Circle()
+                    .fill(Color(red: 0.82, green: 0.58, blue: 0.32))
+                    .frame(width: 5, height: 5)
+            }
+            .offset(y: -6)
+        }
+        .frame(width: 62, height: 28)
+        .handDrawnShadow(radius: 3, y: 2)
+    }
+}
+
 struct ArmChairView: View {
     let seatColor: Color
 

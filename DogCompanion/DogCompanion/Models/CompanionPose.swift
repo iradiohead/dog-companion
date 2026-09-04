@@ -80,10 +80,10 @@ struct PoseTravel: Equatable {
     var occlusion: CompanionOcclusion = .seated
 
     static let hidden = PoseTravel(
-        x: 0,
-        y: PosePlayback.hopFrontY,
-        scaleX: 1.08,
-        scaleY: 1.08,
+        x: -PosePlayback.runDistance,
+        y: 0,
+        scaleX: 1.04,
+        scaleY: 1.04,
         rotationDegrees: 0,
         opacity: 0,
         shadowScale: 0.85,
@@ -112,22 +112,30 @@ struct PoseSnapshot: Equatable {
 }
 
 enum PosePlayback {
+    static let runDuration: TimeInterval = 0.92
+    static let brakeDuration: TimeInterval = 0.20
+    static let settleDuration: TimeInterval = 0.14
+    static let runDistance: CGFloat = 168
+    static var hopDistance: CGFloat { runDistance }
+
     static let crouchDuration: TimeInterval = 0.18
     static let jumpDuration: TimeInterval = 0.70
     static let landDuration: TimeInterval = 0.18
-    static let settleDuration: TimeInterval = 0.14
-    static let hopFrontY: CGFloat = 68
-    static var hopDistance: CGFloat { hopFrontY }
-    static let jumpHeight: CGFloat = 58
-    static var runDistance: CGFloat { hopFrontY }
+    static let hopFrontY: CGFloat = 0
+    static let jumpHeight: CGFloat = 22
 
     static var runningInDuration: TimeInterval {
+        runDuration + brakeDuration + settleDuration
+    }
+
+    static var climbDuration: TimeInterval {
         crouchDuration + jumpDuration + landDuration + settleDuration
     }
 
     static var crouchStart: TimeInterval { 0 }
     static var jumpStart: TimeInterval { crouchDuration }
     static var landStart: TimeInterval { jumpStart + jumpDuration }
+    static var brakeStart: TimeInterval { runDuration }
 
     static func occlusion(state: CompanionMotionState, elapsed: TimeInterval) -> CompanionOcclusion {
         snapshot(state: state, elapsed: elapsed).travel.occlusion
@@ -140,7 +148,7 @@ enum PosePlayback {
     static func travel(
         state: CompanionMotionState,
         elapsed: TimeInterval,
-        runDistance distance: CGFloat = Self.hopFrontY
+        runDistance distance: CGFloat = Self.runDistance
     ) -> PoseTravel {
         snapshot(state: state, elapsed: elapsed, runDistance: distance).travel
     }
@@ -148,15 +156,15 @@ enum PosePlayback {
     static func snapshot(
         state: CompanionMotionState,
         elapsed: TimeInterval,
-        runDistance distance: CGFloat = Self.hopFrontY
+        runDistance distance: CGFloat = Self.runDistance
     ) -> PoseSnapshot {
         switch state {
         case .away:
             var travel = PoseTravel.hidden
-            travel.y = distance
+            travel.x = -distance
             return PoseSnapshot(pose: .sit, travel: travel)
         case .runningIn:
-            return hopOnSnapshot(elapsed: elapsed, distance: distance)
+            return runInSnapshot(elapsed: elapsed, distance: distance)
         case .idle:
             return idleSnapshot(elapsed: elapsed)
         case .reacting:
@@ -166,73 +174,45 @@ enum PosePlayback {
         }
     }
 
-    private static func hopOnSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
-        let startY = distance
-        let crouchEnd = crouchDuration
-        let jumpEnd = crouchEnd + jumpDuration
-        let landEnd = jumpEnd + landDuration
+    private static func runInSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
+        let runEnd = runDuration
+        let brakeEnd = runEnd + brakeDuration
         var travel = PoseTravel.rest()
-        travel.opacity = min(1.0, elapsed / 0.12)
-        travel.occlusion = elapsed < jumpStart + jumpDuration * 0.52 ? .inFront : .seated
+        travel.opacity = min(1.0, elapsed / 0.10)
+        travel.occlusion = .seated
 
-        if elapsed <= crouchEnd {
-            let crouch = smoothstep(elapsed / crouchDuration)
-            travel.x = 0
-            travel.y = startY
-            travel.scaleX = cg(lerp(1.04, 1.10, crouch))
-            travel.scaleY = cg(lerp(1.04, 0.92, crouch))
-            travel.rotationDegrees = cg(lerp(0, 4.0, crouch))
-            travel.shadowScale = cg(lerp(1.12, 1.22, crouch))
+        if elapsed <= runEnd {
+            let t = unit(elapsed / runDuration)
+            let eased = 1.0 - pow(1.0 - t, 1.35)
+            let bounce = abs(sin(elapsed * 16.0))
+            travel.x = -distance * cg(1.0 - eased)
+            travel.y = -cg(bounce * 7.0)
+            travel.scaleX = cg(1.05)
+            travel.scaleY = cg(0.94 + 0.08 * bounce)
+            travel.rotationDegrees = cg(-5.0 + sin(elapsed * 16.0) * 3.5)
+            travel.shadowScale = cg(1.12 - bounce * 0.18)
+            travel.shadowOpacity = 0.18
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
-        if elapsed <= jumpEnd {
-            let t = unit((elapsed - crouchEnd) / jumpDuration)
-            let arc = sin(Double.pi * t)
-            travel.x = 0
-            travel.y = startY * cg(1.0 - t) - jumpHeight * cg(arc)
-            if t < 0.28 {
-                let u = smoothstep(t / 0.28)
-                travel.scaleX = cg(lerp(1.10, 0.97, u))
-                travel.scaleY = cg(lerp(0.92, 1.08, u))
-                travel.rotationDegrees = cg(lerp(4.0, -6.0, u))
-            } else {
-                let u = smoothstep((t - 0.28) / 0.72)
-                travel.scaleX = cg(lerp(0.97, 1.06, u))
-                travel.scaleY = cg(lerp(1.08, 0.94, u))
-                travel.rotationDegrees = cg(lerp(-6.0, 3.0, u))
-            }
-            travel.shadowScale = cg(lerp(1.22, 1.0, t) - 0.28 * arc)
-            travel.shadowOpacity = 0.16 * (0.4 + 0.6 * (1.0 - arc))
-            return PoseSnapshot(pose: .sit, travel: travel)
-        }
-
-        if elapsed <= landEnd {
-            let t = unit((elapsed - jumpEnd) / landDuration)
+        if elapsed <= brakeEnd {
+            let t = unit((elapsed - runEnd) / brakeDuration)
             travel.x = 0
             travel.y = 0
-            if t < 0.45 {
-                let u = smoothstep(t / 0.45)
-                travel.scaleX = cg(lerp(1.06, 1.10, u))
-                travel.scaleY = cg(lerp(0.94, 0.88, u))
-                travel.rotationDegrees = cg(lerp(3.0, 2.0, u))
-            } else {
-                let u = smoothstep((t - 0.45) / 0.55)
-                travel.scaleX = cg(lerp(1.10, 1.02, u))
-                travel.scaleY = cg(lerp(0.88, 0.98, u))
-                travel.rotationDegrees = cg(lerp(2.0, 0.5, u))
-            }
-            travel.shadowScale = cg(lerp(1.14, 1.04, t))
+            travel.scaleX = cg(lerp(1.06, 1.10, t))
+            travel.scaleY = cg(lerp(0.96, 0.88, t))
+            travel.rotationDegrees = cg(lerp(-2.0, 4.0, t))
+            travel.shadowScale = cg(lerp(1.08, 1.16, t))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
-        let settle = smoothstep(unit((elapsed - landEnd) / settleDuration))
+        let settle = smoothstep(unit((elapsed - brakeEnd) / settleDuration))
         return PoseSnapshot(
             pose: .sit,
             travel: .rest(
-                scaleX: cg(lerp(1.02, 1.0, settle)),
-                scaleY: cg(lerp(0.98, 1.0, settle)),
-                rotation: cg(lerp(0.5, 0, settle))
+                scaleX: cg(lerp(1.10, 1.0, settle)),
+                scaleY: cg(lerp(0.88, 1.0, settle)),
+                rotation: cg(lerp(4.0, 0, settle))
             )
         )
     }

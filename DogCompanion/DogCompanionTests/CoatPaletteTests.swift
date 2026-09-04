@@ -36,6 +36,9 @@ final class CoatPaletteTests: XCTestCase {
         XCTAssertEqual(SceneCatalog.defaultFurniture.silhouette, .armchair)
         XCTAssertTrue(SceneCatalog.furniture.contains { $0.silhouette == .roundBack })
         XCTAssertTrue(SceneCatalog.furniture.contains { $0.silhouette == .sofa })
+        XCTAssertGreaterThan(ChairSilhouette.sofa.bodyWidth, 280)
+        XCTAssertGreaterThan(ChairSilhouette.sofa.bodyWidth, ChairSilhouette.armchair.bodyWidth)
+        XCTAssertEqual(ChairSilhouette.sofa.legCount, 4)
     }
 
     private static func solid(_ color: UIColor) -> UIImage {

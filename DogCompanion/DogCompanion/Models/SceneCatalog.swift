@@ -26,6 +26,29 @@ enum ChairSilhouette: String, Hashable {
     case armchair
     case roundBack
     case sofa
+
+    var bodyWidth: CGFloat {
+        switch self {
+        case .armchair: return 216
+        case .roundBack: return 196
+        case .sofa: return 300
+        }
+    }
+
+    var backWidth: CGFloat {
+        switch self {
+        case .armchair: return 184
+        case .roundBack: return 158
+        case .sofa: return 264
+        }
+    }
+
+    var seatWidth: CGFloat { backWidth + (self == .sofa ? 18 : 10) }
+
+    var legCount: Int { self == .sofa ? 4 : 2 }
+
+    /// Distance from the floor to the top of the seat cushion.
+    var seatTop: CGFloat { 64 }
 }
 
 enum SceneCatalog {
