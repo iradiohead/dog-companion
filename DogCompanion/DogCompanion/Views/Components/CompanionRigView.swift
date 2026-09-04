@@ -8,6 +8,7 @@ struct CompanionRigView: UIViewRepresentable {
     var state: CompanionRigState
     var elapsed: TimeInterval
     var isPaused: Bool
+    var motion: CompanionMotionState? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -23,12 +24,14 @@ struct CompanionRigView: UIViewRepresentable {
         view.preferredFramesPerSecond = 60
         view.layer.isOpaque = false
         view.clipsToBounds = false
+        view.layer.masksToBounds = false
 
         let scene = context.coordinator.scene
         scene.image = image
         scene.palette = palette
         scene.rigState = state
         scene.elapsed = elapsed
+        scene.motion = motion
         view.presentScene(scene)
         view.isPaused = isPaused
         return view
@@ -39,6 +42,7 @@ struct CompanionRigView: UIViewRepresentable {
         context.coordinator.scene.palette = palette
         context.coordinator.scene.rigState = state
         context.coordinator.scene.elapsed = elapsed
+        context.coordinator.scene.motion = motion
         context.coordinator.scene.applyCurrent()
         if view.isPaused != isPaused {
             view.isPaused = isPaused
@@ -64,6 +68,7 @@ final class CompanionRigScene: SKScene {
 
     var rigState: CompanionRigState = .sitting
     var elapsed: TimeInterval = 0
+    var motion: CompanionMotionState?
     var image: PlatformImage? {
         didSet {
             guard !Self.isSameImage(image, lastImage) else { return }
@@ -109,7 +114,11 @@ final class CompanionRigScene: SKScene {
     }
 
     func applyCurrent() {
-        apply(CompanionRigMotion.transform(state: rigState, time: elapsed))
+        if let motion {
+            apply(CompanionRigMotion.transform(motion: motion, elapsed: elapsed))
+        } else {
+            apply(CompanionRigMotion.transform(state: rigState, time: elapsed))
+        }
     }
 
     private func rebuild() {
@@ -195,8 +204,8 @@ final class CompanionRigScene: SKScene {
         if usesOwnerCutout, let image {
             let imageSize = image.size
             guard imageSize.width > 0, imageSize.height > 0 else { return }
-            let fitWidth = max(1, size.width * 0.86)
-            let fitHeight = max(1, size.height * 0.92)
+            let fitWidth = max(1, size.width * 0.78)
+            let fitHeight = max(1, size.height * 0.90)
             let scale = min(fitWidth / imageSize.width, fitHeight / imageSize.height)
             fittedSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
             for (part, node) in cutoutNodes {

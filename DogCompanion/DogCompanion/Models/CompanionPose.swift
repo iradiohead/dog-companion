@@ -176,7 +176,6 @@ enum PosePlayback {
 
     private static func runInSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
         let runEnd = runDuration
-        let brakeEnd = runEnd + brakeDuration
         var travel = PoseTravel.rest()
         travel.opacity = min(1.0, elapsed / 0.10)
         travel.occlusion = .seated
@@ -184,37 +183,28 @@ enum PosePlayback {
         if elapsed <= runEnd {
             let t = unit(elapsed / runDuration)
             let eased = 1.0 - pow(1.0 - t, 1.35)
-            let bounce = abs(sin(elapsed * 16.0))
+            let bounce = abs(sin(elapsed * 11.0))
+            let bounceAmp = 4.0 * (0.40 + 0.60 * (1.0 - t))
             travel.x = -distance * cg(1.0 - eased)
-            travel.y = -cg(bounce * 3.0)
-            travel.scaleX = cg(1.03)
-            travel.scaleY = cg(0.97 + 0.04 * bounce)
-            travel.rotationDegrees = cg(-3.0 + sin(elapsed * 16.0) * 1.8)
-            travel.shadowScale = cg(1.12 - bounce * 0.18)
+            travel.y = -cg(bounce * bounceAmp)
+            travel.scaleX = cg(1.02)
+            travel.scaleY = cg(0.98 + 0.03 * bounce)
+            travel.rotationDegrees = cg(-4.0 + sin(elapsed * 11.0) * 2.0)
+            travel.shadowScale = cg(1.10 - bounce * 0.12)
             travel.shadowOpacity = 0.18
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
-        if elapsed <= brakeEnd {
-            let t = unit((elapsed - runEnd) / brakeDuration)
-            travel.x = 0
-            travel.y = 0
-            travel.scaleX = cg(lerp(1.06, 1.10, t))
-            travel.scaleY = cg(lerp(0.96, 0.88, t))
-            travel.rotationDegrees = cg(lerp(-2.0, 4.0, t))
-            travel.shadowScale = cg(lerp(1.08, 1.16, t))
-            return PoseSnapshot(pose: .sit, travel: travel)
-        }
-
-        let settle = smoothstep(unit((elapsed - brakeEnd) / settleDuration))
-        return PoseSnapshot(
-            pose: .sit,
-            travel: .rest(
-                scaleX: cg(lerp(1.10, 1.0, settle)),
-                scaleY: cg(lerp(0.88, 1.0, settle)),
-                rotation: cg(lerp(4.0, 0, settle))
-            )
-        )
+        let settleT = smoothstep(unit((elapsed - runEnd) / (brakeDuration + settleDuration)))
+        let bounce = abs(sin(elapsed * 11.0))
+        travel.x = 0
+        travel.y = -cg(bounce * 4.0 * (1.0 - settleT) * 0.25)
+        travel.scaleX = cg(lerp(1.02, 1.0, settleT))
+        travel.scaleY = cg(lerp(0.99, 1.0, settleT))
+        travel.rotationDegrees = cg(lerp(-3.0, 0, settleT))
+        travel.shadowScale = cg(lerp(1.08, 1.0, settleT))
+        travel.shadowOpacity = lerp(0.18, 0.16, settleT)
+        return PoseSnapshot(pose: .sit, travel: travel)
     }
 
     private static func idleSnapshot(elapsed _: TimeInterval) -> PoseSnapshot {

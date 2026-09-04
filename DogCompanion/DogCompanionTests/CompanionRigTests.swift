@@ -8,15 +8,15 @@ final class CompanionRigTests: XCTestCase {
         let headPeak = CompanionRigMotion.transform(state: .sitting, time: Double.pi / 2)
         let tailPeak = CompanionRigMotion.transform(state: .sitting, time: Double.pi / (2.0 * 0.7))
         XCTAssertEqual(rest.headY, 0, accuracy: 0.01)
-        XCTAssertGreaterThan(headPeak.headY, 6)
-        XCTAssertLessThan(headPeak.headY, 10)
-        XCTAssertGreaterThan(abs(tailPeak.tailRotation), 0.06)
-        XCTAssertLessThan(abs(tailPeak.tailRotation), 0.28)
-        XCTAssertGreaterThan(headPeak.bodyY, 1.5)
-        XCTAssertLessThan(headPeak.bodyY, 4)
-        XCTAssertGreaterThan(abs(headPeak.headRotation), 0.05)
-        XCTAssertGreaterThan(headPeak.bodyScaleY, 1.02)
-        XCTAssertGreaterThan(abs(headPeak.frontLegRotation), 0.03)
+        XCTAssertGreaterThan(headPeak.headY, 3)
+        XCTAssertLessThan(headPeak.headY, 5)
+        XCTAssertGreaterThan(abs(tailPeak.tailRotation), 0.04)
+        XCTAssertLessThan(abs(tailPeak.tailRotation), 0.18)
+        XCTAssertGreaterThan(headPeak.bodyY, 1.2)
+        XCTAssertLessThan(headPeak.bodyY, 2.4)
+        XCTAssertGreaterThan(abs(headPeak.headRotation), 0.03)
+        XCTAssertGreaterThan(headPeak.bodyScaleY, 1.008)
+        XCTAssertGreaterThan(abs(headPeak.frontLegRotation), 0.02)
     }
 
     func testClimbMovesHeadLegsAndTail() {
@@ -48,6 +48,29 @@ final class CompanionRigTests: XCTestCase {
         let run = CompanionRigMotion.transform(state: .running, time: 0.2)
         XCTAssertGreaterThan(abs(run.frontLegRotation), 0.1)
         XCTAssertGreaterThan(abs(run.frontLegRotation - run.backLegRotation), 0.1)
+    }
+
+    func testRunInBlendsIntoSittingAfterTheGallop() {
+        let midBrake = CompanionRigMotion.transform(
+            motion: .runningIn,
+            elapsed: PosePlayback.runDuration + 0.12
+        )
+        let running = CompanionRigMotion.transform(
+            state: .running,
+            time: PosePlayback.runDuration + 0.12
+        )
+        XCTAssertLessThan(abs(midBrake.lean), abs(running.lean))
+        XCTAssertGreaterThan(abs(midBrake.lean), 0.01)
+        let sitting = CompanionRigMotion.transform(
+            state: .sitting,
+            time: PosePlayback.runningInDuration
+        )
+        let settled = CompanionRigMotion.transform(
+            motion: .runningIn,
+            elapsed: PosePlayback.runningInDuration
+        )
+        XCTAssertEqual(settled.lean, sitting.lean, accuracy: 0.02)
+        XCTAssertEqual(settled.headY, sitting.headY, accuracy: 0.2)
     }
 
     func testWalkingSwingsLegsOpposite() {

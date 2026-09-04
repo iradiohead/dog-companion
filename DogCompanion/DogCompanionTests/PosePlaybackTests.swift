@@ -54,13 +54,14 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertEqual(end.x, 0, accuracy: 8)
     }
 
-    func testBrakeSquashesThenSits() {
+    func testBrakeSettlesTowardRest() {
         let brake = PosePlayback.travel(
             state: .runningIn,
             elapsed: PosePlayback.brakeStart + 0.08
         )
-        XCTAssertLessThan(brake.scaleY, 0.96)
         XCTAssertEqual(brake.x, 0, accuracy: 2)
+        XCTAssertGreaterThan(brake.scaleY, 0.96)
+        XCTAssertLessThan(abs(brake.rotationDegrees), 5)
     }
 
     func testAwayHidesOffToTheLeft() {

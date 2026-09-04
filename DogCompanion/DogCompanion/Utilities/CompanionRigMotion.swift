@@ -35,17 +35,17 @@ enum CompanionRigMotion {
             let look = sin(time * 0.55)
             let tailPulse = 0.55 + 0.45 * sin(time * 0.23)
             return CompanionPartTransform(
-                headY: cg(breathe * 8.0),
-                bodyY: cg(breathe * 2.4),
-                tailRotation: cg(sin(time * 1.1) * 0.20 * tailPulse),
-                frontLegRotation: cg(breathe * 0.06),
-                backLegRotation: cg(-breathe * 0.05),
-                headRotation: cg(sin(time * 0.9) * 0.10),
-                frontLegX: cg(breathe * 2.0),
-                backLegX: cg(-breathe * 1.6),
-                headX: cg(look * 4.0),
-                bodyScaleX: cg(1.0 + breathe * 0.02),
-                bodyScaleY: cg(1.0 + breathe * 0.035)
+                headY: cg(breathe * 3.6),
+                bodyY: cg(breathe * 1.8),
+                tailRotation: cg(sin(time * 1.1) * 0.12 * tailPulse),
+                frontLegRotation: cg(breathe * 0.03),
+                backLegRotation: cg(-breathe * 0.024),
+                headRotation: cg(sin(time * 0.7) * 0.05),
+                frontLegX: 0,
+                backLegX: 0,
+                headX: cg(look * 2.0),
+                bodyScaleX: cg(1.0 + breathe * 0.01),
+                bodyScaleY: cg(1.0 + breathe * 0.016)
             )
         case .standing:
             return CompanionPartTransform(
@@ -74,19 +74,35 @@ enum CompanionRigMotion {
                 headX: cg(gait * 3.0)
             )
         case .running:
-            let gait = sin(time * 6.0)
+            let gait = sin(time * 9.5)
             return CompanionPartTransform(
-                headY: cg(2.0 + sin(time * 6.0) * 3.5),
-                bodyY: cg(abs(sin(time * 6.0)) * 1.4),
-                tailRotation: cg(0.08 + sin(time * 7.0) * 0.12),
-                frontLegRotation: cg(gait * 0.22),
-                backLegRotation: cg(-gait * 0.22),
-                headRotation: cg(sin(time * 6.0) * 0.06),
-                lean: -0.06,
-                frontLegX: cg(gait * 5.0),
-                backLegX: cg(-gait * 4.0),
-                headX: cg(gait * 2.0)
+                headY: cg(1.2 + sin(time * 9.5) * 2.0),
+                bodyY: cg(abs(sin(time * 9.5)) * 1.1),
+                tailRotation: cg(0.06 + sin(time * 8.0) * 0.10),
+                frontLegRotation: cg(gait * 0.16),
+                backLegRotation: cg(-gait * 0.16),
+                headRotation: cg(sin(time * 9.5) * 0.04),
+                lean: -0.05,
+                frontLegX: cg(gait * 3.0),
+                backLegX: cg(-gait * 2.4),
+                headX: cg(gait * 1.2)
             )
+        }
+    }
+
+    static func transform(motion: CompanionMotionState, elapsed: TimeInterval) -> CompanionPartTransform {
+        let sitting = transform(state: .sitting, time: elapsed)
+        switch motion {
+        case .away, .idle, .reacting, .celebrating:
+            return sitting
+        case .runningIn:
+            let running = transform(state: .running, time: elapsed)
+            if elapsed <= PosePlayback.runDuration {
+                return running
+            }
+            let settleFor = PosePlayback.brakeDuration + PosePlayback.settleDuration
+            let t = unit((elapsed - PosePlayback.runDuration) / settleFor)
+            return mix(running, sitting, smoothstep(t))
         }
     }
 

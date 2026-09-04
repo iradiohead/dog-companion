@@ -43,5 +43,7 @@ final class HandDrawnPaletteTests: XCTestCase {
         _ = PrototypeRugView(color: HandDrawnPalette.rugPurple)
         _ = PerspectiveRugShape()
         _ = FoodBowlView()
+        _ = StudyDeskView(topColor: HandDrawnPalette.wood)
+        _ = FloorLampView(isLit: false, accent: HandDrawnPalette.warmGlow)
     }
 }

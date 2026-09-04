@@ -24,7 +24,10 @@ struct MotionView: View {
         .onAppear {
             motionStarted = Date()
         }
-        .onChange(of: motionState) { _, _ in
+        .onChange(of: motionState) { oldState, newState in
+            if newState == .idle, oldState == .runningIn {
+                return
+            }
             motionStarted = Date()
         }
     }
@@ -43,11 +46,12 @@ struct MotionView: View {
                 palette: palette,
                 state: CompanionRigMotion.rigState(from: motionState, elapsed: elapsed),
                 elapsed: elapsed,
-                isPaused: motionState == .away
+                isPaused: motionState == .away,
+                motion: motionState
             )
             .scaleEffect(x: travel.scaleX, y: travel.scaleY, anchor: .bottom)
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)
-            .frame(width: 210, height: 196, alignment: .bottom)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .offset(x: travel.x, y: travel.y)
             .opacity(travel.opacity)
             .onTapGesture(perform: onTap)

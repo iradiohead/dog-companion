@@ -147,7 +147,7 @@ struct FloorLampView: View {
 
             VStack(spacing: 0) {
                 lampShade
-                    .frame(width: 84, height: 36)
+                    .frame(width: 92, height: 40)
 
                 Canvas { context, size in
                     var pole = Path()
@@ -159,14 +159,14 @@ struct FloorLampView: View {
                     context.stroke(pole, with: .color(HandDrawnPalette.ink.opacity(0.22)), lineWidth: 5.5)
                     context.stroke(pole, with: .color(HandDrawnPalette.inkLight.opacity(0.7)), lineWidth: 2.4)
                 }
-                .frame(width: 18, height: 128)
+                .frame(width: 18, height: 148)
 
                 WobblyEllipse(wobble: 1.2, seed: 12)
                     .fill(HandDrawnPalette.ink.opacity(0.16))
-                    .frame(width: 54, height: 13)
+                    .frame(width: 58, height: 14)
             }
         }
-        .frame(width: 100, height: 180)
+        .frame(width: 108, height: 204)
         .handDrawnShadow(radius: 5, y: 3)
     }
 
@@ -276,26 +276,26 @@ struct StudyDeskView: View {
                                     .stroke(HandDrawnPalette.ink.opacity(0.48), lineWidth: 1.7)
                             }
                         }
-                        .frame(width: 138, height: 16)
+                        .frame(width: 168, height: 18)
 
                     deskLamp
-                        .offset(x: 14, y: -20)
+                        .offset(x: 18, y: -22)
 
                     openNotebook
-                        .offset(x: 78, y: -22)
+                        .offset(x: 96, y: -24)
                 }
-                .frame(height: 16)
+                .frame(height: 18)
 
-                HStack(spacing: 102) {
+                HStack(spacing: 124) {
                     deskLeg
                     deskLeg
                 }
             }
 
-            BlobShadow(width: 128, height: 12)
+            BlobShadow(width: 154, height: 13)
                 .offset(y: 6)
         }
-        .frame(width: 148, height: 86)
+        .frame(width: 176, height: 108)
     }
 
     private var deskLamp: some View {
@@ -365,7 +365,7 @@ struct StudyDeskView: View {
                     endPoint: .trailing
                 )
             )
-            .frame(width: 6, height: 58)
+            .frame(width: 7, height: 68)
             .overlay {
                 Capsule(style: .continuous)
                     .strokeBorder(HandDrawnPalette.ink.opacity(0.28), lineWidth: 1)
