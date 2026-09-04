@@ -19,6 +19,10 @@ struct CompanionPartTransform: Equatable {
     var lean: CGFloat = 0
     var frontLegX: CGFloat = 0
     var backLegX: CGFloat = 0
+    var frontLegY: CGFloat = 0
+    var backLegY: CGFloat = 0
+    var frontLegScaleY: CGFloat = 1
+    var backLegScaleY: CGFloat = 1
     var headX: CGFloat = 0
     var bodyScaleX: CGFloat = 1
     var bodyScaleY: CGFloat = 1
@@ -26,7 +30,7 @@ struct CompanionPartTransform: Equatable {
     static let identity = CompanionPartTransform()
 }
 
-/// Sliced owner cutout, or bundled puppet fallback. Idle sits on the floor; running-in slides in from the side.
+/// Sliced owner cutout for idle; bundled side puppet during run-in so the dog faces right.
 enum CompanionRigMotion {
     static func transform(state: CompanionRigState, time: TimeInterval) -> CompanionPartTransform {
         switch state {
@@ -96,12 +100,10 @@ enum CompanionRigMotion {
         case .away, .idle, .reacting, .celebrating:
             return sitting
         case .runningIn:
-            // The sit cutout faces the Owner. Horizontal travel comes from PosePlayback;
-            // swinging sliced legs left/right reads as crab-walking.
-            let running = runInFacingFront(elapsed: elapsed)
-            if elapsed <= PosePlayback.runDuration {
-                return running
+            if elapsed < PosePlayback.runDuration {
+                return transform(state: .running, time: elapsed)
             }
+            let running = runInFacingFront(elapsed: elapsed)
             let settleFor = PosePlayback.brakeDuration + PosePlayback.settleDuration
             let t = unit((elapsed - PosePlayback.runDuration) / settleFor)
             return mix(running, sitting, smoothstep(t))
@@ -113,6 +115,9 @@ enum CompanionRigMotion {
         case .away, .idle, .reacting, .celebrating:
             return .sitting
         case .runningIn:
+            if elapsed < PosePlayback.runDuration {
+                return .running
+            }
             return .sitting
         }
     }
@@ -127,15 +132,23 @@ enum CompanionRigMotion {
     }
 
     private static func runInFacingFront(elapsed: TimeInterval) -> CompanionPartTransform {
-        let hop = sin(elapsed * 11.0)
+        let stepHz = 11.0
+        let hop = sin(elapsed * stepHz)
         let bounce = abs(hop)
+        let planted = 1.0 - bounce
         return CompanionPartTransform(
-            headY: cg(1.0 + hop * 1.6),
-            bodyY: cg(bounce * 1.4),
-            tailRotation: cg(sin(elapsed * 8.0) * 0.08),
-            headRotation: cg(hop * 0.02),
-            bodyScaleX: cg(1.0 + bounce * 0.012),
-            bodyScaleY: cg(1.0 - bounce * 0.008)
+            headY: cg(2.0 + hop * 3.0),
+            bodyY: cg(bounce * 2.6),
+            tailRotation: cg(sin(elapsed * 8.0) * 0.12),
+            frontLegY: cg(hop * 5.0),
+            backLegY: cg(-hop * 4.0),
+            frontLegScaleY: cg(0.90 + planted * 0.10),
+            backLegScaleY: cg(0.90 + bounce * 0.10),
+            headRotation: cg(-0.16 + hop * 0.03),
+            headX: cg(-7.0 + hop * 1.2),
+            lean: -0.05,
+            bodyScaleX: cg(1.0 + bounce * 0.022),
+            bodyScaleY: cg(1.0 - bounce * 0.018)
         )
     }
 
@@ -236,6 +249,10 @@ enum CompanionRigMotion {
             lean: a.lean + (b.lean - a.lean) * u,
             frontLegX: a.frontLegX + (b.frontLegX - a.frontLegX) * u,
             backLegX: a.backLegX + (b.backLegX - a.backLegX) * u,
+            frontLegY: a.frontLegY + (b.frontLegY - a.frontLegY) * u,
+            backLegY: a.backLegY + (b.backLegY - a.backLegY) * u,
+            frontLegScaleY: a.frontLegScaleY + (b.frontLegScaleY - a.frontLegScaleY) * u,
+            backLegScaleY: a.backLegScaleY + (b.backLegScaleY - a.backLegScaleY) * u,
             headX: a.headX + (b.headX - a.headX) * u,
             bodyScaleX: a.bodyScaleX + (b.bodyScaleX - a.bodyScaleX) * u,
             bodyScaleY: a.bodyScaleY + (b.bodyScaleY - a.bodyScaleY) * u

@@ -9,6 +9,8 @@ struct CompanionRigView: UIViewRepresentable {
     var elapsed: TimeInterval
     var isPaused: Bool
     var motion: CompanionMotionState? = nil
+    /// Side-view puppet while the dog runs in; owner cutout when seated forward.
+    var sideProfile: Bool = false
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -32,6 +34,7 @@ struct CompanionRigView: UIViewRepresentable {
         scene.rigState = state
         scene.elapsed = elapsed
         scene.motion = motion
+        scene.sideProfile = sideProfile
         view.presentScene(scene)
         view.isPaused = isPaused
         return view
@@ -43,6 +46,7 @@ struct CompanionRigView: UIViewRepresentable {
         context.coordinator.scene.rigState = state
         context.coordinator.scene.elapsed = elapsed
         context.coordinator.scene.motion = motion
+        context.coordinator.scene.sideProfile = sideProfile
         context.coordinator.scene.applyCurrent()
         if view.isPaused != isPaused {
             view.isPaused = isPaused
@@ -56,6 +60,8 @@ struct CompanionRigView: UIViewRepresentable {
 
 final class CompanionRigScene: SKScene {
     private var root = SKNode()
+    private var cutoutRoot = SKNode()
+    private var puppetRoot = SKNode()
     private var cutoutNodes: [CompanionPart: SKSpriteNode] = [:]
     private var fillNodes: [PuppetPart: SKSpriteNode] = [:]
     private var lineNodes: [PuppetPart: SKSpriteNode] = [:]
@@ -69,6 +75,12 @@ final class CompanionRigScene: SKScene {
     var rigState: CompanionRigState = .sitting
     var elapsed: TimeInterval = 0
     var motion: CompanionMotionState?
+    var sideProfile = false {
+        didSet {
+            guard sideProfile != oldValue else { return }
+            updatePresentation()
+        }
+    }
     var image: PlatformImage? {
         didSet {
             guard !Self.isSameImage(image, lastImage) else { return }
@@ -85,14 +97,14 @@ final class CompanionRigScene: SKScene {
         }
     }
 
-    private var usesOwnerCutout: Bool { image != nil }
-
     override init() {
         super.init(size: CGSize(width: 150, height: 168))
         backgroundColor = .clear
         scaleMode = .resizeFill
         anchorPoint = .zero
         addChild(root)
+        root.addChild(cutoutRoot)
+        root.addChild(puppetRoot)
     }
 
     required init?(coder: NSCoder) {
@@ -122,23 +134,36 @@ final class CompanionRigScene: SKScene {
     }
 
     private func rebuild() {
-        root.removeAllChildren()
+        cutoutRoot.removeAllChildren()
+        puppetRoot.removeAllChildren()
         cutoutNodes.removeAll()
         fillNodes.removeAll()
         lineNodes.removeAll()
         spotNode = nil
 
         if let image {
-            buildCutout(from: image)
+            buildCutout(from: image, into: cutoutRoot)
         } else {
             cutoutTailOnLeft = true
-            buildSharedPuppet()
         }
+        buildSharedPuppet(into: puppetRoot)
         layoutParts()
+        updatePresentation()
         applyCurrent()
     }
 
-    private func buildCutout(from image: PlatformImage) {
+    private func updatePresentation() {
+        let hasCutout = image != nil
+        if hasCutout {
+            cutoutRoot.isHidden = sideProfile
+            puppetRoot.isHidden = !sideProfile
+        } else {
+            cutoutRoot.isHidden = true
+            puppetRoot.isHidden = false
+        }
+    }
+
+    private func buildCutout(from image: PlatformImage, into parent: SKNode) {
         let layers = CompanionLayerSlicer.slice(image)
         let drawOrder: [CompanionPart] = [.tail, .backLeg, .body, .frontLeg, .head]
         if let layers {
@@ -147,35 +172,35 @@ final class CompanionRigScene: SKScene {
                 guard let partImage = layers.image(for: part) else { continue }
                 let node = makeCutoutSprite(from: partImage, part: part)
                 node.zPosition = CGFloat(drawOrder.firstIndex(of: part) ?? 0)
-                root.addChild(node)
+                parent.addChild(node)
                 cutoutNodes[part] = node
             }
         } else {
             cutoutTailOnLeft = true
             let node = makeCutoutSprite(from: image, part: .body)
             node.zPosition = 2
-            root.addChild(node)
+            parent.addChild(node)
             cutoutNodes[.body] = node
         }
     }
 
-    private func buildSharedPuppet() {
+    private func buildSharedPuppet(into parent: SKNode) {
         for (index, part) in PuppetCatalog.drawOrder.enumerated() {
             let z = CGFloat(index)
             if let fill = makePuppetSprite(named: part.fillName, part: part, blend: true) {
                 fill.zPosition = z
-                root.addChild(fill)
+                parent.addChild(fill)
                 fillNodes[part] = fill
             }
             if let line = makePuppetSprite(named: part.lineName, part: part, blend: false) {
                 line.zPosition = z + 0.4
-                root.addChild(line)
+                parent.addChild(line)
                 lineNodes[part] = line
             }
         }
         if let spots = makePuppetSprite(named: "puppet_spots", part: .body, blend: true) {
             spots.zPosition = 2.2
-            root.addChild(spots)
+            parent.addChild(spots)
             spotNode = spots
         }
         applyPalette()
@@ -201,7 +226,7 @@ final class CompanionRigScene: SKScene {
         guard size.width > 1, size.height > 1 else { return }
         root.position = CGPoint(x: size.width / 2, y: 0)
         root.zRotation = 0
-        if usesOwnerCutout, let image {
+        if let image {
             let imageSize = image.size
             guard imageSize.width > 0, imageSize.height > 0 else { return }
             let fitWidth = max(1, size.width * 0.78)
@@ -213,19 +238,23 @@ final class CompanionRigScene: SKScene {
                 node.zRotation = 0
                 node.position = cutoutRest(for: part)
             }
-            return
+        } else {
+            let scale = min(size.width / 512.0, size.height / 512.0)
+            fittedSize = CGSize(width: 512.0 * scale, height: 512.0 * scale)
         }
-        let scale = min(size.width / 512.0, size.height / 512.0)
-        fittedSize = CGSize(width: 512.0 * scale, height: 512.0 * scale)
+
+        let puppetSize = image != nil
+            ? CGSize(width: fittedSize.width * 0.94, height: fittedSize.height * 0.94)
+            : fittedSize
         for node in puppetSprites() {
-            node.size = fittedSize
+            node.size = puppetSize
             node.position = .zero
             node.zRotation = 0
         }
     }
 
     private func applyPalette() {
-        guard !usesOwnerCutout else { return }
+        guard !fillNodes.isEmpty else { return }
         let fill = skColor(palette.fill)
         let belly = skColor(palette.belly)
         let spot = skColor(palette.spot)
@@ -251,9 +280,10 @@ final class CompanionRigScene: SKScene {
     }
 
     private func apply(_ transform: CompanionPartTransform) {
-        if usesOwnerCutout {
+        if image != nil, !cutoutRoot.isHidden {
             applyCutout(transform)
-        } else {
+        }
+        if !puppetRoot.isHidden {
             applyPuppet(transform)
         }
     }
@@ -285,18 +315,19 @@ final class CompanionRigScene: SKScene {
         let frontRest = cutoutRest(for: .frontLeg)
         cutoutNodes[.frontLeg]?.position = CGPoint(
             x: frontRest.x + transform.frontLegX,
-            y: frontRest.y + torsoY
+            y: frontRest.y + torsoY + transform.frontLegY
         )
         let backRest = cutoutRest(for: .backLeg)
         cutoutNodes[.backLeg]?.position = CGPoint(
             x: backRest.x + transform.backLegX,
-            y: backRest.y + torsoY
+            y: backRest.y + torsoY + transform.backLegY
         )
         cutoutNodes[.frontLeg]?.zRotation = transform.frontLegRotation
         cutoutNodes[.backLeg]?.zRotation = transform.backLegRotation
+        cutoutNodes[.frontLeg]?.yScale = transform.frontLegScaleY
+        cutoutNodes[.backLeg]?.yScale = transform.backLegScaleY
         for part in [CompanionPart.head, .tail, .frontLeg, .backLeg] {
             cutoutNodes[part]?.xScale = 1
-            cutoutNodes[part]?.yScale = 1
         }
     }
 
@@ -316,6 +347,12 @@ final class CompanionRigScene: SKScene {
                 } else if part == .eye {
                     sprite.xScale = 1
                     sprite.yScale = eyeScale
+                } else if part == .frontLeg {
+                    sprite.xScale = 1
+                    sprite.yScale = transform.frontLegScaleY
+                } else if part == .backLeg {
+                    sprite.xScale = 1
+                    sprite.yScale = transform.backLegScaleY
                 } else {
                     sprite.xScale = 1
                     sprite.yScale = 1
@@ -346,12 +383,18 @@ final class CompanionRigScene: SKScene {
             return (CGPoint(x: rest.x, y: rest.y + transform.bodyY), transform.tailRotation)
         case .frontLeg:
             return (
-                CGPoint(x: rest.x + transform.frontLegX, y: rest.y + transform.bodyY),
+                CGPoint(
+                    x: rest.x + transform.frontLegX,
+                    y: rest.y + transform.bodyY + transform.frontLegY
+                ),
                 transform.frontLegRotation
             )
         case .backLeg:
             return (
-                CGPoint(x: rest.x + transform.backLegX, y: rest.y + transform.bodyY),
+                CGPoint(
+                    x: rest.x + transform.backLegX,
+                    y: rest.y + transform.bodyY + transform.backLegY
+                ),
                 transform.backLegRotation
             )
         case .body, .belly:

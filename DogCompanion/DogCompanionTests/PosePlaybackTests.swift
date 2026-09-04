@@ -37,6 +37,12 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertEqual(end.opacity, 1, accuracy: 0.01)
         XCTAssertEqual(end.scaleX, 1, accuracy: 0.05)
         XCTAssertEqual(end.scaleY, 1, accuracy: 0.05)
+        XCTAssertEqual(end.facingScaleX, 1, accuracy: 0.01)
+    }
+
+    func testRunInStartsFacingRight() {
+        let start = PosePlayback.travel(state: .runningIn, elapsed: 0.05)
+        XCTAssertLessThan(start.facingScaleX, 0)
     }
 
     func testRunInMovesRightward() {

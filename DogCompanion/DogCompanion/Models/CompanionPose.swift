@@ -73,6 +73,7 @@ struct PoseTravel: Equatable {
     var y: CGFloat
     var scaleX: CGFloat
     var scaleY: CGFloat
+    var facingScaleX: CGFloat
     var rotationDegrees: CGFloat
     var opacity: Double
     var shadowScale: CGFloat
@@ -84,6 +85,7 @@ struct PoseTravel: Equatable {
         y: 0,
         scaleX: 1.04,
         scaleY: 1.04,
+        facingScaleX: -1,
         rotationDegrees: 0,
         opacity: 0,
         shadowScale: 0.85,
@@ -97,6 +99,7 @@ struct PoseTravel: Equatable {
             y: 0,
             scaleX: scaleX,
             scaleY: scaleY,
+            facingScaleX: 1,
             rotationDegrees: rotation,
             opacity: 1,
             shadowScale: 1,
@@ -182,26 +185,31 @@ enum PosePlayback {
 
         if elapsed <= runEnd {
             let t = unit(elapsed / runDuration)
-            let eased = 1.0 - pow(1.0 - t, 1.35)
+            let eased = 1.0 - pow(1.0 - t, 1.55)
             let bounce = abs(sin(elapsed * 11.0))
-            let bounceAmp = 4.0 * (0.40 + 0.60 * (1.0 - t))
-            travel.x = -distance * cg(1.0 - eased)
+            let bounceAmp = 6.0 * (0.45 + 0.55 * (1.0 - t))
+            let stride = 0.90 + 0.10 * bounce
+            travel.facingScaleX = -1
+            travel.x = -distance * cg((1.0 - eased) * stride)
             travel.y = -cg(bounce * bounceAmp)
-            travel.scaleX = cg(1.02)
-            travel.scaleY = cg(0.98 + 0.03 * bounce)
-            travel.rotationDegrees = cg(-4.0 + sin(elapsed * 11.0) * 2.0)
-            travel.shadowScale = cg(1.10 - bounce * 0.12)
-            travel.shadowOpacity = 0.18
+            travel.scaleX = cg(1.02 + bounce * 0.02)
+            travel.scaleY = cg(0.96 + 0.05 * bounce)
+            travel.rotationDegrees = cg(-5.0 + sin(elapsed * 11.0) * 2.5)
+            travel.shadowScale = cg(1.16 - bounce * 0.24)
+            travel.shadowOpacity = 0.16 + bounce * 0.06
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
-        let settleT = smoothstep(unit((elapsed - runEnd) / (brakeDuration + settleDuration)))
+        let settleSpan = brakeDuration + settleDuration
+        let settleT = smoothstep(unit((elapsed - runEnd) / settleSpan))
+        let turnDelay = min(0.10, settleSpan * 0.3)
         let bounce = abs(sin(elapsed * 11.0))
         travel.x = 0
         travel.y = -cg(bounce * 4.0 * (1.0 - settleT) * 0.25)
+        travel.facingScaleX = (elapsed - runEnd) >= turnDelay ? 1 : -1
         travel.scaleX = cg(lerp(1.02, 1.0, settleT))
         travel.scaleY = cg(lerp(0.99, 1.0, settleT))
-        travel.rotationDegrees = cg(lerp(-3.0, 0, settleT))
+        travel.rotationDegrees = cg(lerp(-5.0, 0, settleT))
         travel.shadowScale = cg(lerp(1.08, 1.0, settleT))
         travel.shadowOpacity = lerp(0.18, 0.16, settleT)
         return PoseSnapshot(pose: .sit, travel: travel)

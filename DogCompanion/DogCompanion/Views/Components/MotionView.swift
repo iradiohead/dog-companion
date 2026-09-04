@@ -47,7 +47,8 @@ struct MotionView: View {
                 state: CompanionRigMotion.rigState(from: motionState, elapsed: elapsed),
                 elapsed: elapsed,
                 isPaused: motionState == .away,
-                motion: motionState
+                motion: motionState,
+                sideProfile: motionState == .runningIn && travel.facingScaleX < 0
             )
             .scaleEffect(x: travel.scaleX, y: travel.scaleY, anchor: .bottom)
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)
