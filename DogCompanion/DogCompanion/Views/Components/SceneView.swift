@@ -10,7 +10,7 @@ struct SceneView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let floorHeight = max(geo.size.height * 0.56, 240)
+            let floorHeight = max(geo.size.height * 0.66, 280)
             let wallHeight = geo.size.height - floorHeight
 
             ZStack(alignment: .top) {
@@ -46,8 +46,9 @@ struct SceneView: View {
     }
 
     private func floorArea(width: CGFloat, height: CGFloat) -> some View {
-        let rugWidth = min(width * 0.88, 360)
-        let rugHeight: CGFloat = min(128, height * 0.42)
+        let rugWidth = min(width * 0.96, 420)
+        let rugHeight: CGFloat = min(176, max(132, height * 0.48))
+        let clusterLift: CGFloat = max(64, height * 0.18)
 
         return ZStack(alignment: .bottom) {
             WoodenFloorView(
@@ -57,18 +58,18 @@ struct SceneView: View {
 
             PrototypeRugView(color: rugColor)
                 .frame(width: rugWidth, height: rugHeight)
-                .padding(.bottom, 32)
+                .padding(.bottom, clusterLift)
 
-            HStack(alignment: .bottom, spacing: 28) {
-                SideTableView(topColor: HandDrawnPalette.wood)
-                    .scaleEffect(0.92)
+            HStack(alignment: .bottom, spacing: 18) {
+                StudyDeskView(topColor: HandDrawnPalette.wood)
+                    .scaleEffect(1.08)
                 FloorLampView(
                     isLit: isFocusActive,
                     accent: Color(red: 0.95, green: 0.68, blue: 0.38)
                 )
-                .scaleEffect(0.78)
+                .scaleEffect(1.12)
             }
-            .padding(.bottom, 78)
+            .padding(.bottom, clusterLift + rugHeight * 0.52)
 
             MotionView(
                 sitImage: sitImage,
@@ -77,12 +78,13 @@ struct SceneView: View {
                 runDistance: min(PosePlayback.runDistance, max(110, width * 0.38)),
                 onTap: onCompanionTap
             )
-            .frame(height: 200, alignment: .bottom)
-            .padding(.bottom, 48)
+            .frame(height: 210, alignment: .bottom)
+            .padding(.bottom, clusterLift + 22)
 
             FoodBowlView()
-                .padding(.bottom, 44)
-                .offset(x: min(86, rugWidth * 0.28))
+                .scaleEffect(1.15)
+                .padding(.bottom, clusterLift + 18)
+                .offset(x: min(96, rugWidth * 0.26))
         }
     }
 

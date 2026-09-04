@@ -414,65 +414,168 @@ struct PrototypeRugView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let width = geo.size.width
-            let height = max(geo.size.height, 1)
+            let size = geo.size
             ZStack {
-                fringe(width: width)
+                PerspectiveRugShape(farScale: 0.56, nearScale: 1.0)
+                    .fill(HandDrawnPalette.ink.opacity(0.16))
+                    .offset(y: 7)
+                    .blur(radius: 5)
 
-                WobblyRoundedRectangle(cornerRadius: height * 0.28, wobble: 3.2, seed: 44)
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                color.lighter(by: 0.12),
-                                color,
-                                color.darker(by: 0.10)
-                            ],
-                            center: UnitPoint(x: 0.42, y: 0.38),
-                            startRadius: 10,
-                            endRadius: max(width, height) * 0.72
-                        )
-                    )
-                    .overlay {
-                        WatercolorPigment(color: color, highlight: color.lighter(by: 0.18))
-                            .clipShape(WobblyRoundedRectangle(cornerRadius: height * 0.28, wobble: 3.2, seed: 44))
-                    }
-                    .overlay {
-                        PencilHatchOverlay(color: color.darker(by: 0.28), opacity: 0.12, density: 18, angle: 12)
-                            .clipShape(WobblyRoundedRectangle(cornerRadius: height * 0.28, wobble: 3.2, seed: 44))
-                    }
-                    .overlay {
-                        WobblyRoundedRectangle(cornerRadius: height * 0.22, wobble: 2.4, seed: 45)
-                            .stroke(HandDrawnPalette.ink.opacity(0.14), lineWidth: 4)
-                            .padding(height * 0.12)
-                    }
-                    .overlay {
-                        WobblyRoundedRectangle(cornerRadius: height * 0.26, wobble: 2.8, seed: 46)
-                            .stroke(HandDrawnPalette.ink.opacity(0.34), lineWidth: 1.7)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
+                Canvas { context, canvasSize in
+                    drawRug(in: &context, size: canvasSize)
+                }
             }
-        }
-        .handDrawnShadow(radius: 8, y: 5)
-    }
-
-    private func fringe(width: CGFloat) -> some View {
-        Canvas { context, size in
-            let count = max(18, Int(width / 14))
-            for index in 0..<count {
-                let x = size.width * (0.06 + CGFloat(index) / CGFloat(count) * 0.88)
-                var top = Path()
-                top.move(to: CGPoint(x: x, y: 4))
-                top.addLine(to: CGPoint(x: x + 1.2, y: 0))
-                context.stroke(top, with: .color(HandDrawnPalette.ink.opacity(0.22)), lineWidth: 1.1)
-
-                var bottom = Path()
-                bottom.move(to: CGPoint(x: x, y: size.height - 4))
-                bottom.addLine(to: CGPoint(x: x - 1.1, y: size.height))
-                context.stroke(bottom, with: .color(HandDrawnPalette.ink.opacity(0.22)), lineWidth: 1.1)
-            }
+            .frame(width: size.width, height: size.height)
         }
         .allowsHitTesting(false)
+    }
+
+    private func drawRug(in context: inout GraphicsContext, size: CGSize) {
+        let body = PerspectiveRugShape(farScale: 0.58, nearScale: 0.98).path(in: CGRect(origin: .zero, size: size))
+        let inner = PerspectiveRugShape(farScale: 0.48, nearScale: 0.82).path(
+            in: CGRect(
+                x: size.width * 0.09,
+                y: size.height * 0.22,
+                width: size.width * 0.82,
+                height: size.height * 0.58
+            )
+        )
+        let lip = nearLipPath(size: size)
+
+        context.fill(
+            body,
+            with: .linearGradient(
+                Gradient(colors: [
+                    color.lighter(by: 0.16),
+                    color,
+                    color.darker(by: 0.14)
+                ]),
+                startPoint: CGPoint(x: size.width * 0.5, y: size.height * 0.12),
+                endPoint: CGPoint(x: size.width * 0.5, y: size.height * 0.92)
+            )
+        )
+
+        var pigment = context
+        pigment.clip(to: body)
+        pigment.fill(
+            Path(CGRect(origin: .zero, size: size)),
+            with: .radialGradient(
+                Gradient(colors: [
+                    Color.white.opacity(0.22),
+                    .clear
+                ]),
+                center: CGPoint(x: size.width * 0.38, y: size.height * 0.34),
+                startRadius: 8,
+                endRadius: size.width * 0.42
+            )
+        )
+
+        context.stroke(body, with: .color(HandDrawnPalette.ink.opacity(0.16)), lineWidth: 4.2)
+        context.stroke(body, with: .color(HandDrawnPalette.ink.opacity(0.38)), lineWidth: 1.7)
+        context.stroke(inner, with: .color(HandDrawnPalette.ink.opacity(0.18)), lineWidth: 1.4)
+
+        context.fill(lip, with: .color(color.darker(by: 0.22).opacity(0.85)))
+        context.stroke(lip, with: .color(HandDrawnPalette.ink.opacity(0.28)), lineWidth: 1.1)
+
+        drawFringe(in: &context, size: size)
+        drawWeave(in: &context, size: size)
+    }
+
+    private func nearLipPath(size: CGSize) -> Path {
+        let midX = size.width * 0.5
+        let nearW = size.width * 0.98
+        let bottom = size.height * 0.90
+        var path = Path()
+        path.move(to: CGPoint(x: midX - nearW * 0.5, y: bottom - 2))
+        path.addQuadCurve(
+            to: CGPoint(x: midX + nearW * 0.5, y: bottom - 2),
+            control: CGPoint(x: midX, y: bottom + 5)
+        )
+        path.addLine(to: CGPoint(x: midX + nearW * 0.5 - 4, y: bottom + 8))
+        path.addQuadCurve(
+            to: CGPoint(x: midX - nearW * 0.5 + 4, y: bottom + 8),
+            control: CGPoint(x: midX, y: bottom + 13)
+        )
+        path.closeSubpath()
+        return path
+    }
+
+    private func drawFringe(in context: inout GraphicsContext, size: CGSize) {
+        let midX = size.width * 0.5
+        let nearCount = 22
+        let nearW = size.width * 0.96
+        let bottom = size.height * 0.90
+        for index in 0..<nearCount {
+            let t = CGFloat(index) / CGFloat(nearCount - 1)
+            let x = midX - nearW * 0.5 + nearW * t
+            let flare = (t - 0.5) * 10
+            var line = Path()
+            line.move(to: CGPoint(x: x, y: bottom + 6))
+            line.addLine(to: CGPoint(x: x + flare, y: bottom + 16))
+            context.stroke(line, with: .color(HandDrawnPalette.ink.opacity(0.28)), lineWidth: 1.05)
+        }
+
+        let farCount = 14
+        let farW = size.width * 0.56
+        let top = size.height * 0.14
+        for index in 0..<farCount {
+            let t = CGFloat(index) / CGFloat(farCount - 1)
+            let x = midX - farW * 0.5 + farW * t
+            var line = Path()
+            line.move(to: CGPoint(x: x, y: top))
+            line.addLine(to: CGPoint(x: x, y: top - 5))
+            context.stroke(line, with: .color(HandDrawnPalette.ink.opacity(0.16)), lineWidth: 0.8)
+        }
+    }
+
+    private func drawWeave(in context: inout GraphicsContext, size: CGSize) {
+        let midX = size.width * 0.5
+        for index in 1..<5 {
+            let t = CGFloat(index) / 5.0
+            let y = size.height * (0.22 + t * 0.58)
+            let width = size.width * (0.58 + t * 0.36)
+            var stitch = Path()
+            stitch.move(to: CGPoint(x: midX - width * 0.5, y: y))
+            stitch.addQuadCurve(
+                to: CGPoint(x: midX + width * 0.5, y: y + 1),
+                control: CGPoint(x: midX, y: y - 3)
+            )
+            context.stroke(stitch, with: .color(HandDrawnPalette.ink.opacity(0.07 + Double(t) * 0.05)), lineWidth: 1)
+        }
+    }
+}
+
+struct PerspectiveRugShape: Shape {
+    var farScale: CGFloat = 0.58
+    var nearScale: CGFloat = 0.98
+
+    func path(in rect: CGRect) -> Path {
+        let midX = rect.midX
+        let top = rect.minY + rect.height * 0.14
+        let bottom = rect.maxY - rect.height * 0.10
+        let farW = rect.width * farScale
+        let nearW = rect.width * nearScale
+        let midY = (top + bottom) * 0.5
+
+        var path = Path()
+        let topLeft = CGPoint(x: midX - farW * 0.5, y: top)
+        let topRight = CGPoint(x: midX + farW * 0.5, y: top)
+        let bottomRight = CGPoint(x: midX + nearW * 0.5, y: bottom)
+        let bottomLeft = CGPoint(x: midX - nearW * 0.5, y: bottom)
+
+        path.move(to: topLeft)
+        path.addQuadCurve(to: topRight, control: CGPoint(x: midX, y: top - 5))
+        path.addQuadCurve(
+            to: bottomRight,
+            control: CGPoint(x: midX + (farW + nearW) * 0.28, y: midY)
+        )
+        path.addQuadCurve(to: bottomLeft, control: CGPoint(x: midX, y: bottom + 7))
+        path.addQuadCurve(
+            to: topLeft,
+            control: CGPoint(x: midX - (farW + nearW) * 0.28, y: midY)
+        )
+        path.closeSubpath()
+        return path
     }
 }
 

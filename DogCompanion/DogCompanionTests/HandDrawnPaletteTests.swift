@@ -41,6 +41,7 @@ final class HandDrawnPaletteTests: XCTestCase {
         XCTAssertEqual(CompanionRigMotion.rigState(from: .idle), .sitting)
         XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0), .running)
         _ = PrototypeRugView(color: HandDrawnPalette.rugPurple)
+        _ = PerspectiveRugShape()
         _ = FoodBowlView()
     }
 }
