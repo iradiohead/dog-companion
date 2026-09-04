@@ -12,6 +12,7 @@ struct CompanionLayerSet {
     var canvasSize: CGSize
     var scale: CGFloat
     var images: [CompanionPart: UIImage]
+    var tailOnLeft: Bool
 
     func image(for part: CompanionPart) -> UIImage? {
         images[part]
@@ -66,7 +67,8 @@ enum CompanionLayerSlicer {
         return CompanionLayerSet(
             canvasSize: CGSize(width: CGFloat(width) / image.scale, height: CGFloat(height) / image.scale),
             scale: image.scale,
-            images: images
+            images: images,
+            tailOnLeft: tailOnLeft
         )
     }
 
@@ -76,29 +78,51 @@ enum CompanionLayerSlicer {
         ny: Float,
         tailOnLeft: Bool
     ) -> Float {
-        // Full width so ears and ruff are not shaved off the sit cutout.
-        let head = band(ny, -0.02, 0.0, 0.40, 0.52) * band(nx, -0.08, 0.0, 1.0, 1.08)
+        let head = headWeight(nx: nx, ny: ny)
+        let frontLeg = frontLegWeight(nx: nx, ny: ny)
+        let backLeg = backLegWeight(nx: nx, ny: ny)
+        let tail = tailWeight(nx: nx, ny: ny, tailOnLeft: tailOnLeft)
         switch part {
         case .head:
             return head
-        case .body:
-            // Keep the head off the torso layer, or nodding leaves a frozen head behind.
-            let torso = band(ny, 0.38, 0.48, 0.92, 1.04) * band(nx, -0.04, 0.02, 0.98, 1.04)
-            return torso * (1.0 - head)
         case .frontLeg:
-            return band(ny, 0.68, 0.78, 0.98, 1.05) * band(nx, 0.28, 0.38, 0.62, 0.72)
+            return frontLeg
         case .backLeg:
-            let vertical = band(ny, 0.66, 0.76, 0.98, 1.05)
-            let left = band(nx, 0.0, 0.04, 0.26, 0.40)
-            let right = band(nx, 0.60, 0.74, 0.96, 1.0)
-            return min(1.0, vertical * (left + right))
+            return backLeg
         case .tail:
-            let vertical = band(ny, 0.38, 0.52, 0.86, 0.98)
-            if tailOnLeft {
-                return vertical * band(nx, 0.0, 0.0, 0.22, 0.38)
-            }
-            return vertical * band(nx, 0.62, 0.78, 1.0, 1.0)
+            return tail
+        case .body:
+            // Moving parts stay off the torso copy, or wag/run shows a second frozen tail or legs.
+            // Keep a little joint overlap so rotation does not open a hole at the hip or neck.
+            let torso = band(ny, 0.36, 0.46, 0.80, 0.92) * band(nx, -0.04, 0.02, 0.98, 1.04)
+            let legs = min(1.0, frontLeg + backLeg)
+            return torso * (1.0 - head) * (1.0 - tail) * (1.0 - legs * 0.80)
         }
+    }
+
+    private static func headWeight(nx: Float, ny: Float) -> Float {
+        // Full width so ears and ruff are not shaved off the sit cutout.
+        band(ny, -0.02, 0.0, 0.40, 0.52) * band(nx, -0.08, 0.0, 1.0, 1.08)
+    }
+
+    private static func frontLegWeight(nx: Float, ny: Float) -> Float {
+        band(ny, 0.70, 0.80, 0.99, 1.06) * band(nx, 0.28, 0.38, 0.62, 0.72)
+    }
+
+    private static func backLegWeight(nx: Float, ny: Float) -> Float {
+        let vertical = band(ny, 0.68, 0.78, 0.99, 1.06)
+        let left = band(nx, 0.0, 0.04, 0.26, 0.38)
+        let right = band(nx, 0.62, 0.74, 0.96, 1.0)
+        min(1.0, vertical * (left + right))
+    }
+
+    private static func tailWeight(nx: Float, ny: Float, tailOnLeft: Bool) -> Float {
+        // Narrower than the rump so the wagging layer is one tail, not a second hip.
+        let vertical = band(ny, 0.42, 0.54, 0.88, 0.99)
+        if tailOnLeft {
+            return vertical * band(nx, -0.02, 0.0, 0.16, 0.28)
+        }
+        return vertical * band(nx, 0.72, 0.84, 1.0, 1.02)
     }
 
     private static func render(

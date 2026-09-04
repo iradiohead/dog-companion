@@ -60,6 +60,7 @@ final class CompanionRigScene: SKScene {
     private let headAnchorY: CGFloat = 0.52
     private var lastImage: PlatformImage?
     private var lastPalette: CoatPalette?
+    private var cutoutTailOnLeft = true
 
     var rigState: CompanionRigState = .sitting
     var elapsed: TimeInterval = 0
@@ -121,6 +122,7 @@ final class CompanionRigScene: SKScene {
         if let image {
             buildCutout(from: image)
         } else {
+            cutoutTailOnLeft = true
             buildSharedPuppet()
         }
         layoutParts()
@@ -131,6 +133,7 @@ final class CompanionRigScene: SKScene {
         let layers = CompanionLayerSlicer.slice(image)
         let drawOrder: [CompanionPart] = [.tail, .backLeg, .body, .frontLeg, .head]
         if let layers {
+            cutoutTailOnLeft = layers.tailOnLeft
             for part in drawOrder {
                 guard let partImage = layers.image(for: part) else { continue }
                 let node = makeCutoutSprite(from: partImage, part: part)
@@ -139,6 +142,7 @@ final class CompanionRigScene: SKScene {
                 cutoutNodes[part] = node
             }
         } else {
+            cutoutTailOnLeft = true
             let node = makeCutoutSprite(from: image, part: .body)
             node.zPosition = 2
             root.addChild(node)
@@ -249,24 +253,36 @@ final class CompanionRigScene: SKScene {
         let torsoY = transform.bodyY
         let isWholeSprite = cutoutNodes[.head] == nil
         root.zRotation = isWholeSprite ? transform.lean * 0.45 : transform.lean
+
+        let headRest = cutoutRest(for: .head)
         cutoutNodes[.head]?.position = CGPoint(
-            x: transform.headX,
-            y: cutoutRest(for: .head).y + transform.headY
+            x: headRest.x + transform.headX,
+            y: headRest.y + transform.headY + (isWholeSprite ? 0 : torsoY)
         )
         cutoutNodes[.head]?.zRotation = transform.headRotation
-        cutoutNodes[.body]?.position = CGPoint(x: 0, y: isWholeSprite ? torsoY * 0.35 : torsoY)
+
+        let bodyRest = cutoutRest(for: .body)
+        cutoutNodes[.body]?.position = CGPoint(
+            x: bodyRest.x,
+            y: bodyRest.y + (isWholeSprite ? torsoY * 0.35 : torsoY)
+        )
         cutoutNodes[.body]?.xScale = isWholeSprite ? 1 : transform.bodyScaleX
         cutoutNodes[.body]?.yScale = isWholeSprite ? 1 : transform.bodyScaleY
-        cutoutNodes[.tail]?.position = CGPoint(x: 0, y: cutoutRest(for: .tail).y + torsoY)
-        cutoutNodes[.frontLeg]?.position = CGPoint(
-            x: transform.frontLegX,
-            y: cutoutRest(for: .frontLeg).y + torsoY
-        )
-        cutoutNodes[.backLeg]?.position = CGPoint(
-            x: transform.backLegX,
-            y: cutoutRest(for: .backLeg).y + torsoY
-        )
+
+        let tailRest = cutoutRest(for: .tail)
+        cutoutNodes[.tail]?.position = CGPoint(x: tailRest.x, y: tailRest.y + torsoY)
         cutoutNodes[.tail]?.zRotation = transform.tailRotation
+
+        let frontRest = cutoutRest(for: .frontLeg)
+        cutoutNodes[.frontLeg]?.position = CGPoint(
+            x: frontRest.x + transform.frontLegX,
+            y: frontRest.y + torsoY
+        )
+        let backRest = cutoutRest(for: .backLeg)
+        cutoutNodes[.backLeg]?.position = CGPoint(
+            x: backRest.x + transform.backLegX,
+            y: backRest.y + torsoY
+        )
         cutoutNodes[.frontLeg]?.zRotation = transform.frontLegRotation
         cutoutNodes[.backLeg]?.zRotation = transform.backLegRotation
         for part in [CompanionPart.head, .tail, .frontLeg, .backLeg] {
@@ -341,11 +357,11 @@ final class CompanionRigScene: SKScene {
         case .head:
             return CGPoint(x: 0.5, y: headAnchorY)
         case .frontLeg:
-            return CGPoint(x: 0.48, y: 0.36)
+            return CGPoint(x: 0.48, y: 0.32)
         case .backLeg:
-            return CGPoint(x: 0.52, y: 0.34)
+            return CGPoint(x: 0.52, y: 0.30)
         case .tail:
-            return CGPoint(x: 0.42, y: 0.40)
+            return CGPoint(x: cutoutTailOnLeft ? 0.28 : 0.72, y: 0.42)
         case .body:
             return CGPoint(x: 0.5, y: 0)
         }
@@ -353,7 +369,10 @@ final class CompanionRigScene: SKScene {
 
     private func cutoutRest(for part: CompanionPart) -> CGPoint {
         let anchor = cutoutAnchor(for: part)
-        return CGPoint(x: 0, y: fittedSize.height * anchor.y)
+        return CGPoint(
+            x: fittedSize.width * (anchor.x - 0.5),
+            y: fittedSize.height * anchor.y
+        )
     }
 
     private func puppetAnchor(for part: PuppetPart) -> CGPoint {

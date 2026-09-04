@@ -75,6 +75,7 @@ final class CompanionRigTests: XCTestCase {
         let layers = try XCTUnwrap(CompanionLayerSlicer.slice(blob))
         XCTAssertNotNil(layers.image(for: .head))
         XCTAssertNotNil(layers.image(for: .body))
+        XCTAssertNotNil(layers.image(for: .tail))
         XCTAssertGreaterThanOrEqual(layers.images.count, 3)
 
         let head = try XCTUnwrap(layers.image(for: .head))
@@ -108,6 +109,20 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(
             CompanionLayerSlicer.weight(for: .tail, nx: 0.08, ny: 0.7, tailOnLeft: true),
             0.2
+        )
+        XCTAssertLessThan(
+            CompanionLayerSlicer.weight(for: .body, nx: 0.08, ny: 0.7, tailOnLeft: true),
+            0.12,
+            "Body must not keep a second frozen tail beside the wagging tail layer"
+        )
+        XCTAssertLessThan(
+            CompanionLayerSlicer.weight(for: .body, nx: 0.92, ny: 0.7, tailOnLeft: false),
+            0.12
+        )
+        XCTAssertGreaterThan(
+            CompanionLayerSlicer.weight(for: .body, nx: 0.32, ny: 0.62, tailOnLeft: true),
+            0.2,
+            "Rump stays on the body so the tail joint does not open a hole"
         )
         XCTAssertGreaterThan(
             CompanionLayerSlicer.weight(for: .head, nx: 0.04, ny: 0.12, tailOnLeft: true),

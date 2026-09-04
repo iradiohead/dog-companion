@@ -76,16 +76,16 @@ enum CompanionRigMotion {
         case .running:
             let gait = sin(time * 6.0)
             return CompanionPartTransform(
-                headY: cg(6.0 + sin(time * 6.0) * 8.0),
-                bodyY: cg(abs(sin(time * 6.0)) * 3.0),
-                tailRotation: cg(0.16 + sin(time * 7.0) * 0.24),
-                frontLegRotation: cg(gait * 0.48),
-                backLegRotation: cg(-gait * 0.48),
-                headRotation: cg(sin(time * 6.0) * 0.12),
-                lean: -0.14,
-                frontLegX: cg(gait * 12.0),
-                backLegX: cg(-gait * 10.0),
-                headX: cg(6.0 + gait * 4.0)
+                headY: cg(2.0 + sin(time * 6.0) * 3.5),
+                bodyY: cg(abs(sin(time * 6.0)) * 1.4),
+                tailRotation: cg(0.08 + sin(time * 7.0) * 0.12),
+                frontLegRotation: cg(gait * 0.22),
+                backLegRotation: cg(-gait * 0.22),
+                headRotation: cg(sin(time * 6.0) * 0.06),
+                lean: -0.06,
+                frontLegX: cg(gait * 5.0),
+                backLegX: cg(-gait * 4.0),
+                headX: cg(gait * 2.0)
             )
         }
     }
