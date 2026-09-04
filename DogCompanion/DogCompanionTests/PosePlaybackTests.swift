@@ -96,10 +96,10 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertTrue(CompanionPose.land.promptInstruction.contains("不能已经坐稳"))
     }
 
-    func testActionPromptForbidsCopyingSitPose() {
-        let prompt = StyleTemplate.anime.prompt(for: .runA)
-        XCTAssertTrue(prompt.contains("奔跑"))
-        XCTAssertTrue(prompt.contains("不要复制参考图里的坐姿"))
+    func testActionPromptKeepsPaperCutoutStyle() {
+        let prompt = StyleTemplate.anime.prompt(for: .sit)
+        XCTAssertTrue(prompt.contains("剪纸"))
+        XCTAssertTrue(prompt.contains("坐姿"))
         XCTAssertTrue(StyleTemplate.anime.negativePrompt(for: .runA).contains("sitting"))
     }
 
@@ -141,5 +141,18 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertEqual(a.scaleY, 1, accuracy: 0.0001)
         XCTAssertEqual(b.scaleY, 1, accuracy: 0.0001)
         XCTAssertEqual(a.x, 0, accuracy: 0.0001)
+    }
+
+    func testClimbStartsInFrontThenSitsOnTheSeat() {
+        XCTAssertEqual(
+            PosePlayback.occlusion(state: .runningIn, elapsed: 0.05),
+            .inFront
+        )
+        XCTAssertEqual(
+            PosePlayback.occlusion(state: .runningIn, elapsed: PosePlayback.runningInDuration),
+            .seated
+        )
+        XCTAssertEqual(PosePlayback.occlusion(state: .idle, elapsed: 1), .seated)
+        XCTAssertEqual(PosePlayback.occlusion(state: .away, elapsed: 0), .inFront)
     }
 }

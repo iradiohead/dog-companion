@@ -1,34 +1,12 @@
 import SwiftUI
 
-enum CompanionMotionState: Equatable {
-    case away
-    case runningIn
-    case idle
-    case reacting
-    case celebrating
-}
-
 struct MotionView: View {
-    let poses: PoseCutoutSet
+    let palette: CoatPalette
     let motionState: CompanionMotionState
     var hopDistance: CGFloat = PosePlayback.hopDistance
     let onTap: () -> Void
 
     @State private var motionStarted = Date()
-    @State private var sitImage: PlatformImage?
-
-    init(
-        poses: PoseCutoutSet,
-        motionState: CompanionMotionState,
-        hopDistance: CGFloat = PosePlayback.hopDistance,
-        onTap: @escaping () -> Void
-    ) {
-        self.poses = poses
-        self.motionState = motionState
-        self.hopDistance = hopDistance
-        self.onTap = onTap
-        _sitImage = State(initialValue: poses.sit.flatMap(PlatformImage.from))
-    }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: false)) { context in
@@ -44,11 +22,7 @@ struct MotionView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .onAppear {
-            sitImage = poses.sit.flatMap(PlatformImage.from)
             motionStarted = Date()
-        }
-        .onChange(of: poses) { _, newPoses in
-            sitImage = newPoses.sit.flatMap(PlatformImage.from)
         }
         .onChange(of: motionState) { _, _ in
             motionStarted = Date()
@@ -64,22 +38,12 @@ struct MotionView: View {
                 .offset(x: travel.x, y: 6)
                 .blur(radius: 0.5)
 
-            Group {
-                if let sitImage {
-                    CompanionRigView(
-                        image: sitImage,
-                        state: CompanionRigMotion.rigState(from: motionState),
-                        elapsed: elapsed,
-                        isPaused: motionState == .away
-                    )
-                } else if motionState != .away {
-                    Image(systemName: "dog.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .foregroundStyle(.secondary)
-                        .padding(36)
-                }
-            }
+            CompanionRigView(
+                palette: palette,
+                state: CompanionRigMotion.rigState(from: motionState),
+                elapsed: elapsed,
+                isPaused: motionState == .away
+            )
             .scaleEffect(x: travel.scaleX, y: travel.scaleY, anchor: .bottom)
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)
             .frame(width: 150, height: 168, alignment: .bottom)

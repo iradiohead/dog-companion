@@ -65,6 +65,11 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertEqual(CompanionRigMotion.rigState(from: .celebrating), .sitting)
     }
 
+    func testIdleBlinkClosesTheEye() {
+        XCTAssertEqual(CompanionRigMotion.eyeScale(time: 0), 1, accuracy: 0.01)
+        XCTAssertLessThan(CompanionRigMotion.eyeScale(time: 3.35), 0.3)
+    }
+
     func testSlicerSplitsBlobIntoHeadBodyAndLegs() throws {
         let blob = Self.makeSitBlob()
         let layers = try XCTUnwrap(CompanionLayerSlicer.slice(blob))

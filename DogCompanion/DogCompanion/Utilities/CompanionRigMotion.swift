@@ -99,6 +99,15 @@ enum CompanionRigMotion {
         }
     }
 
+    static func eyeScale(time: TimeInterval) -> CGFloat {
+        let period = 3.4
+        let cycle = time.truncatingRemainder(dividingBy: period)
+        if cycle > period - 0.12 {
+            return 0.12
+        }
+        return 1
+    }
+
     private static func climbParts(elapsed: TimeInterval) -> CompanionPartTransform {
         let crouchEnd = PosePlayback.crouchDuration
         let jumpEnd = crouchEnd + PosePlayback.jumpDuration

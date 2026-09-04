@@ -49,7 +49,7 @@ struct ScenePickerView: View {
                         }
                     }
 
-                    sectionHeader("垫子 & 装饰")
+                    sectionHeader("椅子")
                     ForEach(SceneCatalog.furniture) { item in
                         pickerCard(
                             title: item.name,

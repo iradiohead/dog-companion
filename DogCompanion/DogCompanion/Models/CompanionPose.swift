@@ -25,6 +25,11 @@ enum CompanionPose: String, CaseIterable, Equatable {
     }
 }
 
+enum CompanionOcclusion: Equatable {
+    case inFront
+    case seated
+}
+
 struct PoseCutoutSet: Equatable {
     var sit: Data?
     var runA: Data?
@@ -64,6 +69,7 @@ struct PoseTravel: Equatable {
     var opacity: Double
     var shadowScale: CGFloat
     var shadowOpacity: Double
+    var occlusion: CompanionOcclusion = .seated
 
     static let hidden = PoseTravel(
         x: 0,
@@ -73,7 +79,8 @@ struct PoseTravel: Equatable {
         rotationDegrees: 0,
         opacity: 0,
         shadowScale: 0.85,
-        shadowOpacity: 0
+        shadowOpacity: 0,
+        occlusion: .inFront
     )
 
     static func rest(scaleX: CGFloat = 1, scaleY: CGFloat = 1, rotation: CGFloat = 0) -> PoseTravel {
@@ -85,7 +92,8 @@ struct PoseTravel: Equatable {
             rotationDegrees: rotation,
             opacity: 1,
             shadowScale: 1,
-            shadowOpacity: 0.16
+            shadowOpacity: 0.16,
+            occlusion: .seated
         )
     }
 }
@@ -112,6 +120,10 @@ enum PosePlayback {
     static var crouchStart: TimeInterval { 0 }
     static var jumpStart: TimeInterval { crouchDuration }
     static var landStart: TimeInterval { jumpStart + jumpDuration }
+
+    static func occlusion(state: CompanionMotionState, elapsed: TimeInterval) -> CompanionOcclusion {
+        snapshot(state: state, elapsed: elapsed).travel.occlusion
+    }
 
     static func pose(state: CompanionMotionState, elapsed: TimeInterval) -> CompanionPose {
         snapshot(state: state, elapsed: elapsed).pose
@@ -153,6 +165,7 @@ enum PosePlayback {
         let landEnd = jumpEnd + landDuration
         var travel = PoseTravel.rest()
         travel.opacity = min(1.0, elapsed / 0.12)
+        travel.occlusion = elapsed < jumpStart + jumpDuration * 0.52 ? .inFront : .seated
 
         if elapsed <= crouchEnd {
             let crouch = smoothstep(elapsed / crouchDuration)

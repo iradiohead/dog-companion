@@ -10,7 +10,7 @@ The app pivots from a virtual-pet care loop (Feed / Play / Walk, Hunger / Mood) 
 
 **Product:** Pomodoro focus timer + personalized animated dog companion. Remove Vital Stats and Care Actions entirely.
 
-**Visual pipeline:** Source Photo → Comic Portrait (DashScope `wan2.6-image`, solid-background prompt) → Cutout (on-device Vision matting in v1) → procedural Motion (SwiftUI scale/bounce on the Cutout). No AI video or sprite-sheet generation in v1.
+**Visual pipeline:** Source Photo → Comic Portrait (DashScope, paper-cutout prompt) → coat palette snap → shared SpriteKit puppet. No AI video, no extra pose images, no Cutout on the Home Screen. See [ADR 0006](0006-shared-paper-puppet.md).
 
 **Scenes:** AI-generated background and furniture illustrations, bundled as static assets at build time — not generated per user at runtime.
 
@@ -18,7 +18,7 @@ The app pivots from a virtual-pet care loop (Feed / Play / Walk, Hunger / Mood) 
 
 **Widget:** Static home-screen widget (focus status + Scene snapshot) in v1; multi-frame animated widget deferred to v1.1.
 
-**Regeneration:** Retained, limited to 3 per Companion, re-runs the full Generation + Matting pipeline.
+**Regeneration:** Retained, limited to 3 per Companion, re-runs Comic Portrait generation and coat snap.
 
 ## Considered Options
 

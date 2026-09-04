@@ -8,9 +8,9 @@ struct StylePickerView<VM>: View where VM: ComicGenerationFlow & Observable {
     var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 8) {
-                Text("选择漫画风格")
+                Text("选择纸片风格")
                     .font(.title.bold())
-                Text("不同风格会呈现不一样的可爱效果")
+                Text("三种剪纸风，毛色会从照片里取")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

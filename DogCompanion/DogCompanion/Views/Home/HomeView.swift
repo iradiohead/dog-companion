@@ -41,7 +41,7 @@ struct HomeView: View {
                 SceneView(
                     scene: currentScene,
                     furniture: currentFurniture,
-                    poses: companion.poseCutouts,
+                    palette: companion.coatPalette,
                     motionState: viewModel.motionState,
                     isFocusActive: viewModel.phase == .running,
                     onCompanionTap: {
@@ -74,9 +74,6 @@ struct HomeView: View {
             GiftRevealView(title: viewModel.pendingGiftTitle ?? "收到礼物啦！") {
                 viewModel.dismissGift()
             }
-        }
-        .task {
-            viewModel.refreshCutoutIfNeeded(for: companion)
         }
     }
 
@@ -126,6 +123,8 @@ private struct SettingsSheet: View {
                 Section("伙伴") {
                     LabeledContent("名字", value: companion.name)
                     LabeledContent("风格", value: companion.styleTemplate.displayName)
+                    LabeledContent("毛色", value: companion.coatPalette.displayName)
+                    coatPicker
                 }
                 Section {
                     Button("换造型") {
@@ -143,6 +142,14 @@ private struct SettingsSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完成") { dismiss() }
                 }
+            }
+        }
+    }
+
+    private var coatPicker: some View {
+        Picker("更换毛色", selection: $companion.coatPaletteRaw) {
+            ForEach(CoatPalette.allCases) { palette in
+                Text(palette.displayName).tag(palette.rawValue)
             }
         }
     }

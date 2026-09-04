@@ -3,12 +3,12 @@ import SwiftUI
 struct SceneView: View {
     let scene: SceneBackground
     let furniture: FurnitureItem
-    let poses: PoseCutoutSet
+    let palette: CoatPalette
     let motionState: CompanionMotionState
     let isFocusActive: Bool
     let onCompanionTap: () -> Void
 
-    @State private var restFrame: CGRect = .zero
+    @State private var motionStarted = Date()
 
     var body: some View {
         GeometryReader { geo in
@@ -29,27 +29,11 @@ struct SceneView: View {
                     floorArea(width: geo.size.width, height: floorHeight)
                         .frame(height: floorHeight)
                 }
-
-                MotionView(
-                    poses: poses,
-                    motionState: motionState,
-                    hopDistance: PosePlayback.hopFrontY,
-                    onTap: onCompanionTap
-                )
-                .frame(
-                    width: geo.size.width,
-                    height: 280 + PosePlayback.hopFrontY,
-                    alignment: .bottom
-                )
-                .position(
-                    x: restFrame.midX,
-                    y: restFrame.maxY - 140 + PosePlayback.hopFrontY / 2
-                )
-                .opacity(restFrame == .zero ? 0 : 1)
-                .zIndex(20)
             }
-            .coordinateSpace(name: "focusScene")
-            .onPreferenceChange(DogRestAnchorKey.self) { restFrame = $0 }
+        }
+        .onAppear { motionStarted = Date() }
+        .onChange(of: motionState) { _, _ in
+            motionStarted = Date()
         }
     }
 
@@ -75,81 +59,92 @@ struct SceneView: View {
     }
 
     private func floorArea(width: CGFloat, height: CGFloat) -> some View {
-        ZStack(alignment: .bottom) {
-            WoodenFloorView(
-                floorColor: scene.bottomColor.opacity(0.5),
-                plankColor: HandDrawnPalette.ink
-            )
-            .overlay(alignment: .top) {
-                Canvas { context, size in
-                    var horizon = Path()
-                    horizon.move(to: CGPoint(x: 0, y: 3))
-                    horizon.addQuadCurve(
-                        to: CGPoint(x: size.width, y: 4),
-                        control: CGPoint(x: size.width * 0.5, y: -2)
-                    )
-                    context.stroke(horizon, with: .color(HandDrawnPalette.ink.opacity(0.12)), lineWidth: 1.6)
-                }
-                .frame(height: 8)
-            }
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: false)) { context in
+            let elapsed = context.date.timeIntervalSince(motionStarted)
+            let inFront = PosePlayback.occlusion(state: motionState, elapsed: elapsed) == .inFront
 
-            HStack(alignment: .bottom, spacing: 0) {
-                GiftBasketView()
-                    .scaleEffect(0.95)
-                    .padding(.leading, 18)
-                    .padding(.bottom, 14)
-
-                Spacer(minLength: 8)
-
-                HStack(alignment: .bottom, spacing: 6) {
-                    ZStack(alignment: .bottom) {
-                        DogMatView(color: furniture.tint.opacity(0.9))
-                            .frame(width: 190, height: 50)
-                            .padding(.bottom, 4)
-
-                        Color.clear
-                            .frame(width: 150, height: 168)
-                            .padding(.bottom, 8)
-                            .anchorReader(coordinateSpace: "focusScene")
-                    }
-                    .frame(width: 190)
-
-                    StudyDeskView(topColor: HandDrawnPalette.wood)
-                        .scaleEffect(1.05)
-                        .padding(.bottom, 2)
-                }
-
-                Spacer(minLength: 12)
-
-                CornerDoodlesView()
-                    .padding(.trailing, 22)
-                    .padding(.bottom, 18)
-            }
-            .padding(.bottom, 8)
-        }
-    }
-}
-
-private struct DogRestAnchorKey: PreferenceKey {
-    static var defaultValue: CGRect = .zero
-
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        let next = nextValue()
-        if next != .zero {
-            value = next
-        }
-    }
-}
-
-private extension View {
-    func anchorReader(coordinateSpace: String) -> some View {
-        background(
-            GeometryReader { proxy in
-                Color.clear.preference(
-                    key: DogRestAnchorKey.self,
-                    value: proxy.frame(in: .named(coordinateSpace))
+            ZStack(alignment: .bottom) {
+                WoodenFloorView(
+                    floorColor: scene.bottomColor.opacity(0.5),
+                    plankColor: HandDrawnPalette.ink
                 )
+                .overlay(alignment: .top) {
+                    Canvas { context, size in
+                        var horizon = Path()
+                        horizon.move(to: CGPoint(x: 0, y: 3))
+                        horizon.addQuadCurve(
+                            to: CGPoint(x: size.width, y: 4),
+                            control: CGPoint(x: size.width * 0.5, y: -2)
+                        )
+                        context.stroke(horizon, with: .color(HandDrawnPalette.ink.opacity(0.12)), lineWidth: 1.6)
+                    }
+                    .frame(height: 8)
+                }
+
+                HStack(alignment: .bottom, spacing: 0) {
+                    GiftBasketView()
+                        .scaleEffect(0.95)
+                        .padding(.leading, 18)
+                        .padding(.bottom, 14)
+
+                    Spacer(minLength: 8)
+
+                    HStack(alignment: .bottom, spacing: 6) {
+                        chairStack(inFront: inFront)
+
+                        StudyDeskView(topColor: HandDrawnPalette.wood)
+                            .scaleEffect(1.05)
+                            .padding(.bottom, 2)
+                    }
+
+                    Spacer(minLength: 12)
+
+                    CornerDoodlesView()
+                        .padding(.trailing, 22)
+                        .padding(.bottom, 18)
+                }
+                .padding(.bottom, 8)
             }
-        )
+        }
+    }
+
+    private func chairStack(inFront: Bool) -> some View {
+        ZStack(alignment: .bottom) {
+            LayeredChairView(
+                color: furniture.tint,
+                silhouette: furniture.silhouette,
+                layer: .back
+            )
+            .zIndex(1)
+
+            LayeredChairView(
+                color: furniture.tint,
+                silhouette: furniture.silhouette,
+                layer: .seat
+            )
+            .zIndex(2)
+
+            MotionView(
+                palette: palette,
+                motionState: motionState,
+                hopDistance: PosePlayback.hopFrontY,
+                onTap: onCompanionTap
+            )
+            .frame(
+                width: 160,
+                height: 168 + PosePlayback.hopFrontY,
+                alignment: .bottom
+            )
+            .padding(.bottom, 30)
+            .zIndex(inFront ? 6 : 3)
+
+            LayeredChairView(
+                color: furniture.tint,
+                silhouette: furniture.silhouette,
+                layer: .front
+            )
+            .zIndex(4)
+        }
+        .frame(width: 210, height: 220)
     }
 }

@@ -16,9 +16,16 @@ struct FurnitureItem: Identifiable, Hashable {
     let name: String
     let iconName: String
     let tint: Color
+    let silhouette: ChairSilhouette
     let unlockAfterSessions: Int
 
     var isDefaultUnlocked: Bool { unlockAfterSessions == 0 }
+}
+
+enum ChairSilhouette: String, Hashable {
+    case armchair
+    case roundBack
+    case sofa
 }
 
 enum SceneCatalog {
@@ -60,23 +67,26 @@ enum SceneCatalog {
     static let furniture: [FurnitureItem] = [
         FurnitureItem(
             id: "mat_cream",
-            name: "奶油小垫",
-            iconName: "rectangle.roundedbottom",
+            name: "奶油小椅",
+            iconName: "chair.fill",
             tint: Color(red: 0.95, green: 0.90, blue: 0.82),
+            silhouette: .armchair,
             unlockAfterSessions: 0
         ),
         FurnitureItem(
             id: "cushion_blue",
-            name: "蓝色圆垫",
-            iconName: "square.fill",
+            name: "蓝色软椅",
+            iconName: "chair.fill",
             tint: Color(red: 0.55, green: 0.72, blue: 0.88),
+            silhouette: .roundBack,
             unlockAfterSessions: 2
         ),
         FurnitureItem(
             id: "bone_pillow",
-            name: "暖棕软垫",
-            iconName: "oval.fill",
+            name: "暖棕沙发椅",
+            iconName: "sofa.fill",
             tint: Color(red: 0.92, green: 0.82, blue: 0.70),
+            silhouette: .sofa,
             unlockAfterSessions: 4
         )
     ]

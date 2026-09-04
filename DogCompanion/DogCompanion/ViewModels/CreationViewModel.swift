@@ -16,10 +16,7 @@ final class CreationViewModel: ComicGenerationFlow {
     var sourceImage: UIImage?
     var selectedStyle: StyleTemplate?
     var generatedPortraitData: Data?
-    var generatedCutoutData: Data?
-    var generatedRunAData: Data?
-    var generatedRunBData: Data?
-    var generatedLandData: Data?
+    var selectedPalette: CoatPalette = .brown
     var companionName: String = ""
     var isGenerating = false
     var errorMessage: String?
@@ -51,10 +48,7 @@ final class CreationViewModel: ComicGenerationFlow {
         do {
             let result = try await generationService.generateCompanionAssets(from: image, style: style)
             generatedPortraitData = result.comicPortraitData
-            generatedCutoutData = result.cutoutData
-            generatedRunAData = result.cutoutRunAData
-            generatedRunBData = result.cutoutRunBData
-            generatedLandData = result.cutoutLandData
+            selectedPalette = result.coatPalette
             sourceImage = nil
             step = .naming
         } catch {
@@ -72,8 +66,7 @@ final class CreationViewModel: ComicGenerationFlow {
             return
         }
         guard let style = selectedStyle,
-              let portraitData = generatedPortraitData,
-              let cutoutData = generatedCutoutData else {
+              let portraitData = generatedPortraitData else {
             errorMessage = "缺少生成数据，请重新开始"
             step = .photo
             return
@@ -82,10 +75,7 @@ final class CreationViewModel: ComicGenerationFlow {
         let companion = Companion(
             name: trimmed,
             comicPortraitData: portraitData,
-            cutoutData: cutoutData,
-            cutoutRunAData: generatedRunAData,
-            cutoutRunBData: generatedRunBData,
-            cutoutLandData: generatedLandData,
+            coatPalette: selectedPalette,
             styleTemplate: style
         )
         context.insert(companion)
@@ -98,10 +88,7 @@ final class CreationViewModel: ComicGenerationFlow {
         sourceImage = nil
         selectedStyle = nil
         generatedPortraitData = nil
-        generatedCutoutData = nil
-        generatedRunAData = nil
-        generatedRunBData = nil
-        generatedLandData = nil
+        selectedPalette = .brown
         companionName = ""
         isGenerating = false
         errorMessage = nil
