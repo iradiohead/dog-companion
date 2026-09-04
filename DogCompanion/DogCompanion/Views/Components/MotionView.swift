@@ -65,9 +65,9 @@ struct MotionView: View {
 
             Group {
                 if let sitImage {
-                    CompanionMeshView(
+                    CompanionRigView(
                         image: sitImage,
-                        breathEnabled: motionState == .idle,
+                        state: CompanionRigMotion.rigState(from: motionState),
                         isPaused: motionState == .away
                     )
                 } else if motionState != .away {
