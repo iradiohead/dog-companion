@@ -6,6 +6,10 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var showRegeneration = false
     @State private var showScenePicker = false
+    @State private var showSettings = false
+    @State private var showStats = false
+    @State private var showTimeline = false
+    @State private var selectedTab: HomeTab = .decor
 
     private var currentScene: SceneBackground {
         SceneCatalog.scene(for: companion.selectedSceneId)
@@ -17,33 +21,55 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            SceneView(
-                scene: currentScene,
-                furniture: currentFurniture,
-                cutoutData: companion.cutoutData,
-                portraitData: companion.comicPortraitData,
-                motionState: viewModel.motionState,
-                isFocusActive: viewModel.phase == .running,
-                onCompanionTap: {
-                    viewModel.reactToTap()
-                }
-            )
+            PaperBackgroundView()
 
-            VStack {
+            VStack(spacing: 0) {
                 topBar
-                Spacer()
-                bottomPanel
+                    .padding(.horizontal, 24)
+                    .padding(.top, 12)
+
+                FocusTimerCenterView(
+                    phase: viewModel.phase,
+                    formattedTime: viewModel.formattedRemainingTime,
+                    onStart: { viewModel.startFocus(with: companion) },
+                    onPause: { viewModel.pauseFocus() },
+                    onResume: { viewModel.resumeFocus(with: companion) },
+                    onCancel: { viewModel.cancelFocus() }
+                )
+                .padding(.top, 4)
+
+                SceneView(
+                    scene: currentScene,
+                    furniture: currentFurniture,
+                    cutoutData: companion.cutoutData,
+                    portraitData: companion.comicPortraitData,
+                    motionState: viewModel.motionState,
+                    isFocusActive: viewModel.phase == .running,
+                    onCompanionTap: {
+                        viewModel.reactToTap()
+                    }
+                )
+                .frame(maxHeight: .infinity)
+
+                BottomNavBar(selectedTab: $selectedTab) { tab in
+                    handleTab(tab)
+                }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 20)
         }
-        .background(HandDrawnPalette.cream)
         .sheet(isPresented: $showRegeneration) {
             RegenerationFlowView(companion: companion)
         }
         .sheet(isPresented: $showScenePicker) {
             ScenePickerView(companion: companion)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsSheet(companion: companion, showRegeneration: $showRegeneration)
+        }
+        .sheet(isPresented: $showStats) {
+            StatsSheet(companion: companion)
+        }
+        .sheet(isPresented: $showTimeline) {
+            TimelinePlaceholderSheet()
         }
         .sheet(isPresented: giftRevealBinding) {
             GiftRevealView(title: viewModel.pendingGiftTitle ?? "收到礼物啦！") {
@@ -53,57 +79,25 @@ struct HomeView: View {
     }
 
     private var topBar: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(companion.name)
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(HandDrawnPalette.ink)
-                Text("已完成 \(companion.completedFocusSessions) 次专注")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(HandDrawnPalette.inkLight)
+        HStack {
+            HandDrawnTextButton(title: "收藏", dotColor: .green) {
+                showStats = true
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background {
-                Capsule(style: .continuous)
-                    .fill(HandDrawnPalette.paper.opacity(0.85))
-                    .overlay {
-                        Capsule(style: .continuous)
-                            .strokeBorder(HandDrawnPalette.ink.opacity(0.25), lineWidth: 1.5)
-                    }
-            }
-
             Spacer()
-
-            HStack(spacing: 10) {
-                HandDrawnIconButton(icon: "paintpalette", label: "装扮") {
-                    showScenePicker = true
-                }
-                HandDrawnIconButton(icon: "paintbrush", label: "换造型") {
-                    showRegeneration = true
-                }
-                .opacity(companion.canRegenerate ? 1 : 0.45)
-                .disabled(!companion.canRegenerate)
+            HandDrawnTextButton(title: "设置", trailingIcon: "dog.fill") {
+                showSettings = true
             }
         }
     }
 
-    private var bottomPanel: some View {
-        VStack(spacing: 10) {
-            FocusTimerView(
-                phase: viewModel.phase,
-                formattedTime: viewModel.formattedRemainingTime,
-                onStart: { viewModel.startFocus(with: companion) },
-                onPause: { viewModel.pauseFocus() },
-                onResume: { viewModel.resumeFocus(with: companion) },
-                onCancel: { viewModel.cancelFocus() }
-            )
-
-            if companion.canRegenerate {
-                Text("还可以换 \(companion.remainingRegenerations) 次造型")
-                    .font(.caption2)
-                    .foregroundStyle(HandDrawnPalette.inkLight.opacity(0.9))
-            }
+    private func handleTab(_ tab: HomeTab) {
+        switch tab {
+        case .stats:
+            showStats = true
+        case .timeline:
+            showTimeline = true
+        case .decor:
+            showScenePicker = true
         }
     }
 
@@ -116,6 +110,96 @@ struct HomeView: View {
                 }
             }
         )
+    }
+}
+
+private struct SettingsSheet: View {
+    @Bindable var companion: Companion
+    @Binding var showRegeneration: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("伙伴") {
+                    LabeledContent("名字", value: companion.name)
+                    LabeledContent("风格", value: companion.styleTemplate.displayName)
+                }
+                Section {
+                    Button("换造型") {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            showRegeneration = true
+                        }
+                    }
+                    .disabled(!companion.canRegenerate)
+                }
+            }
+            .navigationTitle("设置")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+private struct StatsSheet: View {
+    let companion: Companion
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text("\(companion.completedFocusSessions)")
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundStyle(HandDrawnPalette.timerGreen)
+                Text("次专注完成")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(HandDrawnPalette.ink)
+                Spacer()
+            }
+            .padding(.top, 40)
+            .frame(maxWidth: .infinity)
+            .background(HandDrawnPalette.paperBase)
+            .navigationTitle("统计")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+private struct TimelinePlaceholderSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                Image(systemName: "calendar")
+                    .font(.largeTitle)
+                    .foregroundStyle(HandDrawnPalette.inkLight)
+                Text("时间轴即将推出")
+                    .font(.headline)
+                    .foregroundStyle(HandDrawnPalette.ink)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(HandDrawnPalette.paperBase)
+            .navigationTitle("时间轴")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 }
 

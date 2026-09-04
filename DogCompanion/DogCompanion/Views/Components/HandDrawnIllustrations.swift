@@ -180,11 +180,111 @@ struct DogMatView: View {
     var body: some View {
         Ellipse()
             .fill(color)
-            .frame(width: 150, height: 42)
+            .frame(width: 220, height: 58)
             .overlay {
                 Ellipse()
-                    .strokeBorder(HandDrawnPalette.ink.opacity(0.25), lineWidth: 2)
+                    .strokeBorder(HandDrawnPalette.ink.opacity(0.2), lineWidth: 2)
             }
-            .shadow(color: HandDrawnPalette.ink.opacity(0.1), radius: 3, y: 2)
+            .shadow(color: HandDrawnPalette.ink.opacity(0.08), radius: 3, y: 2)
+    }
+}
+
+struct ArmChairView: View {
+    let seatColor: Color
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                ZStack(alignment: .bottomLeading) {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(seatColor)
+                        .frame(width: 150, height: 88)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                                .strokeBorder(HandDrawnPalette.ink.opacity(0.35), lineWidth: 2.5)
+                        }
+
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(seatColor.opacity(0.95))
+                        .frame(width: 34, height: 70)
+                        .offset(x: -18, y: -8)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .strokeBorder(HandDrawnPalette.ink.opacity(0.3), lineWidth: 2)
+                        }
+
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(HandDrawnPalette.wood.opacity(0.85))
+                        .frame(width: 42, height: 12)
+                        .offset(x: -36, y: 24)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(HandDrawnPalette.ink.opacity(0.25), lineWidth: 1.5)
+                        }
+                }
+
+                HStack(spacing: 52) {
+                    leg
+                    leg
+                    leg
+                }
+                .offset(y: -2)
+            }
+        }
+        .frame(width: 170, height: 120)
+    }
+
+    private var leg: some View {
+        RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(HandDrawnPalette.wood)
+            .frame(width: 8, height: 28)
+            .overlay {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .strokeBorder(HandDrawnPalette.ink.opacity(0.25), lineWidth: 1)
+            }
+    }
+}
+
+struct GiftBasketView: View {
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Path { path in
+                path.move(to: CGPoint(x: 10, y: 20))
+                path.addQuadCurve(to: CGPoint(x: 70, y: 20), control: CGPoint(x: 40, y: 42))
+                path.addLine(to: CGPoint(x: 66, y: 52))
+                path.addQuadCurve(to: CGPoint(x: 14, y: 52), control: CGPoint(x: 40, y: 58))
+                path.closeSubpath()
+            }
+            .fill(Color(red: 0.45, green: 0.68, blue: 0.72).opacity(0.75))
+            .overlay {
+                Path { path in
+                    path.move(to: CGPoint(x: 10, y: 20))
+                    path.addQuadCurve(to: CGPoint(x: 70, y: 20), control: CGPoint(x: 40, y: 42))
+                    path.addLine(to: CGPoint(x: 66, y: 52))
+                    path.addQuadCurve(to: CGPoint(x: 14, y: 52), control: CGPoint(x: 40, y: 58))
+                    path.closeSubpath()
+                }
+                .stroke(HandDrawnPalette.ink.opacity(0.35), lineWidth: 2)
+            }
+
+            HStack(spacing: 4) {
+                Circle().fill(Color.pink.opacity(0.7)).frame(width: 10, height: 10)
+                Circle().fill(Color.orange.opacity(0.7)).frame(width: 8, height: 8)
+                Circle().fill(Color.green.opacity(0.6)).frame(width: 9, height: 9)
+            }
+            .offset(y: -8)
+        }
+        .frame(width: 80, height: 56)
+    }
+}
+
+struct CornerDoodlesView: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "pawprint.fill")
+            Image(systemName: "leaf.fill")
+        }
+        .font(.caption)
+        .foregroundStyle(HandDrawnPalette.ink.opacity(0.35))
     }
 }

@@ -12,58 +12,44 @@ struct SceneView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                // Wall
-                LinearGradient(
-                    colors: [scene.topColor, scene.bottomColor.opacity(0.95)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-
-                // Floor
-                VStack {
-                    Spacer()
-                    WoodenFloorView(
-                        floorColor: scene.accentColor.opacity(0.35),
-                        plankColor: HandDrawnPalette.ink
-                    )
-                    .frame(height: geo.size.height * 0.32)
-                }
-
-                // Wall painting
                 WallPaintingView(accent: scene.accentColor)
-                    .position(x: geo.size.width * 0.72, y: geo.size.height * 0.18)
+                    .scaleEffect(0.85)
+                    .position(x: geo.size.width * 0.18, y: geo.size.height * 0.22)
 
-                // Floor lamp
-                FloorLampView(isLit: isFocusActive, accent: scene.accentColor)
-                    .position(x: geo.size.width * 0.14, y: geo.size.height * 0.52)
+                GiftBasketView()
+                    .position(x: geo.size.width * 0.14, y: geo.size.height * 0.78)
 
-                // Table + dog area
-                VStack {
+                FloorLampView(isLit: isFocusActive, accent: Color(red: 0.95, green: 0.68, blue: 0.38))
+                    .scaleEffect(0.9)
+                    .position(x: geo.size.width * 0.84, y: geo.size.height * 0.42)
+
+                CornerDoodlesView()
+                    .position(x: geo.size.width * 0.88, y: geo.size.height * 0.82)
+
+                VStack(spacing: 0) {
                     Spacer()
 
-                    HStack(alignment: .bottom, spacing: 0) {
-                        VStack(spacing: 0) {
-                            DogMatView(color: furniture.tint)
-                                .padding(.bottom, 4)
+                    ZStack(alignment: .bottom) {
+                        DogMatView(color: furniture.tint.opacity(0.92))
+                            .padding(.bottom, 8)
 
+                        VStack(spacing: -18) {
                             MotionView(
                                 cutoutData: cutoutData,
                                 portraitData: portraitData,
                                 motionState: motionState,
                                 onTap: onCompanionTap
                             )
-                            .frame(height: min(geo.size.height * 0.28, 220))
-                        }
-                        .frame(maxWidth: .infinity)
+                            .frame(height: min(geo.size.height * 0.34, 150))
+                            .zIndex(1)
 
-                        SideTableView(topColor: scene.accentColor.opacity(0.75))
-                            .padding(.bottom, 18)
-                            .padding(.trailing, 28)
+                            ArmChairView(seatColor: HandDrawnPalette.chairGreen)
+                                .padding(.bottom, 6)
+                        }
                     }
-                    .padding(.bottom, geo.size.height * 0.08)
+                    .padding(.bottom, geo.size.height * 0.04)
                 }
             }
         }
-        .ignoresSafeArea()
     }
 }
