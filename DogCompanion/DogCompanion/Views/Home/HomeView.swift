@@ -16,75 +16,93 @@ struct HomeView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    SceneView(
-                        scene: currentScene,
-                        furniture: currentFurniture,
-                        cutoutData: companion.cutoutData,
-                        portraitData: companion.comicPortraitData,
-                        motionState: viewModel.motionState,
-                        onCompanionTap: {
-                            viewModel.reactToTap()
-                        }
-                    )
-                    .padding(.horizontal)
+        ZStack {
+            SceneView(
+                scene: currentScene,
+                furniture: currentFurniture,
+                cutoutData: companion.cutoutData,
+                portraitData: companion.comicPortraitData,
+                motionState: viewModel.motionState,
+                isFocusActive: viewModel.phase == .running,
+                onCompanionTap: {
+                    viewModel.reactToTap()
+                }
+            )
 
-                    FocusTimerView(
-                        phase: viewModel.phase,
-                        formattedTime: viewModel.formattedRemainingTime,
-                        onStart: { viewModel.startFocus(with: companion) },
-                        onPause: { viewModel.pauseFocus() },
-                        onResume: { viewModel.resumeFocus(with: companion) },
-                        onCancel: { viewModel.cancelFocus() }
-                    )
-                    .padding(.horizontal)
+            VStack {
+                topBar
+                Spacer()
+                bottomPanel
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 20)
+        }
+        .background(HandDrawnPalette.cream)
+        .sheet(isPresented: $showRegeneration) {
+            RegenerationFlowView(companion: companion)
+        }
+        .sheet(isPresented: $showScenePicker) {
+            ScenePickerView(companion: companion)
+        }
+        .sheet(isPresented: giftRevealBinding) {
+            GiftRevealView(title: viewModel.pendingGiftTitle ?? "收到礼物啦！") {
+                viewModel.dismissGift()
+            }
+        }
+    }
 
-                    HStack {
-                        Label("已完成 \(companion.completedFocusSessions) 次专注", systemImage: "checkmark.seal")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        if companion.canRegenerate {
-                            Text("还可换 \(companion.remainingRegenerations) 次造型")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+    private var topBar: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(companion.name)
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(HandDrawnPalette.ink)
+                Text("已完成 \(companion.completedFocusSessions) 次专注")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(HandDrawnPalette.inkLight)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background {
+                Capsule(style: .continuous)
+                    .fill(HandDrawnPalette.paper.opacity(0.85))
+                    .overlay {
+                        Capsule(style: .continuous)
+                            .strokeBorder(HandDrawnPalette.ink.opacity(0.25), lineWidth: 1.5)
                     }
-                    .padding(.horizontal)
-                }
-                .padding(.vertical)
             }
-            .navigationTitle(companion.name)
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        showScenePicker = true
-                    } label: {
-                        Label("装扮", systemImage: "paintpalette")
-                    }
+
+            Spacer()
+
+            HStack(spacing: 10) {
+                HandDrawnIconButton(icon: "paintpalette", label: "装扮") {
+                    showScenePicker = true
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showRegeneration = true
-                    } label: {
-                        Label("换造型", systemImage: "paintbrush")
-                    }
-                    .disabled(!companion.canRegenerate)
+                HandDrawnIconButton(icon: "paintbrush", label: "换造型") {
+                    showRegeneration = true
                 }
+                .opacity(companion.canRegenerate ? 1 : 0.45)
+                .disabled(!companion.canRegenerate)
             }
-            .sheet(isPresented: $showRegeneration) {
-                RegenerationFlowView(companion: companion)
-            }
-            .sheet(isPresented: $showScenePicker) {
-                ScenePickerView(companion: companion)
-            }
-            .sheet(isPresented: giftRevealBinding) {
-                GiftRevealView(title: viewModel.pendingGiftTitle ?? "收到礼物啦！") {
-                    viewModel.dismissGift()
-                }
+        }
+    }
+
+    private var bottomPanel: some View {
+        VStack(spacing: 10) {
+            FocusTimerView(
+                phase: viewModel.phase,
+                formattedTime: viewModel.formattedRemainingTime,
+                onStart: { viewModel.startFocus(with: companion) },
+                onPause: { viewModel.pauseFocus() },
+                onResume: { viewModel.resumeFocus(with: companion) },
+                onCancel: { viewModel.cancelFocus() }
+            )
+
+            if companion.canRegenerate {
+                Text("还可以换 \(companion.remainingRegenerations) 次造型")
+                    .font(.caption2)
+                    .foregroundStyle(HandDrawnPalette.inkLight.opacity(0.9))
             }
         }
     }

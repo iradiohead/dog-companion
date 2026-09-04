@@ -9,70 +9,65 @@ struct FocusTimerView: View {
     let onCancel: () -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text(formattedTime)
-                .font(.system(size: 48, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .contentTransition(.numericText())
+        HandDrawnCard {
+            VStack(spacing: 14) {
+                Text(formattedTime)
+                    .font(.system(size: 52, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(HandDrawnPalette.ink)
+                    .contentTransition(.numericText())
 
-            Text(statusText)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                Text(statusText)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(HandDrawnPalette.inkLight)
 
-            HStack(spacing: 12) {
-                switch phase {
-                case .idle, .completed:
-                    Button(action: onStart) {
-                        Label("开始专注", systemImage: "play.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-
-                case .running:
-                    Button(action: onPause) {
-                        Label("暂停", systemImage: "pause.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-
-                    Button(role: .destructive, action: onCancel) {
-                        Label("放弃", systemImage: "xmark")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-
-                case .paused:
-                    Button(action: onResume) {
-                        Label("继续", systemImage: "play.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-
-                    Button(role: .destructive, action: onCancel) {
-                        Label("放弃", systemImage: "xmark")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                }
+                controlButtons
             }
         }
-        .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    @ViewBuilder
+    private var controlButtons: some View {
+        switch phase {
+        case .idle, .completed:
+            HandDrawnActionButton(title: "开始专注", icon: "play.fill", action: onStart)
+
+        case .running:
+            HStack(spacing: 10) {
+                HandDrawnActionButton(title: "暂停", icon: "pause.fill", tint: Color(red: 0.65, green: 0.58, blue: 0.50), action: onPause)
+                HandDrawnActionButton(
+                    title: "放弃",
+                    icon: "xmark",
+                    tint: Color(red: 0.78, green: 0.48, blue: 0.42),
+                    isPrimary: false,
+                    action: onCancel
+                )
+            }
+
+        case .paused:
+            HStack(spacing: 10) {
+                HandDrawnActionButton(title: "继续", icon: "play.fill", action: onResume)
+                HandDrawnActionButton(
+                    title: "放弃",
+                    icon: "xmark",
+                    tint: Color(red: 0.78, green: 0.48, blue: 0.42),
+                    isPrimary: false,
+                    action: onCancel
+                )
+            }
+        }
     }
 
     private var statusText: String {
         switch phase {
         case .idle:
-            return "狗狗在等你开始专注"
+            return "狗狗在桌边等你开始专注"
         case .running:
-            return "狗狗正在陪你专注中…"
+            return "狗狗正在安静地陪你…"
         case .paused:
-            return "已暂停"
+            return "专注已暂停"
         case .completed:
-            return "本次专注已完成"
+            return "本次专注完成啦"
         }
     }
 }

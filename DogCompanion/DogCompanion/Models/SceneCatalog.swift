@@ -60,21 +60,21 @@ enum SceneCatalog {
     static let furniture: [FurnitureItem] = [
         FurnitureItem(
             id: "mat_cream",
-            name: "奶油垫子",
+            name: "奶油小垫",
             iconName: "rectangle.roundedbottom",
             tint: Color(red: 0.95, green: 0.90, blue: 0.82),
             unlockAfterSessions: 0
         ),
         FurnitureItem(
             id: "cushion_blue",
-            name: "蓝色软垫",
+            name: "蓝色圆垫",
             iconName: "square.fill",
             tint: Color(red: 0.55, green: 0.72, blue: 0.88),
             unlockAfterSessions: 2
         ),
         FurnitureItem(
             id: "bone_pillow",
-            name: "骨头抱枕",
+            name: "暖棕软垫",
             iconName: "oval.fill",
             tint: Color(red: 0.92, green: 0.82, blue: 0.70),
             unlockAfterSessions: 4

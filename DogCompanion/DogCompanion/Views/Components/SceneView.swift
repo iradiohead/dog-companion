@@ -6,45 +6,64 @@ struct SceneView: View {
     let cutoutData: Data?
     let portraitData: Data?
     let motionState: CompanionMotionState
+    let isFocusActive: Bool
     let onCompanionTap: () -> Void
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            LinearGradient(
-                colors: [scene.topColor, scene.bottomColor],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-            RoundedRectangle(cornerRadius: 20)
-                .fill(scene.accentColor.opacity(0.25))
-                .frame(height: 90)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-
-            VStack(spacing: 0) {
-                Spacer()
-
-                Image(systemName: furniture.iconName)
-                    .font(.system(size: 72))
-                    .foregroundStyle(furniture.tint)
-                    .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-                    .padding(.bottom, 8)
-
-                MotionView(
-                    cutoutData: cutoutData,
-                    portraitData: portraitData,
-                    motionState: motionState,
-                    onTap: onCompanionTap
+        GeometryReader { geo in
+            ZStack {
+                // Wall
+                LinearGradient(
+                    colors: [scene.topColor, scene.bottomColor.opacity(0.95)],
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
-                .padding(.bottom, 28)
+
+                // Floor
+                VStack {
+                    Spacer()
+                    WoodenFloorView(
+                        floorColor: scene.accentColor.opacity(0.35),
+                        plankColor: HandDrawnPalette.ink
+                    )
+                    .frame(height: geo.size.height * 0.32)
+                }
+
+                // Wall painting
+                WallPaintingView(accent: scene.accentColor)
+                    .position(x: geo.size.width * 0.72, y: geo.size.height * 0.18)
+
+                // Floor lamp
+                FloorLampView(isLit: isFocusActive, accent: scene.accentColor)
+                    .position(x: geo.size.width * 0.14, y: geo.size.height * 0.52)
+
+                // Table + dog area
+                VStack {
+                    Spacer()
+
+                    HStack(alignment: .bottom, spacing: 0) {
+                        VStack(spacing: 0) {
+                            DogMatView(color: furniture.tint)
+                                .padding(.bottom, 4)
+
+                            MotionView(
+                                cutoutData: cutoutData,
+                                portraitData: portraitData,
+                                motionState: motionState,
+                                onTap: onCompanionTap
+                            )
+                            .frame(height: min(geo.size.height * 0.28, 220))
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        SideTableView(topColor: scene.accentColor.opacity(0.75))
+                            .padding(.bottom, 18)
+                            .padding(.trailing, 28)
+                    }
+                    .padding(.bottom, geo.size.height * 0.08)
+                }
             }
         }
-        .frame(height: 360)
-        .clipShape(RoundedRectangle(cornerRadius: 28))
-        .overlay {
-            RoundedRectangle(cornerRadius: 28)
-                .strokeBorder(.white.opacity(0.35), lineWidth: 1)
-        }
+        .ignoresSafeArea()
     }
 }
