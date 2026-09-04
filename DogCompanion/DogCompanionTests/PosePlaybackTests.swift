@@ -3,14 +3,14 @@ import UIKit
 @testable import DogCompanion
 
 final class PosePlaybackTests: XCTestCase {
-    func testJumpOnUsesSitPoseTheWholeWay() {
-        XCTAssertEqual(PosePlayback.pose(state: .runningIn, elapsed: 0), .sit)
+    func testRunInUsesRunArtThenSits() {
+        XCTAssertEqual(PosePlayback.pose(state: .runningIn, elapsed: 0.1), .runA)
         XCTAssertEqual(
-            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.crouchDuration + 0.3),
-            .sit
+            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.runDuration * 0.7),
+            .runB
         )
         XCTAssertEqual(
-            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.crouchDuration + PosePlayback.jumpDuration + 0.05),
+            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.crouchStart + 0.05),
             .sit
         )
         XCTAssertEqual(

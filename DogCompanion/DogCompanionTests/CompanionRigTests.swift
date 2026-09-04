@@ -8,9 +8,11 @@ final class CompanionRigTests: XCTestCase {
         let headPeak = CompanionRigMotion.transform(state: .sitting, time: Double.pi / 2)
         let tailPeak = CompanionRigMotion.transform(state: .sitting, time: Double.pi / 4)
         XCTAssertEqual(rest.headY, 0, accuracy: 0.01)
-        XCTAssertGreaterThan(headPeak.headY, 4)
+        XCTAssertGreaterThan(headPeak.headY, 12)
         XCTAssertGreaterThan(abs(tailPeak.tailRotation), 0.1)
-        XCTAssertGreaterThan(headPeak.bodyY, 1)
+        XCTAssertGreaterThan(headPeak.bodyY, 3)
+        XCTAssertGreaterThan(abs(headPeak.headRotation), 0.1)
+        XCTAssertGreaterThan(headPeak.bodyScaleY, 1.04)
     }
 
     func testJumpCrouchDipsTheHead() {
@@ -35,6 +37,18 @@ final class CompanionRigTests: XCTestCase {
         let pose = CompanionRigMotion.transform(state: .jumping, time: PosePlayback.runningInDuration)
         XCTAssertEqual(pose.headY, 0, accuracy: 0.2)
         XCTAssertEqual(pose.frontLegRotation, 0, accuracy: 0.05)
+        XCTAssertEqual(pose.bodyScaleX, 1, accuracy: 0.05)
+    }
+
+    func testRunningPoseLeansAndSwingsLegs() {
+        let sit = CompanionRigMotion.transform(state: .sitting, time: 0.2)
+        let run = CompanionRigMotion.transform(state: .running, time: 0.2)
+        XCTAssertLessThan(run.lean, -0.1)
+        XCTAssertGreaterThan(abs(run.frontLegRotation), 0.3)
+        XCTAssertGreaterThan(abs(run.frontLegX), abs(sit.frontLegX) + 4)
+        XCTAssertGreaterThan(abs(run.headY), abs(sit.headY))
+        XCTAssertGreaterThan(run.bodyScaleX, sit.bodyScaleX)
+        XCTAssertLessThan(run.bodyScaleY, sit.bodyScaleY)
     }
 
     func testWalkingSwingsLegsOpposite() {
@@ -68,6 +82,14 @@ final class CompanionRigTests: XCTestCase {
             0.4
         )
         XCTAssertLessThan(
+            CompanionLayerSlicer.weight(for: .body, nx: 0.5, ny: 0.12, tailOnLeft: true),
+            0.08
+        )
+        XCTAssertLessThan(
+            CompanionLayerSlicer.weight(for: .body, nx: 0.5, ny: 0.22, tailOnLeft: true),
+            0.08
+        )
+        XCTAssertLessThan(
             CompanionLayerSlicer.weight(for: .head, nx: 0.5, ny: 0.82, tailOnLeft: true),
             0.05
         )
@@ -83,6 +105,7 @@ final class CompanionRigTests: XCTestCase {
             CompanionLayerSlicer.weight(for: .tail, nx: 0.08, ny: 0.7, tailOnLeft: true),
             0.2
         )
+        XCTAssertLessThan(Self.opaqueCountInTopQuarter(body), Self.opaqueCountInTopQuarter(head))
     }
 
     private static func makeSitBlob() -> UIImage {
@@ -116,6 +139,36 @@ final class CompanionRigTests: XCTestCase {
         var count = 0
         for index in stride(from: 3, to: data.count, by: 4) where data[index] > 20 {
             count += 1
+        }
+        return count
+    }
+
+    private static func opaqueCountInTopQuarter(_ image: UIImage) -> Int {
+        guard let cgImage = image.cgImage else { return 0 }
+        let width = cgImage.width
+        let height = cgImage.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        guard let context = CGContext(
+            data: &data,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        ) else {
+            return 0
+        }
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let maxY = max(1, height / 4)
+        var count = 0
+        for y in 0..<maxY {
+            for x in 0..<width {
+                let alpha = data[(y * width + x) * 4 + 3]
+                if alpha > 20 {
+                    count += 1
+                }
+            }
         }
         return count
     }

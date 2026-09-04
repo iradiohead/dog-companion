@@ -163,13 +163,16 @@ enum PosePlayback {
             let damp = 1.0 - smoothstep((t - 0.82) / 0.18)
             let stride = sin(elapsed * 8.0)
             travel.x = startX + (hopStartX - startX) * cg(approach)
-            travel.y = -farLift * cg(1.0 - approach) - cg(5.0 * abs(stride) * damp)
-            travel.scaleX = cg(size * (1.0 + 0.03 * stride * damp))
-            travel.scaleY = cg(size * (1.0 + 0.04 * abs(stride) * damp))
-            travel.rotationDegrees = cg(lerp(-8.0, 0, approach))
+            travel.y = -farLift * cg(1.0 - approach) - cg(8.0 * abs(stride) * damp)
+            let runScaleX = 1.04 + 0.05 * stride
+            let runScaleY = 1.0 - 0.04 * abs(stride)
+            travel.scaleX = cg(size * (runScaleX * damp + 1.0 * (1.0 - damp)))
+            travel.scaleY = cg(size * (runScaleY * damp + 1.0 * (1.0 - damp)))
+            travel.rotationDegrees = cg(-10.0 * damp)
             travel.shadowScale = cg(lerp(0.55, 1.0, approach))
             travel.shadowOpacity = 0.16 * lerp(0.4, 1.0, approach)
-            return PoseSnapshot(pose: .sit, travel: travel)
+            let pose: CompanionPose = t < 0.48 ? .runA : .runB
+            return PoseSnapshot(pose: pose, travel: travel)
         }
 
         if elapsed <= crouchEnd {
