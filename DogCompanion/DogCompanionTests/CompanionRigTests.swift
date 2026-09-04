@@ -14,7 +14,10 @@ final class CompanionRigTests: XCTestCase {
     }
 
     func testJumpCrouchDipsTheHead() {
-        let pose = CompanionRigMotion.transform(state: .jumping, time: PosePlayback.crouchDuration)
+        let pose = CompanionRigMotion.transform(
+            state: .jumping,
+            time: PosePlayback.crouchStart + PosePlayback.crouchDuration
+        )
         XCTAssertLessThan(pose.headY, -3)
         XCTAssertLessThan(pose.bodyY, -2)
     }
@@ -22,7 +25,7 @@ final class CompanionRigTests: XCTestCase {
     func testJumpApexTucksTheLegs() {
         let pose = CompanionRigMotion.transform(
             state: .jumping,
-            time: PosePlayback.crouchDuration + PosePlayback.jumpDuration * 0.5
+            time: PosePlayback.jumpStart + PosePlayback.jumpDuration * 0.5
         )
         XCTAssertLessThan(pose.frontLegRotation, -0.1)
         XCTAssertGreaterThan(pose.tailRotation, 0.1)
@@ -39,9 +42,13 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(abs(pose.frontLegRotation - pose.backLegRotation), 0.1)
     }
 
-    func testIdleMapsToSittingAndJumpMapsToJumping() {
+    func testIdleMapsToSittingAndRunInStartsRunning() {
         XCTAssertEqual(CompanionRigMotion.rigState(from: .idle), .sitting)
-        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn), .jumping)
+        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .running)
+        XCTAssertEqual(
+            CompanionRigMotion.rigState(from: .runningIn, elapsed: PosePlayback.runDuration + 0.05),
+            .jumping
+        )
         XCTAssertEqual(CompanionRigMotion.rigState(from: .celebrating), .sitting)
     }
 

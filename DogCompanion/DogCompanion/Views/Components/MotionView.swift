@@ -67,7 +67,7 @@ struct MotionView: View {
                 if let sitImage {
                     CompanionRigView(
                         image: sitImage,
-                        state: CompanionRigMotion.rigState(from: motionState),
+                        state: CompanionRigMotion.rigState(from: motionState, elapsed: elapsed),
                         elapsed: elapsed,
                         isPaused: motionState == .away
                     )
@@ -81,6 +81,7 @@ struct MotionView: View {
             }
             .scaleEffect(x: travel.scaleX, y: travel.scaleY, anchor: .bottom)
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)
+            .frame(width: 150, height: 168, alignment: .bottom)
             .offset(x: travel.x, y: travel.y)
             .opacity(travel.opacity)
             .onTapGesture(perform: onTap)

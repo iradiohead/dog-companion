@@ -25,19 +25,31 @@ final class PosePlaybackTests: XCTestCase {
     }
 
     func testCrouchBeforeJump() {
-        let crouch = PosePlayback.travel(state: .runningIn, elapsed: 0.2)
+        let crouch = PosePlayback.travel(state: .runningIn, elapsed: PosePlayback.crouchStart + 0.15)
         XCTAssertLessThan(crouch.scaleY, 0.98)
         XCTAssertGreaterThan(crouch.scaleX, 1.02)
-        XCTAssertLessThan(crouch.x, -80)
+        XCTAssertLessThan(crouch.x, -10)
         XCTAssertGreaterThan(crouch.opacity, 0.5)
+    }
+
+    func testRunInStartsSmallAndFarLeft() {
+        let start = PosePlayback.travel(state: .runningIn, elapsed: 0.05)
+        XCTAssertLessThan(start.x, -150)
+        XCTAssertLessThan(start.scaleY, 0.55)
+        XCTAssertGreaterThan(start.opacity, 0.2)
+    }
+
+    func testRunInGrowsWhileMovingRight() {
+        let early = PosePlayback.travel(state: .runningIn, elapsed: 0.2)
+        let late = PosePlayback.travel(state: .runningIn, elapsed: PosePlayback.runDuration - 0.05)
+        XCTAssertGreaterThan(late.x, early.x)
+        XCTAssertGreaterThan(late.scaleY, early.scaleY)
+        XCTAssertGreaterThan(late.scaleY, 0.85)
     }
 
     func testJumpTravelsFromLeftToTheMat() {
         let start = PosePlayback.travel(state: .runningIn, elapsed: 0)
-        let end = PosePlayback.travel(
-            state: .runningIn,
-            elapsed: PosePlayback.crouchDuration + PosePlayback.jumpDuration
-        )
+        let end = PosePlayback.travel(state: .runningIn, elapsed: PosePlayback.landStart)
         XCTAssertLessThan(start.x, end.x)
         XCTAssertEqual(end.x, 0, accuracy: 2)
     }
@@ -45,25 +57,25 @@ final class PosePlaybackTests: XCTestCase {
     func testJumpHasOneArc() {
         let mid = PosePlayback.travel(
             state: .runningIn,
-            elapsed: PosePlayback.crouchDuration + PosePlayback.jumpDuration * 0.5
+            elapsed: PosePlayback.jumpStart + PosePlayback.jumpDuration * 0.5
         )
         XCTAssertLessThan(mid.y, -20)
 
         var lowest: CGFloat = 0
-        var elapsed = PosePlayback.crouchDuration
+        var elapsed = PosePlayback.jumpStart
         let end = elapsed + PosePlayback.jumpDuration
         while elapsed < end {
             lowest = min(lowest, PosePlayback.travel(state: .runningIn, elapsed: elapsed).y)
             elapsed += 0.03
         }
         XCTAssertLessThan(lowest, -20)
-        XCTAssertGreaterThan(lowest, -70)
+        XCTAssertGreaterThan(lowest, -50)
     }
 
     func testLandSquashesGentlyThenSits() {
         let land = PosePlayback.travel(
             state: .runningIn,
-            elapsed: PosePlayback.crouchDuration + PosePlayback.jumpDuration + 0.03
+            elapsed: PosePlayback.landStart + 0.03
         )
         XCTAssertLessThan(land.scaleY, 0.97)
         XCTAssertEqual(land.x, 0, accuracy: 0.5)
@@ -108,8 +120,8 @@ final class PosePlaybackTests: XCTestCase {
         while elapsed < PosePlayback.runningInDuration {
             elapsed += 1.0 / 60.0
             let next = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
-            XCTAssertLessThan(abs(next.scaleY - previous.scaleY), 0.06)
-            XCTAssertLessThan(abs(next.rotationDegrees - previous.rotationDegrees), 3.5)
+            XCTAssertLessThan(abs(next.scaleY - previous.scaleY), 0.08)
+            XCTAssertLessThan(abs(next.rotationDegrees - previous.rotationDegrees), 4.0)
             previous = next
         }
     }
@@ -117,14 +129,15 @@ final class PosePlaybackTests: XCTestCase {
     func testJumpDurationIsASingleBeat() {
         XCTAssertEqual(
             PosePlayback.runningInDuration,
-            PosePlayback.crouchDuration
+            PosePlayback.runDuration
+                + PosePlayback.crouchDuration
                 + PosePlayback.jumpDuration
                 + PosePlayback.landDuration
                 + PosePlayback.settleDuration,
             accuracy: 0.001
         )
-        XCTAssertGreaterThan(PosePlayback.runningInDuration, 1.4)
-        XCTAssertLessThan(PosePlayback.runningInDuration, 2.0)
+        XCTAssertGreaterThan(PosePlayback.runningInDuration, 2.8)
+        XCTAssertLessThan(PosePlayback.runningInDuration, 3.8)
     }
 
     func testIdleTravelStaysStillWhileMeshWarps() {

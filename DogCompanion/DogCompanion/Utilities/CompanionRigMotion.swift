@@ -57,27 +57,28 @@ enum CompanionRigMotion {
                 backLegRotation: cg(-gait * 0.2)
             )
         case .running:
-            let gait = sin(time * 5.0)
+            let gait = sin(time * 8.0)
             return CompanionPartTransform(
-                headY: cg(sin(time * 5.0) * 2.8),
-                bodyY: cg(sin(time * 5.0) * 1.4),
-                tailRotation: cg(sin(time * 6.0) * 0.24),
-                frontLegRotation: cg(gait * 0.28),
-                backLegRotation: cg(-gait * 0.28)
+                headY: cg(sin(time * 8.0) * 2.0),
+                bodyY: cg(abs(sin(time * 8.0)) * 1.4),
+                tailRotation: cg(sin(time * 10.0) * 0.22),
+                frontLegRotation: cg(gait * 0.22),
+                backLegRotation: cg(-gait * 0.22)
             )
         }
     }
 
-    static func rigState(from motion: CompanionMotionState) -> CompanionRigState {
+    static func rigState(from motion: CompanionMotionState, elapsed: TimeInterval = 0) -> CompanionRigState {
         switch motion {
         case .away, .idle, .reacting, .celebrating:
             return .sitting
         case .runningIn:
-            return .jumping
+            return elapsed < PosePlayback.runDuration ? .running : .jumping
         }
     }
 
     private static func jumpParts(elapsed: TimeInterval) -> CompanionPartTransform {
+        let local = elapsed - PosePlayback.runDuration
         let crouchEnd = PosePlayback.crouchDuration
         let jumpEnd = crouchEnd + PosePlayback.jumpDuration
         let landEnd = jumpEnd + PosePlayback.landDuration
@@ -103,11 +104,14 @@ enum CompanionRigMotion {
             backLegRotation: -0.05
         )
 
-        if elapsed <= crouchEnd {
-            return mix(.identity, coiled, smoothstep(elapsed / crouchEnd))
+        if local <= 0 {
+            return transform(state: .running, time: elapsed)
         }
-        if elapsed <= jumpEnd {
-            let t = unit((elapsed - crouchEnd) / PosePlayback.jumpDuration)
+        if local <= crouchEnd {
+            return mix(.identity, coiled, smoothstep(local / crouchEnd))
+        }
+        if local <= jumpEnd {
+            let t = unit((local - crouchEnd) / PosePlayback.jumpDuration)
             if t < 0.22 {
                 return mix(coiled, airborne, smoothstep(t / 0.22))
             }
@@ -116,8 +120,8 @@ enum CompanionRigMotion {
             }
             return mix(airborne, landing, smoothstep((t - 0.5) / 0.5))
         }
-        if elapsed <= landEnd {
-            let t = unit((elapsed - jumpEnd) / PosePlayback.landDuration)
+        if local <= landEnd {
+            let t = unit((local - jumpEnd) / PosePlayback.landDuration)
             return mix(landing, .identity, smoothstep(t))
         }
         return .identity

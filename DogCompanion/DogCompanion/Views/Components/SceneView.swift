@@ -35,11 +35,11 @@ struct SceneView: View {
                     motionState: motionState,
                     runDistance: restFrame == .zero
                         ? PosePlayback.runDistance
-                        : max(96, restFrame.midX - 72),
+                        : max(180, restFrame.midX - 20),
                     onTap: onCompanionTap
                 )
-                .frame(width: 150, height: 168)
-                .position(x: restFrame.midX, y: restFrame.midY)
+                .frame(width: geo.size.width, height: 280, alignment: .bottom)
+                .position(x: restFrame.midX, y: restFrame.maxY - 140)
                 .opacity(restFrame == .zero ? 0 : 1)
                 .zIndex(20)
             }
