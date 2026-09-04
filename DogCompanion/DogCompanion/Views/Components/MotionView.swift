@@ -38,7 +38,7 @@ struct MotionView: View {
                 elapsed: elapsed,
                 runDistance: runDistance
             )
-            character(snapshot)
+            character(snapshot, elapsed: elapsed)
                 .transaction { $0.animation = nil }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -54,7 +54,7 @@ struct MotionView: View {
         }
     }
 
-    private func character(_ snapshot: PoseSnapshot) -> some View {
+    private func character(_ snapshot: PoseSnapshot, elapsed: TimeInterval) -> some View {
         let travel = snapshot.travel
         return ZStack(alignment: .bottom) {
             Ellipse()
