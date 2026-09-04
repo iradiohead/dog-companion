@@ -58,45 +58,67 @@ struct PoseCutoutSet: Equatable {
 struct PoseTravel: Equatable {
     var x: CGFloat
     var y: CGFloat
-    var scale: CGFloat
+    var scaleX: CGFloat
+    var scaleY: CGFloat
+    var rotationDegrees: CGFloat
     var opacity: Double
+    var shadowScale: CGFloat
+    var shadowOpacity: Double
+    var motion: Double
+    var dust: Double
+
+    static let hidden = PoseTravel(
+        x: -PosePlayback.runDistance,
+        y: 0,
+        scaleX: 1,
+        scaleY: 1,
+        rotationDegrees: 0,
+        opacity: 0,
+        shadowScale: 0.7,
+        shadowOpacity: 0,
+        motion: 0,
+        dust: 0
+    )
+
+    static func rest(scaleX: CGFloat = 1, scaleY: CGFloat = 1, rotation: CGFloat = 0) -> PoseTravel {
+        PoseTravel(
+            x: 0,
+            y: 0,
+            scaleX: scaleX,
+            scaleY: scaleY,
+            rotationDegrees: rotation,
+            opacity: 1,
+            shadowScale: 1,
+            shadowOpacity: 0.18,
+            motion: 0,
+            dust: 0
+        )
+    }
+}
+
+struct PoseSnapshot: Equatable {
+    var pose: CompanionPose
+    var nextPose: CompanionPose
+    var crossfade: Double
+    var travel: PoseTravel
 }
 
 enum PosePlayback {
-    static let runDuration: TimeInterval = 1.85
+    static let anticipateDuration: TimeInterval = 0.18
+    static let runDuration: TimeInterval = 1.42
     static let landDuration: TimeInterval = 0.32
-    static let strideDuration: TimeInterval = 0.11
+    static let settleDuration: TimeInterval = 0.40
+    static let strideDuration: TimeInterval = 0.17
     static let runDistance: CGFloat = 236
+    static let windup: CGFloat = 14
+    static let hopHeight: CGFloat = 18
 
     static var runningInDuration: TimeInterval {
-        runDuration + landDuration
+        anticipateDuration + runDuration + landDuration + settleDuration
     }
 
     static func pose(state: CompanionMotionState, elapsed: TimeInterval) -> CompanionPose {
-        switch state {
-        case .away:
-            return .sit
-        case .runningIn:
-            if elapsed < runDuration {
-                let frame = Int(elapsed / strideDuration)
-                return frame.isMultiple(of: 2) ? .runA : .runB
-            }
-            if elapsed < runningInDuration {
-                return .land
-            }
-            return .sit
-        case .idle:
-            return .sit
-        case .reacting:
-            return elapsed < 0.35 ? .land : .sit
-        case .celebrating:
-            let frame = Int(elapsed / 0.16) % 4
-            switch frame {
-            case 1: return .land
-            case 2: return .runA
-            default: return .sit
-            }
-        }
+        snapshot(state: state, elapsed: elapsed).pose
     }
 
     static func travel(
@@ -104,26 +126,252 @@ enum PosePlayback {
         elapsed: TimeInterval,
         runDistance distance: CGFloat = Self.runDistance
     ) -> PoseTravel {
+        snapshot(state: state, elapsed: elapsed, runDistance: distance).travel
+    }
+
+    static func snapshot(
+        state: CompanionMotionState,
+        elapsed: TimeInterval,
+        runDistance distance: CGFloat = Self.runDistance
+    ) -> PoseSnapshot {
         switch state {
         case .away:
-            return PoseTravel(x: -distance, y: 0, scale: 1, opacity: 0)
+            var travel = PoseTravel.hidden
+            travel.x = -distance
+            return PoseSnapshot(pose: .sit, nextPose: .sit, crossfade: 0, travel: travel)
         case .runningIn:
-            let t = min(1, elapsed / runDuration)
-            let eased = 1 - (1 - t) * (1 - t)
-            let hop: CGFloat
-            if elapsed < runDuration {
-                hop = sin(elapsed / strideDuration * .pi) * -11
-            } else {
-                hop = 0
-            }
-            return PoseTravel(
-                x: -distance * (1 - eased),
-                y: hop,
-                scale: 1,
-                opacity: 1
-            )
-        case .idle, .reacting, .celebrating:
-            return PoseTravel(x: 0, y: 0, scale: 1, opacity: 1)
+            return runningInSnapshot(elapsed: elapsed, distance: distance)
+        case .idle:
+            return idleSnapshot(elapsed: elapsed)
+        case .reacting:
+            return reactingSnapshot(elapsed: elapsed)
+        case .celebrating:
+            return celebratingSnapshot(elapsed: elapsed)
         }
+    }
+
+    private static func runningInSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
+        let startX = -distance - windup
+        let anticipateEnd = anticipateDuration
+        let runEnd = anticipateEnd + runDuration
+        let landEnd = runEnd + landDuration
+
+        if elapsed < anticipateEnd {
+            let t = unit(elapsed / anticipateDuration)
+            let crouch = smoothstep(t)
+            var travel = PoseTravel.rest(
+                scaleX: cg(1 + 0.2 * crouch),
+                scaleY: cg(1 - 0.22 * crouch),
+                rotation: cg(-14.0 * crouch)
+            )
+            travel.x = -distance - windup * cg(crouch)
+            travel.opacity = min(1.0, elapsed / 0.07)
+            travel.shadowScale = cg(1.08 + 0.12 * crouch)
+            travel.shadowOpacity = 0.22
+            return PoseSnapshot(pose: .sit, nextPose: .sit, crossfade: 0, travel: travel)
+        }
+
+        if elapsed < runEnd {
+            let runElapsed = elapsed - anticipateEnd
+            let t = unit(runElapsed / runDuration)
+            let eased = easeOutCubic(t)
+            let gait = gallop(runElapsed: runElapsed)
+            var travel = PoseTravel.rest(scaleX: gait.sx, scaleY: gait.sy, rotation: gait.rot)
+            travel.x = startX * cg(1.0 - eased)
+            travel.y = gait.y
+            travel.motion = gait.motion
+            travel.dust = gait.dust
+            let hopAmount = min(1.0, max(0.0, Double(-gait.y) / Double(hopHeight)))
+            travel.shadowScale = cg(1.05 - 0.42 * hopAmount)
+            travel.shadowOpacity = 0.18 * (0.45 + 0.55 * (1.0 - hopAmount))
+            let stride = strideBlend(runElapsed: runElapsed)
+            return PoseSnapshot(
+                pose: stride.pose,
+                nextPose: stride.next,
+                crossfade: stride.crossfade,
+                travel: travel
+            )
+        }
+
+        if elapsed < landEnd {
+            let t = unit((elapsed - runEnd) / landDuration)
+            let recover = easeOutCubic(t)
+            var travel = PoseTravel.rest(
+                scaleX: cg(1.24 - 0.16 * recover),
+                scaleY: cg(0.72 + 0.2 * recover),
+                rotation: cg(-8.0 + 12.0 * recover)
+            )
+            travel.x = cg(5.0 * (1.0 - recover) * sin(t * .pi))
+            travel.dust = (1.0 - t) * 0.85
+            travel.shadowScale = cg(1.22 - 0.14 * recover)
+            travel.shadowOpacity = 0.24
+            return PoseSnapshot(
+                pose: .land,
+                nextPose: .sit,
+                crossfade: 0.35 * t,
+                travel: travel
+            )
+        }
+
+        let t = unit((elapsed - landEnd) / settleDuration)
+        let bounce = sin(t * .pi) * (1.0 - t)
+        var travel = PoseTravel.rest(
+            scaleX: cg(1.0 + 0.07 * bounce),
+            scaleY: cg(1.0 - 0.05 * bounce),
+            rotation: cg(4.0 * (1.0 - t))
+        )
+        if t >= 0.98 {
+            return PoseSnapshot(pose: .sit, nextPose: .sit, crossfade: 0, travel: .rest())
+        }
+        return PoseSnapshot(
+            pose: .land,
+            nextPose: .sit,
+            crossfade: smoothstep(t),
+            travel: travel
+        )
+    }
+
+    private static func idleSnapshot(elapsed: TimeInterval) -> PoseSnapshot {
+        let breath = sin(elapsed * 2.15)
+        return PoseSnapshot(
+            pose: .sit,
+            nextPose: .sit,
+            crossfade: 0,
+            travel: .rest(
+                scaleX: cg(1.0 - 0.012 * breath),
+                scaleY: cg(1.0 + 0.018 * breath)
+            )
+        )
+    }
+
+    private static func reactingSnapshot(elapsed: TimeInterval) -> PoseSnapshot {
+        if elapsed < 0.1 {
+            let t = unit(elapsed / 0.1)
+            return PoseSnapshot(
+                pose: .sit,
+                nextPose: .land,
+                crossfade: t * 0.4,
+                travel: .rest(
+                    scaleX: cg(1.0 + 0.14 * t),
+                    scaleY: cg(1.0 - 0.16 * t),
+                    rotation: cg(-6.0 * t)
+                )
+            )
+        }
+        if elapsed < 0.42 {
+            let t = unit((elapsed - 0.1) / 0.32)
+            let hop = 4.0 * t * (1.0 - t)
+            var travel = PoseTravel.rest(
+                scaleX: 0.94,
+                scaleY: 1.08,
+                rotation: -10
+            )
+            travel.y = cg(-22.0 * hop)
+            travel.shadowScale = cg(1.0 - 0.35 * hop)
+            travel.motion = 0.25
+            return PoseSnapshot(pose: .land, nextPose: .land, crossfade: 0, travel: travel)
+        }
+        if elapsed < 0.72 {
+            let t = unit((elapsed - 0.42) / 0.3)
+            return PoseSnapshot(
+                pose: .land,
+                nextPose: .sit,
+                crossfade: smoothstep(t),
+                travel: .rest(
+                    scaleX: cg(1.12 - 0.12 * t),
+                    scaleY: cg(0.86 + 0.14 * t)
+                )
+            )
+        }
+        return idleSnapshot(elapsed: elapsed - 0.72)
+    }
+
+    private static func celebratingSnapshot(elapsed: TimeInterval) -> PoseSnapshot {
+        let period: TimeInterval = 0.4
+        let cycle = elapsed.truncatingRemainder(dividingBy: period)
+        if cycle < 0.12 {
+            let t = unit(cycle / 0.12)
+            return PoseSnapshot(
+                pose: .sit,
+                nextPose: .land,
+                crossfade: t * 0.5,
+                travel: .rest(
+                    scaleX: cg(1.0 + 0.12 * t),
+                    scaleY: cg(1.0 - 0.14 * t)
+                )
+            )
+        }
+        if cycle < 0.3 {
+            let t = unit((cycle - 0.12) / 0.18)
+            let hop = 4.0 * t * (1.0 - t)
+            var travel = PoseTravel.rest(scaleX: 0.95, scaleY: 1.08, rotation: -8)
+            travel.y = cg(-20.0 * hop)
+            travel.shadowScale = cg(1.0 - 0.4 * hop)
+            return PoseSnapshot(pose: .land, nextPose: .runA, crossfade: hop * 0.25, travel: travel)
+        }
+        let t = unit((cycle - 0.3) / 0.1)
+        return PoseSnapshot(
+            pose: .land,
+            nextPose: .sit,
+            crossfade: t,
+            travel: .rest(
+                scaleX: cg(1.1 - 0.1 * t),
+                scaleY: cg(0.9 + 0.1 * t)
+            )
+        )
+    }
+
+    private static func gallop(runElapsed: TimeInterval) -> (y: CGFloat, sx: CGFloat, sy: CGFloat, rot: CGFloat, dust: Double, motion: Double) {
+        let u = runElapsed.truncatingRemainder(dividingBy: strideDuration) / strideDuration
+        let contactEnd = 0.26
+        if u < contactEnd {
+            let c = u / contactEnd
+            return (
+                y: 0,
+                sx: cg(1.16 - 0.16 * c),
+                sy: cg(0.84 + 0.16 * c),
+                rot: cg(-11.0 - 5.0 * c),
+                dust: (1.0 - c) * 0.95,
+                motion: 0.5 + 0.4 * c
+            )
+        }
+        let a = (u - contactEnd) / (1.0 - contactEnd)
+        let hop = 4.0 * a * (1.0 - a)
+        return (
+            y: -hopHeight * cg(hop),
+            sx: cg(0.93 + 0.03 * (1.0 - hop)),
+            sy: cg(1.05 + 0.07 * hop),
+            rot: cg(-18.0 + 7.0 * a),
+            dust: 0,
+            motion: 0.9
+        )
+    }
+
+    private static func strideBlend(runElapsed: TimeInterval) -> (pose: CompanionPose, next: CompanionPose, crossfade: Double) {
+        let index = Int(runElapsed / strideDuration)
+        let u = runElapsed.truncatingRemainder(dividingBy: strideDuration) / strideDuration
+        let even = index.isMultiple(of: 2)
+        let pose: CompanionPose = even ? .runA : .runB
+        let next: CompanionPose = even ? .runB : .runA
+        let crossfade = smoothstep((u - 0.6) / 0.4)
+        return (pose, next, crossfade)
+    }
+
+    private static func unit(_ value: TimeInterval) -> Double {
+        min(1.0, max(0.0, value))
+    }
+
+    private static func easeOutCubic(_ t: Double) -> Double {
+        let clamped = unit(t)
+        return 1.0 - pow(1.0 - clamped, 3.0)
+    }
+
+    private static func smoothstep(_ t: Double) -> Double {
+        let clamped = unit(t)
+        return clamped * clamped * (3.0 - 2.0 * clamped)
+    }
+
+    private static func cg(_ value: Double) -> CGFloat {
+        CGFloat(value)
     }
 }

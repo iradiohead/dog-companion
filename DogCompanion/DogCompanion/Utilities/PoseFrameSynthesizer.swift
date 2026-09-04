@@ -2,15 +2,15 @@ import UIKit
 
 enum PoseFrameSynthesizer {
     static func runA(from sitData: Data) -> Data? {
-        render(sitData, degrees: -24, stretchX: 1.28, stretchY: 0.82, hop: -14)
+        render(sitData, degrees: -9, stretchX: 1.08, stretchY: 0.96, hop: -4)
     }
 
     static func runB(from sitData: Data) -> Data? {
-        render(sitData, degrees: -10, stretchX: 0.9, stretchY: 1.12, hop: 6)
+        render(sitData, degrees: -16, stretchX: 0.97, stretchY: 1.05, hop: -8)
     }
 
     static func land(from sitData: Data) -> Data? {
-        render(sitData, degrees: 8, stretchX: 1.18, stretchY: 0.72, hop: 12)
+        render(sitData, degrees: 5, stretchX: 1.1, stretchY: 0.86, hop: 6)
     }
 
     private static func render(
@@ -25,7 +25,7 @@ enum PoseFrameSynthesizer {
         }
 
         let source = CGSize(width: cgImage.width, height: cgImage.height)
-        let padded = hypot(source.width * stretchX, source.height * stretchY) * 1.2
+        let padded = hypot(source.width * stretchX, source.height * stretchY) * 1.15
         let canvas = CGSize(width: ceil(padded), height: ceil(padded))
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1

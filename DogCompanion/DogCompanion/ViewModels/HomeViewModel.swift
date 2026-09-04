@@ -70,7 +70,7 @@ final class HomeViewModel {
         showGiftReveal = true
 
         Task {
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            try? await Task.sleep(nanoseconds: 1_450_000_000)
             motionState = .idle
         }
     }
