@@ -44,12 +44,13 @@ struct MattingService {
             throw MattingError.maskGenerationFailed
         }
 
-        let inputImage = CIImage(cgImage: cgImage)
-        let maskedImage = try observation.generateMaskedImage(
-            of: inputImage,
-            forInstances: instances,
+        let maskPixelBuffer = try observation.generateMaskedImage(
+            ofInstances: instances,
+            from: handler,
             croppedToInstancesExtent: true
         )
+
+        let maskedImage = CIImage(cvPixelBuffer: maskPixelBuffer)
 
         let context = CIContext()
         guard let outputCG = context.createCGImage(maskedImage, from: maskedImage.extent) else {
