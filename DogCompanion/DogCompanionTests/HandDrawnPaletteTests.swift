@@ -36,5 +36,7 @@ final class HandDrawnPaletteTests: XCTestCase {
         let states: [CompanionMotionState] = [.away, .runningIn, .idle, .reacting, .celebrating]
         XCTAssertEqual(states.count, 5)
         XCTAssertNotEqual(CompanionMotionState.away, .runningIn)
+        XCTAssertEqual(CompanionRigMotion.rigState(from: .idle), .sitting)
+        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn), .jumping)
     }
 }

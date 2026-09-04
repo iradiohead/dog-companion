@@ -1,6 +1,14 @@
 import Foundation
 import CoreGraphics
 
+enum CompanionMotionState: Equatable {
+    case away
+    case runningIn
+    case idle
+    case reacting
+    case celebrating
+}
+
 enum CompanionPose: String, CaseIterable, Equatable {
     case sit
     case runA
