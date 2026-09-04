@@ -33,11 +33,18 @@ struct SceneView: View {
                 MotionView(
                     poses: poses,
                     motionState: motionState,
-                    hopDistance: PosePlayback.hopDistance,
+                    hopDistance: PosePlayback.hopFrontY,
                     onTap: onCompanionTap
                 )
-                .frame(width: geo.size.width, height: 280, alignment: .bottom)
-                .position(x: restFrame.midX, y: restFrame.maxY - 140)
+                .frame(
+                    width: geo.size.width,
+                    height: 280 + PosePlayback.hopFrontY,
+                    alignment: .bottom
+                )
+                .position(
+                    x: restFrame.midX,
+                    y: restFrame.maxY - 140 + PosePlayback.hopFrontY / 2
+                )
                 .opacity(restFrame == .zero ? 0 : 1)
                 .zIndex(20)
             }

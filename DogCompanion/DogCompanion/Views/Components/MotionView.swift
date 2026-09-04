@@ -39,6 +39,7 @@ struct MotionView: View {
                 runDistance: hopDistance
             )
             character(snapshot, elapsed: elapsed)
+                .padding(.bottom, PosePlayback.hopFrontY)
                 .transaction { $0.animation = nil }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)

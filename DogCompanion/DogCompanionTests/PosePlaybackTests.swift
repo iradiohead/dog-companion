@@ -27,23 +27,26 @@ final class PosePlaybackTests: XCTestCase {
         )
         XCTAssertLessThan(crouch.scaleY, 0.90)
         XCTAssertGreaterThan(crouch.scaleX, 1.08)
-        XCTAssertEqual(crouch.x, -PosePlayback.hopDistance, accuracy: 1)
+        XCTAssertEqual(crouch.x, 0, accuracy: 1)
+        XCTAssertGreaterThan(crouch.y, 50)
         XCTAssertGreaterThan(crouch.opacity, 0.5)
     }
 
-    func testHopStartsOneStepLeftNotFarAway() {
+    func testHopStartsInFrontOfTheMat() {
         let start = PosePlayback.travel(state: .runningIn, elapsed: 0.05)
-        XCTAssertLessThan(start.x, -50)
-        XCTAssertGreaterThan(start.x, -90)
-        XCTAssertGreaterThan(start.scaleY, 0.85)
+        XCTAssertEqual(start.x, 0, accuracy: 1)
+        XCTAssertGreaterThan(start.y, 50)
+        XCTAssertLessThan(start.y, 80)
+        XCTAssertGreaterThan(start.scaleY, 0.95)
         XCTAssertGreaterThan(start.opacity, 0.2)
     }
 
-    func testJumpTravelsFromLeftToTheMat() {
+    func testJumpClimbsFromFrontOntoTheMat() {
         let start = PosePlayback.travel(state: .runningIn, elapsed: 0)
         let end = PosePlayback.travel(state: .runningIn, elapsed: PosePlayback.landStart)
-        XCTAssertLessThan(start.x, end.x)
+        XCTAssertGreaterThan(start.y, end.y)
         XCTAssertEqual(end.x, 0, accuracy: 2)
+        XCTAssertEqual(end.y, 0, accuracy: 2)
     }
 
     func testJumpHasOneArc() {
@@ -78,10 +81,11 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertEqual(settled.travel.y, 0, accuracy: 0.5)
     }
 
-    func testAwayStaysBesideTheMatHidden() {
+    func testAwayHidesInFrontOfTheMat() {
         let away = PosePlayback.travel(state: .away, elapsed: 0)
         XCTAssertEqual(away.opacity, 0, accuracy: 0.01)
-        XCTAssertEqual(away.x, -PosePlayback.hopDistance, accuracy: 0.5)
+        XCTAssertEqual(away.x, 0, accuracy: 0.5)
+        XCTAssertEqual(away.y, PosePlayback.hopFrontY, accuracy: 0.5)
     }
 
     func testPosePromptsDescribeDifferentActions() {
@@ -127,8 +131,8 @@ final class PosePlaybackTests: XCTestCase {
                 + PosePlayback.settleDuration,
             accuracy: 0.001
         )
-        XCTAssertGreaterThan(PosePlayback.runningInDuration, 0.9)
-        XCTAssertLessThan(PosePlayback.runningInDuration, 1.15)
+        XCTAssertGreaterThan(PosePlayback.runningInDuration, 1.05)
+        XCTAssertLessThan(PosePlayback.runningInDuration, 1.35)
     }
 
     func testIdleTravelStaysStillWhilePartsBreathe() {

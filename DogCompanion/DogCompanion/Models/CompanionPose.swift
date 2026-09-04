@@ -66,13 +66,13 @@ struct PoseTravel: Equatable {
     var shadowOpacity: Double
 
     static let hidden = PoseTravel(
-        x: -PosePlayback.hopDistance,
-        y: 0,
-        scaleX: 1,
-        scaleY: 1,
+        x: 0,
+        y: PosePlayback.hopFrontY,
+        scaleX: 1.08,
+        scaleY: 1.08,
         rotationDegrees: 0,
         opacity: 0,
-        shadowScale: 0.7,
+        shadowScale: 0.85,
         shadowOpacity: 0
     )
 
@@ -96,13 +96,14 @@ struct PoseSnapshot: Equatable {
 }
 
 enum PosePlayback {
-    static let crouchDuration: TimeInterval = 0.16
-    static let jumpDuration: TimeInterval = 0.55
-    static let landDuration: TimeInterval = 0.16
+    static let crouchDuration: TimeInterval = 0.18
+    static let jumpDuration: TimeInterval = 0.70
+    static let landDuration: TimeInterval = 0.18
     static let settleDuration: TimeInterval = 0.14
-    static let hopDistance: CGFloat = 72
-    static let jumpHeight: CGFloat = 44
-    static var runDistance: CGFloat { hopDistance }
+    static let hopFrontY: CGFloat = 68
+    static var hopDistance: CGFloat { hopFrontY }
+    static let jumpHeight: CGFloat = 58
+    static var runDistance: CGFloat { hopFrontY }
 
     static var runningInDuration: TimeInterval {
         crouchDuration + jumpDuration + landDuration + settleDuration
@@ -119,7 +120,7 @@ enum PosePlayback {
     static func travel(
         state: CompanionMotionState,
         elapsed: TimeInterval,
-        runDistance distance: CGFloat = Self.hopDistance
+        runDistance distance: CGFloat = Self.hopFrontY
     ) -> PoseTravel {
         snapshot(state: state, elapsed: elapsed, runDistance: distance).travel
     }
@@ -127,12 +128,12 @@ enum PosePlayback {
     static func snapshot(
         state: CompanionMotionState,
         elapsed: TimeInterval,
-        runDistance distance: CGFloat = Self.hopDistance
+        runDistance distance: CGFloat = Self.hopFrontY
     ) -> PoseSnapshot {
         switch state {
         case .away:
             var travel = PoseTravel.hidden
-            travel.x = -distance
+            travel.y = distance
             return PoseSnapshot(pose: .sit, travel: travel)
         case .runningIn:
             return hopOnSnapshot(elapsed: elapsed, distance: distance)
@@ -146,40 +147,41 @@ enum PosePlayback {
     }
 
     private static func hopOnSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
-        let startX = -distance
+        let startY = distance
         let crouchEnd = crouchDuration
         let jumpEnd = crouchEnd + jumpDuration
         let landEnd = jumpEnd + landDuration
         var travel = PoseTravel.rest()
-        travel.opacity = min(1.0, elapsed / 0.10)
+        travel.opacity = min(1.0, elapsed / 0.12)
 
         if elapsed <= crouchEnd {
             let crouch = smoothstep(elapsed / crouchDuration)
-            travel.x = startX
-            travel.scaleX = cg(lerp(1.0, 1.14, crouch))
-            travel.scaleY = cg(lerp(1.0, 0.82, crouch))
-            travel.rotationDegrees = cg(lerp(0, 8.0, crouch))
-            travel.shadowScale = cg(lerp(1.0, 1.16, crouch))
+            travel.x = 0
+            travel.y = startY
+            travel.scaleX = cg(lerp(1.08, 1.18, crouch))
+            travel.scaleY = cg(lerp(1.08, 0.84, crouch))
+            travel.rotationDegrees = cg(lerp(0, 6.0, crouch))
+            travel.shadowScale = cg(lerp(1.12, 1.22, crouch))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
         if elapsed <= jumpEnd {
             let t = unit((elapsed - crouchEnd) / jumpDuration)
             let arc = sin(Double.pi * t)
-            travel.x = startX * cg(1.0 - t)
-            travel.y = -jumpHeight * cg(arc)
+            travel.x = 0
+            travel.y = startY * cg(1.0 - t) - jumpHeight * cg(arc)
             if t < 0.28 {
                 let u = smoothstep(t / 0.28)
-                travel.scaleX = cg(lerp(1.14, 0.90, u))
-                travel.scaleY = cg(lerp(0.82, 1.14, u))
-                travel.rotationDegrees = cg(lerp(8.0, -12.0, u))
+                travel.scaleX = cg(lerp(1.18, 0.94, u))
+                travel.scaleY = cg(lerp(0.84, 1.16, u))
+                travel.rotationDegrees = cg(lerp(6.0, -10.0, u))
             } else {
                 let u = smoothstep((t - 0.28) / 0.72)
-                travel.scaleX = cg(lerp(0.90, 1.12, u))
-                travel.scaleY = cg(lerp(1.14, 0.86, u))
-                travel.rotationDegrees = cg(lerp(-12.0, 6.0, u))
+                travel.scaleX = cg(lerp(0.94, 1.10, u))
+                travel.scaleY = cg(lerp(1.16, 0.88, u))
+                travel.rotationDegrees = cg(lerp(-10.0, 5.0, u))
             }
-            travel.shadowScale = cg(1.0 - 0.38 * arc)
+            travel.shadowScale = cg(lerp(1.22, 1.0, t) - 0.28 * arc)
             travel.shadowOpacity = 0.16 * (0.4 + 0.6 * (1.0 - arc))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
@@ -187,18 +189,19 @@ enum PosePlayback {
         if elapsed <= landEnd {
             let t = unit((elapsed - jumpEnd) / landDuration)
             travel.x = 0
+            travel.y = 0
             if t < 0.45 {
                 let u = smoothstep(t / 0.45)
-                travel.scaleX = cg(lerp(1.12, 1.18, u))
-                travel.scaleY = cg(lerp(0.86, 0.80, u))
-                travel.rotationDegrees = cg(lerp(6.0, 3.0, u))
+                travel.scaleX = cg(lerp(1.10, 1.16, u))
+                travel.scaleY = cg(lerp(0.88, 0.80, u))
+                travel.rotationDegrees = cg(lerp(5.0, 3.0, u))
             } else {
                 let u = smoothstep((t - 0.45) / 0.55)
-                travel.scaleX = cg(lerp(1.18, 1.04, u))
+                travel.scaleX = cg(lerp(1.16, 1.04, u))
                 travel.scaleY = cg(lerp(0.80, 0.97, u))
                 travel.rotationDegrees = cg(lerp(3.0, 1.0, u))
             }
-            travel.shadowScale = cg(lerp(1.16, 1.04, t))
+            travel.shadowScale = cg(lerp(1.14, 1.04, t))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
 
