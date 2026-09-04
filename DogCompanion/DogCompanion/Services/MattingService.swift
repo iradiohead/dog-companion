@@ -37,7 +37,10 @@ enum CutoutImageProcessor {
     }
 
     static func needsCutoutRefresh(_ data: Data?) -> Bool {
-        guard let data, let image = UIImage(data: data), let pixels = rgbaPixels(from: image) else {
+        guard let data,
+              let image = UIImage(data: data),
+              let cgImage = image.cgImage,
+              let pixels = rgbaPixels(from: image) else {
             return true
         }
 
@@ -45,8 +48,8 @@ enum CutoutImageProcessor {
             return true
         }
 
-        let width = Int(image.size.width)
-        let height = Int(image.size.height)
+        let width = cgImage.width
+        let height = cgImage.height
         guard width > 0, height > 0 else { return true }
 
         let cornerSamples = [
@@ -64,12 +67,17 @@ enum CutoutImageProcessor {
     }
 
     static func refineCutout(from image: UIImage) throws -> Data {
-        guard var pixels = rgbaPixels(from: image), !pixels.isEmpty else {
+        guard var pixels = rgbaPixels(from: image),
+              let cgImage = image.cgImage,
+              !pixels.isEmpty else {
             throw MattingError.invalidImage
         }
 
-        let width = Int(image.size.width)
-        let height = Int(image.size.height)
+        let width = cgImage.width
+        let height = cgImage.height
+        guard pixels.count == width * height else {
+            throw MattingError.invalidImage
+        }
         let background = estimateBackgroundColor(pixels: pixels, width: width, height: height)
 
         for index in pixels.indices {
@@ -83,6 +91,14 @@ enum CutoutImageProcessor {
             let scaled = Int(pixel.a) * Int(backgroundAlpha) / 255
             pixels[index].a = UInt8(clamping: scaled)
         }
+
+        floodClearBackground(
+            in: &pixels,
+            width: width,
+            height: height,
+            background: background,
+            tolerance: 44
+        )
 
         removeNearWhiteBackground(
             in: &pixels,
@@ -107,12 +123,17 @@ enum CutoutImageProcessor {
     }
 
     static func chromaKeyCutout(from image: UIImage) throws -> Data {
-        guard var pixels = rgbaPixels(from: image), !pixels.isEmpty else {
+        guard var pixels = rgbaPixels(from: image),
+              let cgImage = image.cgImage,
+              !pixels.isEmpty else {
             throw MattingError.invalidImage
         }
 
-        let width = Int(image.size.width)
-        let height = Int(image.size.height)
+        let width = cgImage.width
+        let height = cgImage.height
+        guard pixels.count == width * height else {
+            throw MattingError.invalidImage
+        }
         let background = estimateBackgroundColor(pixels: pixels, width: width, height: height)
 
         for index in pixels.indices {
@@ -125,6 +146,14 @@ enum CutoutImageProcessor {
             )
             pixels[index].a = alpha
         }
+
+        floodClearBackground(
+            in: &pixels,
+            width: width,
+            height: height,
+            background: background,
+            tolerance: 38
+        )
 
         removeNearWhiteBackground(
             in: &pixels,
@@ -203,6 +232,50 @@ enum CutoutImageProcessor {
 
         let blend = (distance - tolerance) / feather
         return UInt8(clamping: Int((Double(pixel.a) * blend).rounded()))
+    }
+
+    /// Walk inward from the corners so leftover paper/cardboard does not stay as a pulsing rectangle.
+    private static func floodClearBackground(
+        in pixels: inout [RGBA],
+        width: Int,
+        height: Int,
+        background: (r: Double, g: Double, b: Double),
+        tolerance: Double
+    ) {
+        guard width > 0, height > 0, pixels.count == width * height else { return }
+
+        var visited = [Bool](repeating: false, count: pixels.count)
+        var queue: [Int] = []
+        queue.reserveCapacity(width + height)
+
+        let seeds = [0, width - 1, (height - 1) * width, height * width - 1]
+        for seed in seeds where seed >= 0 && seed < pixels.count {
+            queue.append(seed)
+        }
+
+        let maxDistance = tolerance * tolerance
+
+        while let current = queue.popLast() {
+            if visited[current] { continue }
+            visited[current] = true
+
+            let pixel = pixels[current]
+            let dr = Double(pixel.r) - background.r
+            let dg = Double(pixel.g) - background.g
+            let db = Double(pixel.b) - background.b
+            let similarToBackground = (dr * dr + dg * dg + db * db) <= maxDistance
+            let alreadyThin = pixel.a < 48
+            guard similarToBackground || alreadyThin else { continue }
+
+            pixels[current].a = 0
+
+            let x = current % width
+            let y = current / width
+            if x > 0 { queue.append(current - 1) }
+            if x + 1 < width { queue.append(current + 1) }
+            if y > 0 { queue.append(current - width) }
+            if y + 1 < height { queue.append(current + width) }
+        }
     }
 
     private static func removeNearWhiteBackground(

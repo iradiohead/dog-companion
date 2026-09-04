@@ -20,6 +20,13 @@ final class CutoutImageProcessorTests: XCTestCase {
 
         XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: cutout))
         XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(cutout))
+
+        guard let cutoutImage = UIImage(data: cutout),
+              let cgImage = cutoutImage.cgImage else {
+            return XCTFail("Cutout PNG could not be decoded")
+        }
+        XCTAssertGreaterThan(cgImage.width, 0)
+        XCTAssertLessThan(cgImage.width, 32)
     }
 
     func testOpaqueWhiteImageNeedsRefresh() throws {
