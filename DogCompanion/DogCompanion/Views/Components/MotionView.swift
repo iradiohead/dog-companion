@@ -18,7 +18,10 @@ struct MotionView: View {
     @State private var reactionWiggle = false
 
     private var imageData: Data? {
-        cutoutData ?? portraitData
+        if let cutoutData, CutoutImageProcessor.hasMeaningfulTransparency(in: cutoutData) {
+            return cutoutData
+        }
+        return portraitData
     }
 
     var body: some View {
@@ -30,7 +33,7 @@ struct MotionView: View {
                     .scaleEffect(scale)
                     .offset(y: jumpOffset)
                     .rotationEffect(.degrees(rotation))
-                    .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+                    .shadow(color: .black.opacity(0.15), radius: 6, y: 5)
                     .onTapGesture(perform: onTap)
             } else {
                 Image(systemName: "dog.fill")

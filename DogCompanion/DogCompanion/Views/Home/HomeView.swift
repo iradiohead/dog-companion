@@ -76,6 +76,9 @@ struct HomeView: View {
                 viewModel.dismissGift()
             }
         }
+        .task {
+            viewModel.refreshCutoutIfNeeded(for: companion)
+        }
     }
 
     private var topBar: some View {

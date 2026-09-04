@@ -42,6 +42,7 @@
 		A10000000000000000000016 /* RegenerationFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* RegenerationFlowView.swift */; };
 		B10000000000000000000002 /* GiftUnlockPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* GiftUnlockPolicyTests.swift */; };
 		B10000000000000000000003 /* HandDrawnPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* HandDrawnPaletteTests.swift */; };
+		B10000000000000000000004 /* CutoutImageProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* CutoutImageProcessorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,6 +93,7 @@
 		A30000000000000000000001 /* DogCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DogCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B20000000000000000000002 /* GiftUnlockPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftUnlockPolicyTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000003 /* HandDrawnPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnPaletteTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000004 /* CutoutImageProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutoutImageProcessorTests.swift; sourceTree = "<group>"; };
 		B30000000000000000000001 /* DogCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DogCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -257,6 +259,7 @@
 			children = (
 				B20000000000000000000002 /* GiftUnlockPolicyTests.swift */,
 				B20000000000000000000003 /* HandDrawnPaletteTests.swift */,
+				B20000000000000000000004 /* CutoutImageProcessorTests.swift */,
 			);
 			path = DogCompanionTests;
 			sourceTree = "<group>";
@@ -414,6 +417,7 @@
 			files = (
 				B10000000000000000000002 /* GiftUnlockPolicyTests.swift in Sources */,
 				B10000000000000000000003 /* HandDrawnPaletteTests.swift in Sources */,
+				B10000000000000000000004 /* CutoutImageProcessorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

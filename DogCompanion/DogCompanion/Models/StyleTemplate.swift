@@ -25,7 +25,7 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
     }
 
     var prompt: String {
-        let backgroundConstraint = "纯色米白背景，无道具无阴影，狗狗全身坐姿居中，四肢完整，适合抠图"
+        let backgroundConstraint = "纯白色平面背景（#FFFFFF），无纸张纹理、无画框、无地毯、无阴影、无道具，狗狗全身坐姿居中，四肢完整，仅保留狗狗主体，适合透明抠图"
         switch self {
         case .anime:
             return "将照片中的狗狗转换为可爱的日系动漫插画风格，保留毛色、花纹和品种特征，线条柔和，眼睛有神，色彩鲜明，高质量，\(backgroundConstraint)"
@@ -37,6 +37,6 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
     }
 
     var negativePrompt: String {
-        "模糊，低画质，变形，畸形，丑陋，人体，文字，水印，低分辨率，手指畸形，AI感过重"
+        "模糊，低画质，变形，畸形，丑陋，人体，文字，水印，低分辨率，手指畸形，AI感过重，背景纹理，纸张质感，画框，地毯，阴影，场景，家具"
     }
 }

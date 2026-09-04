@@ -91,6 +91,21 @@ final class HomeViewModel {
         }
     }
 
+    func refreshCutoutIfNeeded(for companion: Companion) {
+        guard CutoutImageProcessor.needsCutoutRefresh(companion.cutoutData),
+              let portraitData = companion.comicPortraitData,
+              let portrait = UIImage(data: portraitData) else {
+            return
+        }
+
+        Task {
+            let service = MattingService()
+            if let refreshed = try? await service.extractCutout(from: portrait) {
+                companion.cutoutData = refreshed
+            }
+        }
+    }
+
     private func startTimer(for companion: Companion) {
         stopTimer()
         timerTask = Task {
