@@ -80,9 +80,8 @@ enum CutoutImageProcessor {
                 tolerance: 42,
                 feather: 28
             )
-            pixels[index].a = UInt8(
-                min(255, Int(pixel.a) * backgroundAlpha / 255)
-            )
+            let scaled = Int(pixel.a) * Int(backgroundAlpha) / 255
+            pixels[index].a = UInt8(clamping: scaled)
         }
 
         removeNearWhiteBackground(
@@ -203,7 +202,7 @@ enum CutoutImageProcessor {
         }
 
         let blend = (distance - tolerance) / feather
-        return UInt8(min(255, Double(pixel.a) * blend))
+        return UInt8(clamping: Int((Double(pixel.a) * blend).rounded()))
     }
 
     private static func removeNearWhiteBackground(
@@ -217,9 +216,9 @@ enum CutoutImageProcessor {
             guard minimumChannel >= threshold - feather else { continue }
 
             let whiteDistance = Double(minimumChannel - (threshold - feather))
-            let removal = min(1, whiteDistance / Double(max(feather, 1)))
-            let keep = 1 - removal
-            pixels[index].a = UInt8(Double(pixels[index].a) * keep)
+            let removal = min(1.0, whiteDistance / Double(max(Int(feather), 1)))
+            let keep = 1.0 - removal
+            pixels[index].a = UInt8(clamping: Int((Double(pixels[index].a) * keep).rounded()))
         }
     }
 

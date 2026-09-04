@@ -33,9 +33,11 @@ Fix any compile or test failures before pushing.
 
 When `xcodebuild` is unavailable:
 
-1. **Symbol cross-check** — grep usages of shared types (`HandDrawnPalette`, `PlatformImage`, `HomeTab`, etc.) and confirm definitions exist.
-2. **pbxproj** — new `.swift` files must be added to `DogCompanion.xcodeproj/project.pbxproj`.
-3. **Unit tests** — add smoke tests for new shared types (see `HandDrawnPaletteTests.swift`).
-4. Report to the user that full build was not run locally; they should verify in Xcode on Mac.
+1. **Treat Xcode issue screenshots as failing tests** — fix compile errors before anything else.
+2. **Numeric types** — `UInt8` / `Int` / `Double` / `CGFloat` must not mix in `min`/`max`/`*` (this already broke `MattingService`).
+3. **Symbol cross-check** — grep usages of shared types (`HandDrawnPalette`, `PlatformImage`, `HomeTab`, `CutoutImageProcessor`, etc.) and confirm definitions exist.
+4. **pbxproj** — new `.swift` files must be added to `DogCompanion.xcodeproj/project.pbxproj`.
+5. **Unit tests** — add or extend tests that actually call new logic (not only symbol smoke tests).
+6. Report to the user that full `xcodebuild` was not run locally; they should verify in Xcode on Mac.
 
-Never commit with known missing symbols or unregistered source files.
+Never commit with known missing symbols, unregistered source files, or unresolved Xcode compile errors.

@@ -35,7 +35,7 @@ struct PaperFiberOverlay: View {
             guard size.width > 2, size.height > 2 else { return }
             let width = size.width
             let height = size.height
-            let fiberCount = Int(max(24, min(90, width * height / 4_800)))
+            let fiberCount = Int(max(24.0, min(90.0, width * height / 4_800)))
 
             for index in 0..<fiberCount {
                 let y = HandDrawnTexture.unit(index + seed, 1) * height
@@ -55,7 +55,7 @@ struct PaperFiberOverlay: View {
                 )
             }
 
-            let speckCount = Int(max(80, min(280, width * height / 1_600)))
+            let speckCount = Int(max(80.0, min(280.0, width * height / 1_600)))
             for index in 0..<speckCount {
                 let x = HandDrawnTexture.unit(index + seed, 8) * width
                 let y = HandDrawnTexture.unit(index, 9) * height
@@ -352,7 +352,7 @@ extension Color {
     }
 
     func mix(with other: Color, amount: CGFloat) -> Color {
-        let t = max(0, min(1, amount))
+        let t = max(0 as CGFloat, min(1 as CGFloat, amount))
         let a = UIColor(self)
         let b = UIColor(other)
         var ar: CGFloat = 0, ag: CGFloat = 0, ab: CGFloat = 0, aa: CGFloat = 0
