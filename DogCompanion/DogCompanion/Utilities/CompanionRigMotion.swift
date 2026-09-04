@@ -26,7 +26,7 @@ struct CompanionPartTransform: Equatable {
     static let identity = CompanionPartTransform()
 }
 
-/// Sliced owner cutout, or bundled puppet fallback. Idle sits on the floor; running-in gallops in from the side.
+/// Sliced owner cutout, or bundled puppet fallback. Idle sits on the floor; running-in slides in from the side.
 enum CompanionRigMotion {
     static func transform(state: CompanionRigState, time: TimeInterval) -> CompanionPartTransform {
         switch state {
@@ -96,7 +96,9 @@ enum CompanionRigMotion {
         case .away, .idle, .reacting, .celebrating:
             return sitting
         case .runningIn:
-            let running = transform(state: .running, time: elapsed)
+            // The sit cutout faces the Owner. Horizontal travel comes from PosePlayback;
+            // swinging sliced legs left/right reads as crab-walking.
+            let running = runInFacingFront(elapsed: elapsed)
             if elapsed <= PosePlayback.runDuration {
                 return running
             }
@@ -111,7 +113,7 @@ enum CompanionRigMotion {
         case .away, .idle, .reacting, .celebrating:
             return .sitting
         case .runningIn:
-            return elapsed < PosePlayback.runDuration ? .running : .sitting
+            return .sitting
         }
     }
 
@@ -122,6 +124,19 @@ enum CompanionRigMotion {
             return 0.12
         }
         return 1
+    }
+
+    private static func runInFacingFront(elapsed: TimeInterval) -> CompanionPartTransform {
+        let hop = sin(elapsed * 11.0)
+        let bounce = abs(hop)
+        return CompanionPartTransform(
+            headY: cg(1.0 + hop * 1.6),
+            bodyY: cg(bounce * 1.4),
+            tailRotation: cg(sin(elapsed * 8.0) * 0.08),
+            headRotation: cg(hop * 0.02),
+            bodyScaleX: cg(1.0 + bounce * 0.012),
+            bodyScaleY: cg(1.0 - bounce * 0.008)
+        )
     }
 
     private static func climbParts(elapsed: TimeInterval) -> CompanionPartTransform {

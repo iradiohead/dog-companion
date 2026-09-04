@@ -50,17 +50,23 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(abs(run.frontLegRotation - run.backLegRotation), 0.1)
     }
 
+    func testRunInDoesNotSwingLegsSideways() {
+        let run = CompanionRigMotion.transform(motion: .runningIn, elapsed: 0.2)
+        XCTAssertEqual(run.frontLegX, 0, accuracy: 0.01)
+        XCTAssertEqual(run.backLegX, 0, accuracy: 0.01)
+        XCTAssertEqual(run.frontLegRotation, 0, accuracy: 0.01)
+        XCTAssertEqual(run.backLegRotation, 0, accuracy: 0.01)
+        XCTAssertEqual(run.headX, 0, accuracy: 0.01)
+        XCTAssertEqual(run.lean, 0, accuracy: 0.01)
+        XCTAssertGreaterThan(run.bodyY, 0.2)
+    }
+
     func testRunInBlendsIntoSittingAfterTheGallop() {
         let midBrake = CompanionRigMotion.transform(
             motion: .runningIn,
             elapsed: PosePlayback.runDuration + 0.12
         )
-        let running = CompanionRigMotion.transform(
-            state: .running,
-            time: PosePlayback.runDuration + 0.12
-        )
-        XCTAssertLessThan(abs(midBrake.lean), abs(running.lean))
-        XCTAssertGreaterThan(abs(midBrake.lean), 0.01)
+        XCTAssertGreaterThan(midBrake.bodyY, 0.1)
         let sitting = CompanionRigMotion.transform(
             state: .sitting,
             time: PosePlayback.runningInDuration
@@ -78,9 +84,9 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(abs(pose.frontLegRotation - pose.backLegRotation), 0.1)
     }
 
-    func testIdleMapsToSittingAndRunInUsesRunning() {
+    func testIdleMapsToSittingAndRunInKeepsFrontFacingRig() {
         XCTAssertEqual(CompanionRigMotion.rigState(from: .idle), .sitting)
-        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .running)
+        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .sitting)
         XCTAssertEqual(
             CompanionRigMotion.rigState(from: .runningIn, elapsed: PosePlayback.runDuration),
             .sitting
