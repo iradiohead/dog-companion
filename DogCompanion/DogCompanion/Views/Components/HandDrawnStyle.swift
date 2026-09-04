@@ -17,19 +17,35 @@ enum HandDrawnPalette {
 
 struct PaperBackgroundView: View {
     var body: some View {
-        HandDrawnPalette.paperBase
-            .overlay {
-                LinearGradient(
-                    colors: [
-                        .white.opacity(0.35),
-                        .clear,
-                        HandDrawnPalette.ink.opacity(0.03)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            }
-            .ignoresSafeArea()
+        ZStack {
+            HandDrawnPalette.paperBase
+
+            WatercolorWashOverlay(colors: [
+                HandDrawnPalette.cream,
+                Color(red: 0.94, green: 0.90, blue: 0.82),
+                HandDrawnPalette.warmGlow.opacity(0.6)
+            ])
+
+            LinearGradient(
+                colors: [
+                    .white.opacity(0.42),
+                    .clear,
+                    HandDrawnPalette.ink.opacity(0.04)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            RadialGradient(
+                colors: [.clear, HandDrawnPalette.ink.opacity(0.05)],
+                center: .center,
+                startRadius: 80,
+                endRadius: 420
+            )
+
+            PaperGrainOverlay(opacity: 0.62)
+        }
+        .ignoresSafeArea()
     }
 }
 

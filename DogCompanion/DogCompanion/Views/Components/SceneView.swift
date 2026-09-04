@@ -12,6 +12,12 @@ struct SceneView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
+                SceneAmbientOverlay(
+                    wallColor: scene.topColor,
+                    floorColor: scene.bottomColor,
+                    isLampLit: isFocusActive
+                )
+
                 WallPaintingView(accent: scene.accentColor)
                     .scaleEffect(0.85)
                     .position(x: geo.size.width * 0.18, y: geo.size.height * 0.22)
@@ -29,25 +35,41 @@ struct SceneView: View {
                 VStack(spacing: 0) {
                     Spacer()
 
-                    ZStack(alignment: .bottom) {
-                        DogMatView(color: furniture.tint.opacity(0.92))
-                            .padding(.bottom, 8)
+                    WoodenFloorView(
+                        floorColor: scene.bottomColor.opacity(0.35),
+                        plankColor: HandDrawnPalette.ink
+                    )
+                    .frame(height: min(geo.size.height * 0.14, 72))
+                    .overlay(alignment: .top) {
+                        Rectangle()
+                            .fill(HandDrawnPalette.ink.opacity(0.08))
+                            .frame(height: 2)
+                    }
 
-                        VStack(spacing: -18) {
+                    HStack(alignment: .bottom, spacing: 8) {
+                        Spacer(minLength: 0)
+
+                        ZStack(alignment: .bottom) {
+                            DogMatView(color: furniture.tint.opacity(0.92))
+                                .padding(.bottom, 6)
+
                             MotionView(
                                 cutoutData: cutoutData,
                                 portraitData: portraitData,
                                 motionState: motionState,
                                 onTap: onCompanionTap
                             )
-                            .frame(height: min(geo.size.height * 0.34, 150))
-                            .zIndex(1)
-
-                            ArmChairView(seatColor: HandDrawnPalette.chairGreen)
-                                .padding(.bottom, 6)
+                            .frame(height: min(geo.size.height * 0.32, 140))
+                            .padding(.bottom, 10)
                         }
+
+                        StudyDeskView(topColor: HandDrawnPalette.wood)
+                            .padding(.bottom, 4)
+
+                        Spacer(minLength: 0)
                     }
-                    .padding(.bottom, geo.size.height * 0.04)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, geo.size.height * 0.03)
                 }
             }
         }

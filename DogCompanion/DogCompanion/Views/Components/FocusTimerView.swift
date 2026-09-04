@@ -49,8 +49,27 @@ struct FocusTimerCenterView: View {
             Button(action: onStart) {
                 ZStack {
                     Ellipse()
-                        .fill(HandDrawnPalette.startBlue)
-                        .frame(width: 120, height: 52)
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    HandDrawnPalette.startBlue.opacity(0.85),
+                                    HandDrawnPalette.startBlue.opacity(0.45),
+                                    Color(red: 0.62, green: 0.82, blue: 0.96).opacity(0.35)
+                                ],
+                                center: UnitPoint(x: 0.35, y: 0.3),
+                                startRadius: 8,
+                                endRadius: 70
+                            )
+                        )
+                        .frame(width: 124, height: 54)
+                        .overlay {
+                            Ellipse()
+                                .strokeBorder(
+                                    HandDrawnPalette.ink.opacity(0.15),
+                                    style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [6, 4])
+                                )
+                        }
+                        .paperTextured(opacity: 0.15)
                     Text("开始")
                         .font(.title2.weight(.bold))
                         .foregroundStyle(HandDrawnPalette.ink)

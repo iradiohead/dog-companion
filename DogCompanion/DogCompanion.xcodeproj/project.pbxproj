@@ -24,6 +24,7 @@
 		A10000000000000000000020 /* PlatformImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* PlatformImage.swift */; };
 		A10000000000000000000021 /* HandDrawnStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* HandDrawnStyle.swift */; };
 		A10000000000000000000022 /* HandDrawnIllustrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* HandDrawnIllustrations.swift */; };
+		A10000000000000000000023 /* HandDrawnTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* HandDrawnTexture.swift */; };
 		A10000000000000000000008 /* CreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CreationViewModel.swift */; };
 		A10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HomeViewModel.swift */; };
 		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
@@ -71,6 +72,7 @@
 		A20000000000000000000020 /* PlatformImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformImage.swift; sourceTree = "<group>"; };
 		A20000000000000000000021 /* HandDrawnStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnStyle.swift; sourceTree = "<group>"; };
 		A20000000000000000000022 /* HandDrawnIllustrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnIllustrations.swift; sourceTree = "<group>"; };
+		A20000000000000000000023 /* HandDrawnTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnTexture.swift; sourceTree = "<group>"; };
 		A20000000000000000000008 /* CreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationViewModel.swift; sourceTree = "<group>"; };
 		A20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
@@ -209,6 +211,7 @@
 				A2000000000000000000001F /* ScenePickerView.swift */,
 				A20000000000000000000021 /* HandDrawnStyle.swift */,
 				A20000000000000000000022 /* HandDrawnIllustrations.swift */,
+				A20000000000000000000023 /* HandDrawnTexture.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -388,6 +391,7 @@
 				A10000000000000000000020 /* PlatformImage.swift in Sources */,
 				A10000000000000000000021 /* HandDrawnStyle.swift in Sources */,
 				A10000000000000000000022 /* HandDrawnIllustrations.swift in Sources */,
+				A10000000000000000000023 /* HandDrawnTexture.swift in Sources */,
 				A10000000000000000000008 /* CreationViewModel.swift in Sources */,
 				A10000000000000000000009 /* HomeViewModel.swift in Sources */,
 				A1000000000000000000000A /* SharedComponents.swift in Sources */,
