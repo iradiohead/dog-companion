@@ -51,7 +51,7 @@ struct GenerationService {
         }
 
         let cutoutData = try await mattingService.extractCutout(from: portraitImage)
-        let extras = await generateActionPoses(from: portraitImage, style: style)
+        let extras = await generateActionPoses(from: image, style: style)
         return GenerationResult(
             comicPortraitData: portraitData,
             cutoutData: cutoutData,
@@ -79,21 +79,28 @@ struct GenerationService {
         return try await downloadImage(from: imageURL)
     }
 
-    private func generateActionPoses(from sitImage: UIImage, style: StyleTemplate) async -> (runA: Data?, runB: Data?, land: Data?) {
-        async let runA = optionalPoseCutout(from: sitImage, style: style, pose: .runA)
-        async let runB = optionalPoseCutout(from: sitImage, style: style, pose: .runB)
-        async let land = optionalPoseCutout(from: sitImage, style: style, pose: .land)
-        return await (runA, runB, land)
+    func generateActionPoses(from image: UIImage, style: StyleTemplate) async -> (runA: Data?, runB: Data?, land: Data?) {
+        let runA = await poseCutoutWithRetry(from: image, style: style, pose: .runA)
+        let runB = await poseCutoutWithRetry(from: image, style: style, pose: .runB)
+        let land = await poseCutoutWithRetry(from: image, style: style, pose: .land)
+        return (runA, runB, land)
     }
 
-    private func optionalPoseCutout(from image: UIImage, style: StyleTemplate, pose: CompanionPose) async -> Data? {
-        do {
-            let portrait = try await generateComicPortrait(from: image, style: style, pose: pose)
-            guard let poseImage = UIImage(data: portrait) else { return nil }
-            return try await mattingService.extractCutout(from: poseImage)
-        } catch {
-            return nil
+    private func poseCutoutWithRetry(from image: UIImage, style: StyleTemplate, pose: CompanionPose) async -> Data? {
+        for attempt in 0..<3 {
+            do {
+                let portrait = try await generateComicPortrait(from: image, style: style, pose: pose)
+                guard let poseImage = UIImage(data: portrait) else { return nil }
+                return try await mattingService.extractCutout(from: poseImage)
+            } catch GenerationError.rateLimited(let retryAfter) {
+                try? await Task.sleep(nanoseconds: UInt64(max(retryAfter, 1) * 1_000_000_000))
+            } catch {
+                if attempt < 2 {
+                    try? await Task.sleep(nanoseconds: 800_000_000)
+                }
+            }
         }
+        return nil
     }
 
     private func createWanxiangImage(
@@ -130,12 +137,12 @@ struct GenerationService {
                 ]
             ],
             "parameters": [
-                "negative_prompt": style.negativePrompt,
+                "negative_prompt": style.negativePrompt(for: pose),
                 "enable_interleave": false,
                 "n": 1,
                 "size": "1K",
                 "watermark": false,
-                "prompt_extend": true
+                "prompt_extend": pose == .sit
             ]
         ]
 

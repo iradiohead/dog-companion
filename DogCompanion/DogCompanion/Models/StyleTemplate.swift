@@ -35,7 +35,7 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
         case .sit:
             identity = "保留照片中狗狗的毛色、花纹和品种特征"
         case .runA, .runB, .land:
-            identity = "必须与参考图是同一只狗：品种、毛色、花纹、耳朵、五官和画风完全一致，只改变姿势"
+            identity = "必须与参考图是同一只狗：品种、毛色、花纹、耳朵、五官和画风完全一致。只改姿势，不要复制参考图里的坐姿"
         }
 
         let styleLine: String
@@ -48,10 +48,18 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
             styleLine = "水彩手绘风格，温暖色调，手绘质感，艺术感"
         }
 
-        return "将图中的狗狗转换为\(styleLine)，\(identity)，\(pose.promptInstruction)，\(background)"
+        return "【姿势必须遵守】\(pose.promptInstruction)。将图中的狗狗转换为\(styleLine)。\(identity)。再次强调姿势：\(pose.promptInstruction)。\(background)"
     }
 
     var negativePrompt: String {
-        "模糊，低画质，变形，畸形，丑陋，人体，文字，水印，低分辨率，手指畸形，AI感过重，背景纹理，纸张质感，画框，地毯，阴影，场景，家具"
+        negativePrompt(for: .sit)
+    }
+
+    func negativePrompt(for pose: CompanionPose) -> String {
+        var prompt = "模糊，低画质，变形，畸形，丑陋，人体，文字，水印，低分辨率，手指畸形，AI感过重，背景纹理，纸张质感，画框，地毯，阴影，场景，家具"
+        if pose != .sit {
+            prompt += "，坐着，坐姿，蹲坐，正面证件照，sitting, seated, lying down, sitting down, front portrait"
+        }
+        return prompt
     }
 }

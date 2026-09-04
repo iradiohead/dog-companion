@@ -12,11 +12,11 @@ enum CompanionPose: String, CaseIterable, Equatable {
         case .sit:
             return "全身坐姿居中，臀部着地，前肢直立，表情放松"
         case .runA:
-            return "侧面全身奔跑，左前腿向前大步迈出，右后腿向后蹬地，身体明显前倾，四腿交错"
+            return "必须是侧面奔跑中的狗，绝对不能坐着。左前腿向前大步伸直，右后腿向后蹬地，身体前倾，四腿离地或交错迈步，像在冲向画面右侧"
         case .runB:
-            return "侧面全身奔跑，右前腿向前大步迈出，左后腿向后蹬地，与交叉步相反，身体前倾"
+            return "必须是侧面奔跑中的狗，绝对不能坐着。右前腿向前大步伸直，左后腿向后蹬地，与上一跑姿相反的交叉步，身体前倾"
         case .land:
-            return "全身刚跑到停下，后腿弯曲下蹲、前爪点地，正在坐下但尚未完全坐稳"
+            return "必须是刚刹车的站姿，绝对不能已经坐稳。后腿弯曲、前爪撑地，身体还前倾，正在准备坐下"
         }
     }
 }
@@ -43,6 +43,16 @@ struct PoseCutoutSet: Equatable {
             return land ?? sit
         }
     }
+
+    func withSynthesizedFallbacks() -> PoseCutoutSet {
+        guard let sit else { return self }
+        return PoseCutoutSet(
+            sit: sit,
+            runA: runA ?? PoseFrameSynthesizer.runA(from: sit),
+            runB: runB ?? PoseFrameSynthesizer.runB(from: sit),
+            land: land ?? PoseFrameSynthesizer.land(from: sit)
+        )
+    }
 }
 
 struct PoseTravel: Equatable {
@@ -53,9 +63,14 @@ struct PoseTravel: Equatable {
 }
 
 enum PosePlayback {
-    static let runDuration: TimeInterval = 1.24
-    static let landDuration: TimeInterval = 0.28
-    static let strideDuration: TimeInterval = 0.12
+    static let runDuration: TimeInterval = 1.85
+    static let landDuration: TimeInterval = 0.32
+    static let strideDuration: TimeInterval = 0.11
+    static let runDistance: CGFloat = 236
+
+    static var runningInDuration: TimeInterval {
+        runDuration + landDuration
+    }
 
     static func pose(state: CompanionMotionState, elapsed: TimeInterval) -> CompanionPose {
         switch state {
@@ -66,7 +81,7 @@ enum PosePlayback {
                 let frame = Int(elapsed / strideDuration)
                 return frame.isMultiple(of: 2) ? .runA : .runB
             }
-            if elapsed < runDuration + landDuration {
+            if elapsed < runningInDuration {
                 return .land
             }
             return .sit
@@ -84,17 +99,27 @@ enum PosePlayback {
         }
     }
 
-    static func travel(state: CompanionMotionState, elapsed: TimeInterval) -> PoseTravel {
+    static func travel(
+        state: CompanionMotionState,
+        elapsed: TimeInterval,
+        runDistance distance: CGFloat = Self.runDistance
+    ) -> PoseTravel {
         switch state {
         case .away:
-            return PoseTravel(x: 170, y: -58, scale: 0.3, opacity: 0)
+            return PoseTravel(x: -distance, y: 0, scale: 1, opacity: 0)
         case .runningIn:
             let t = min(1, elapsed / runDuration)
             let eased = 1 - (1 - t) * (1 - t)
+            let hop: CGFloat
+            if elapsed < runDuration {
+                hop = sin(elapsed / strideDuration * .pi) * -11
+            } else {
+                hop = 0
+            }
             return PoseTravel(
-                x: 170 * (1 - eased),
-                y: -58 * (1 - eased),
-                scale: 0.34 + 0.66 * eased,
+                x: -distance * (1 - eased),
+                y: hop,
+                scale: 1,
                 opacity: 1
             )
         case .idle, .reacting, .celebrating:

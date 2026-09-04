@@ -26,6 +26,7 @@
 		A10000000000000000000022 /* HandDrawnIllustrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* HandDrawnIllustrations.swift */; };
 		A10000000000000000000023 /* HandDrawnTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* HandDrawnTexture.swift */; };
 		A10000000000000000000024 /* CompanionPose.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* CompanionPose.swift */; };
+		A10000000000000000000025 /* PoseFrameSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* PoseFrameSynthesizer.swift */; };
 		A10000000000000000000008 /* CreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* CreationViewModel.swift */; };
 		A10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HomeViewModel.swift */; };
 		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
@@ -77,6 +78,7 @@
 		A20000000000000000000022 /* HandDrawnIllustrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnIllustrations.swift; sourceTree = "<group>"; };
 		A20000000000000000000023 /* HandDrawnTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnTexture.swift; sourceTree = "<group>"; };
 		A20000000000000000000024 /* CompanionPose.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPose.swift; sourceTree = "<group>"; };
+		A20000000000000000000025 /* PoseFrameSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseFrameSynthesizer.swift; sourceTree = "<group>"; };
 		A20000000000000000000008 /* CreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationViewModel.swift; sourceTree = "<group>"; };
 		A20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
@@ -183,6 +185,7 @@
 				A20000000000000000000015 /* RegenerationPolicy.swift */,
 				A2000000000000000000001B /* GiftUnlockPolicy.swift */,
 				A20000000000000000000020 /* PlatformImage.swift */,
+				A20000000000000000000025 /* PoseFrameSynthesizer.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -402,6 +405,7 @@
 				A10000000000000000000022 /* HandDrawnIllustrations.swift in Sources */,
 				A10000000000000000000023 /* HandDrawnTexture.swift in Sources */,
 				A10000000000000000000024 /* CompanionPose.swift in Sources */,
+				A10000000000000000000025 /* PoseFrameSynthesizer.swift in Sources */,
 				A10000000000000000000008 /* CreationViewModel.swift in Sources */,
 				A10000000000000000000009 /* HomeViewModel.swift in Sources */,
 				A1000000000000000000000A /* SharedComponents.swift in Sources */,

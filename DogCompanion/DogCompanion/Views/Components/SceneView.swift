@@ -8,6 +8,8 @@ struct SceneView: View {
     let isFocusActive: Bool
     let onCompanionTap: () -> Void
 
+    @State private var restFrame: CGRect = .zero
+
     var body: some View {
         GeometryReader { geo in
             let floorHeight = max(geo.size.height * 0.40, 180)
@@ -27,7 +29,22 @@ struct SceneView: View {
                     floorArea(width: geo.size.width, height: floorHeight)
                         .frame(height: floorHeight)
                 }
+
+                MotionView(
+                    poses: poses,
+                    motionState: motionState,
+                    runDistance: restFrame == .zero
+                        ? PosePlayback.runDistance
+                        : max(140, restFrame.midX - 36),
+                    onTap: onCompanionTap
+                )
+                .frame(width: 150, height: 168)
+                .position(x: restFrame.midX, y: restFrame.midY)
+                .opacity(restFrame == .zero ? 0 : 1)
+                .zIndex(20)
             }
+            .coordinateSpace(name: "focusScene")
+            .onPreferenceChange(DogRestAnchorKey.self) { restFrame = $0 }
         }
     }
 
@@ -85,21 +102,16 @@ struct SceneView: View {
                             .frame(width: 190, height: 50)
                             .padding(.bottom, 4)
 
-                        MotionView(
-                            poses: poses,
-                            motionState: motionState,
-                            onTap: onCompanionTap
-                        )
-                        .frame(width: 150, height: 168)
-                        .padding(.bottom, 8)
-                        .zIndex(2)
+                        Color.clear
+                            .frame(width: 150, height: 168)
+                            .padding(.bottom, 8)
+                            .anchorReader(coordinateSpace: "focusScene")
                     }
                     .frame(width: 190)
 
                     StudyDeskView(topColor: HandDrawnPalette.wood)
                         .scaleEffect(1.05)
                         .padding(.bottom, 2)
-                        .zIndex(1)
                 }
 
                 Spacer(minLength: 12)
@@ -110,5 +122,29 @@ struct SceneView: View {
             }
             .padding(.bottom, 8)
         }
+    }
+}
+
+private struct DogRestAnchorKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next != .zero {
+            value = next
+        }
+    }
+}
+
+private extension View {
+    func anchorReader(coordinateSpace: String) -> some View {
+        background(
+            GeometryReader { proxy in
+                Color.clear.preference(
+                    key: DogRestAnchorKey.self,
+                    value: proxy.frame(in: .named(coordinateSpace))
+                )
+            }
+        )
     }
 }

@@ -12,6 +12,7 @@ final class HomeViewModel {
     private(set) var showGiftReveal = false
 
     private var timerTask: Task<Void, Never>?
+    private var didAttemptPoseBackfill = false
 
     var formattedRemainingTime: String {
         let total = max(0, Int(remainingSeconds))
@@ -93,6 +94,8 @@ final class HomeViewModel {
     }
 
     func refreshCutoutIfNeeded(for companion: Companion) {
+        backfillActionPosesIfNeeded(for: companion)
+
         guard CutoutImageProcessor.needsCutoutRefresh(companion.cutoutData),
               let portraitData = companion.comicPortraitData,
               let portrait = UIImage(data: portraitData) else {
@@ -131,9 +134,34 @@ final class HomeViewModel {
 
     private func scheduleRunInToSit() {
         Task {
-            try? await Task.sleep(nanoseconds: 1_700_000_000)
+            let nanos = UInt64((PosePlayback.runningInDuration + 0.08) * 1_000_000_000)
+            try? await Task.sleep(nanoseconds: nanos)
             if motionState == .runningIn {
                 motionState = .idle
+            }
+        }
+    }
+
+    private func backfillActionPosesIfNeeded(for companion: Companion) {
+        guard !didAttemptPoseBackfill else { return }
+        guard !companion.poseCutouts.canFlipbook else { return }
+        guard let portraitData = companion.comicPortraitData,
+              let portrait = UIImage(data: portraitData) else {
+            return
+        }
+
+        didAttemptPoseBackfill = true
+        let style = companion.styleTemplate
+        Task {
+            let extras = await GenerationService().generateActionPoses(from: portrait, style: style)
+            if companion.cutoutRunAData == nil {
+                companion.cutoutRunAData = extras.runA
+            }
+            if companion.cutoutRunBData == nil {
+                companion.cutoutRunBData = extras.runB
+            }
+            if companion.cutoutLandData == nil {
+                companion.cutoutLandData = extras.land
             }
         }
     }
