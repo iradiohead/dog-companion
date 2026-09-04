@@ -30,7 +30,7 @@ struct CompanionPartTransform: Equatable {
     static let identity = CompanionPartTransform()
 }
 
-/// Sliced owner cutout for idle; bundled side puppet during run-in so the dog faces right.
+/// Sliced owner cutout for idle; owner run flipbook during run-in.
 enum CompanionRigMotion {
     static func transform(state: CompanionRigState, time: TimeInterval) -> CompanionPartTransform {
         switch state {
@@ -94,14 +94,21 @@ enum CompanionRigMotion {
         }
     }
 
-    static func transform(motion: CompanionMotionState, elapsed: TimeInterval) -> CompanionPartTransform {
+    static func transform(
+        motion: CompanionMotionState,
+        elapsed: TimeInterval,
+        usesRunFlipbook: Bool = false
+    ) -> CompanionPartTransform {
         let sitting = transform(state: .sitting, time: elapsed)
         switch motion {
         case .away, .idle, .reacting, .celebrating:
             return sitting
         case .runningIn:
             if elapsed < PosePlayback.runDuration {
-                return transform(state: .running, time: elapsed)
+                if usesRunFlipbook {
+                    return runInFlipbook(elapsed: elapsed)
+                }
+                return runInFacingFront(elapsed: elapsed)
             }
             let running = runInFacingFront(elapsed: elapsed)
             let settleFor = PosePlayback.brakeDuration + PosePlayback.settleDuration
@@ -115,9 +122,6 @@ enum CompanionRigMotion {
         case .away, .idle, .reacting, .celebrating:
             return .sitting
         case .runningIn:
-            if elapsed < PosePlayback.runDuration {
-                return .running
-            }
             return .sitting
         }
     }
@@ -129,6 +133,17 @@ enum CompanionRigMotion {
             return 0.12
         }
         return 1
+    }
+
+    private static func runInFlipbook(elapsed: TimeInterval) -> CompanionPartTransform {
+        let hop = sin(elapsed * 11.0)
+        let bounce = abs(hop)
+        return CompanionPartTransform(
+            bodyY: cg(bounce * 2.0),
+            lean: -0.05,
+            bodyScaleX: cg(1.0 + bounce * 0.02),
+            bodyScaleY: cg(1.0 - bounce * 0.018)
+        )
     }
 
     private static func runInFacingFront(elapsed: TimeInterval) -> CompanionPartTransform {

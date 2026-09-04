@@ -68,12 +68,21 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertEqual(settled.x, 0, accuracy: 2)
     }
 
-    func testRunInUsesSideRunningGaitWhileMoving() {
-        let stepA = CompanionRigMotion.transform(motion: .runningIn, elapsed: 0.2)
-        let stepB = CompanionRigMotion.transform(motion: .runningIn, elapsed: 0.2 + Double.pi / 9.5)
-        XCTAssertGreaterThan(abs(stepA.frontLegX), 1.0)
+    func testRunInUsesOwnerFlipbookGaitWhileMoving() {
+        let stepA = CompanionRigMotion.transform(
+            motion: .runningIn,
+            elapsed: 0.2,
+            usesRunFlipbook: true
+        )
+        let stepB = CompanionRigMotion.transform(
+            motion: .runningIn,
+            elapsed: 0.2 + Double.pi / 11.0,
+            usesRunFlipbook: true
+        )
+        XCTAssertEqual(stepA.frontLegX, 0, accuracy: 0.01)
         XCTAssertLessThan(stepA.lean, -0.02)
-        XCTAssertLessThan(stepA.frontLegX * stepB.frontLegX, 0)
+        XCTAssertGreaterThan(stepA.bodyY, 0.5)
+        XCTAssertGreaterThan(abs(stepA.bodyY - stepB.bodyY), 0.1)
     }
 
     func testRunInCutoutSettlesWithoutCrabWalk() {
@@ -94,10 +103,11 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertLessThan(stepA.frontLegY * stepB.frontLegY, 0)
     }
 
-    func testRunInRunProfileLooksRight() {
-        let run = CompanionRigMotion.transform(motion: .runningIn, elapsed: 0.2)
-        XCTAssertLessThan(run.lean, -0.02)
-        XCTAssertGreaterThan(abs(run.frontLegX), 1.0)
+    func testRunInFacingFrontWhenNoFlipbook() {
+        let run = CompanionRigMotion.transform(motion: .runningIn, elapsed: 0.2, usesRunFlipbook: false)
+        XCTAssertLessThan(run.headRotation, -0.08)
+        XCTAssertLessThan(run.headX, -4)
+        XCTAssertGreaterThan(abs(run.frontLegY), 1.5)
     }
 
     func testRunInBlendsIntoSittingAfterTheGallop() {
@@ -123,9 +133,9 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(abs(pose.frontLegRotation - pose.backLegRotation), 0.1)
     }
 
-    func testIdleMapsToSittingAndRunInUsesSideProfileWhileMoving() {
+    func testIdleMapsToSittingAndRunInKeepsSitRig() {
         XCTAssertEqual(CompanionRigMotion.rigState(from: .idle), .sitting)
-        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .running)
+        XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .sitting)
         XCTAssertEqual(
             CompanionRigMotion.rigState(from: .runningIn, elapsed: PosePlayback.runDuration + 0.01),
             .sitting

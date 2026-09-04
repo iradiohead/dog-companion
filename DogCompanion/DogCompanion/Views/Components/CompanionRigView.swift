@@ -4,13 +4,15 @@ import UIKit
 
 struct CompanionRigView: UIViewRepresentable {
     var image: PlatformImage? = nil
+    var runFrames: [PlatformImage] = []
     var palette: CoatPalette = .brown
     var state: CompanionRigState
     var elapsed: TimeInterval
     var isPaused: Bool
     var motion: CompanionMotionState? = nil
-    /// Side-view puppet while the dog runs in; owner cutout when seated forward.
-    var sideProfile: Bool = false
+    /// Owner run flipbook while traveling in; sit rig when seated forward.
+    var showRunFlipbook: Bool = false
+    var facingScaleX: CGFloat = 1
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -30,11 +32,13 @@ struct CompanionRigView: UIViewRepresentable {
 
         let scene = context.coordinator.scene
         scene.image = image
+        scene.runFrames = runFrames
         scene.palette = palette
         scene.rigState = state
         scene.elapsed = elapsed
         scene.motion = motion
-        scene.sideProfile = sideProfile
+        scene.showRunFlipbook = showRunFlipbook
+        scene.facingScaleX = facingScaleX
         view.presentScene(scene)
         view.isPaused = isPaused
         return view
@@ -42,11 +46,13 @@ struct CompanionRigView: UIViewRepresentable {
 
     func updateUIView(_ view: SKView, context: Context) {
         context.coordinator.scene.image = image
+        context.coordinator.scene.runFrames = runFrames
         context.coordinator.scene.palette = palette
         context.coordinator.scene.rigState = state
         context.coordinator.scene.elapsed = elapsed
         context.coordinator.scene.motion = motion
-        context.coordinator.scene.sideProfile = sideProfile
+        context.coordinator.scene.showRunFlipbook = showRunFlipbook
+        context.coordinator.scene.facingScaleX = facingScaleX
         context.coordinator.scene.applyCurrent()
         if view.isPaused != isPaused {
             view.isPaused = isPaused
@@ -63,6 +69,8 @@ final class CompanionRigScene: SKScene {
     private var cutoutRoot = SKNode()
     private var puppetRoot = SKNode()
     private var cutoutNodes: [CompanionPart: SKSpriteNode] = [:]
+    private var flipbookNode: SKSpriteNode?
+    private var runTextures: [SKTexture] = []
     private var fillNodes: [PuppetPart: SKSpriteNode] = [:]
     private var lineNodes: [PuppetPart: SKSpriteNode] = [:]
     private var spotNode: SKSpriteNode?
@@ -75,9 +83,18 @@ final class CompanionRigScene: SKScene {
     var rigState: CompanionRigState = .sitting
     var elapsed: TimeInterval = 0
     var motion: CompanionMotionState?
-    var sideProfile = false {
+    var facingScaleX: CGFloat = 1
+    var showRunFlipbook = false {
         didSet {
-            guard sideProfile != oldValue else { return }
+            guard showRunFlipbook != oldValue else { return }
+            updatePresentation()
+        }
+    }
+    var runFrames: [PlatformImage] = [] {
+        didSet {
+            guard image != nil else { return }
+            rebuildFlipbook()
+            layoutParts()
             updatePresentation()
         }
     }
@@ -126,37 +143,64 @@ final class CompanionRigScene: SKScene {
     }
 
     func applyCurrent() {
+        root.xScale = showRunFlipbook ? 1 : facingScaleX
         if let motion {
-            apply(CompanionRigMotion.transform(motion: motion, elapsed: elapsed))
+            apply(CompanionRigMotion.transform(motion: motion, elapsed: elapsed, usesRunFlipbook: usesRunFlipbook))
         } else {
             apply(CompanionRigMotion.transform(state: rigState, time: elapsed))
         }
+    }
+
+    private var usesRunFlipbook: Bool {
+        showRunFlipbook && !runTextures.isEmpty
     }
 
     private func rebuild() {
         cutoutRoot.removeAllChildren()
         puppetRoot.removeAllChildren()
         cutoutNodes.removeAll()
+        flipbookNode = nil
+        runTextures.removeAll()
         fillNodes.removeAll()
         lineNodes.removeAll()
         spotNode = nil
 
         if let image {
             buildCutout(from: image, into: cutoutRoot)
+            rebuildFlipbook()
         } else {
             cutoutTailOnLeft = true
+            buildSharedPuppet(into: puppetRoot)
         }
-        buildSharedPuppet(into: puppetRoot)
         layoutParts()
         updatePresentation()
         applyCurrent()
     }
 
+    private func rebuildFlipbook() {
+        flipbookNode?.removeFromParent()
+        flipbookNode = nil
+        runTextures = runFrames.map { frame in
+            let texture = SKTexture(image: frame)
+            texture.filteringMode = .linear
+            return texture
+        }
+        guard let first = runTextures.first else { return }
+        let node = SKSpriteNode(texture: first)
+        node.anchorPoint = CGPoint(x: 0.5, y: 0)
+        node.zPosition = 4
+        cutoutRoot.addChild(node)
+        flipbookNode = node
+    }
+
     private func updatePresentation() {
-        let hasCutout = image != nil
-        if hasCutout {
-            cutoutRoot.isHidden = sideProfile
-            puppetRoot.isHidden = !sideProfile
+        if image != nil {
+            puppetRoot.isHidden = true
+            let flipbook = usesRunFlipbook
+            flipbookNode?.isHidden = !flipbook
+            for node in cutoutNodes.values {
+                node.isHidden = flipbook
+            }
         } else {
             cutoutRoot.isHidden = true
             puppetRoot.isHidden = false
@@ -238,16 +282,14 @@ final class CompanionRigScene: SKScene {
                 node.zRotation = 0
                 node.position = cutoutRest(for: part)
             }
-        } else {
-            let scale = min(size.width / 512.0, size.height / 512.0)
-            fittedSize = CGSize(width: 512.0 * scale, height: 512.0 * scale)
+            flipbookNode?.size = fittedSize
+            flipbookNode?.position = .zero
+            return
         }
-
-        let puppetSize = image != nil
-            ? CGSize(width: fittedSize.width * 0.94, height: fittedSize.height * 0.94)
-            : fittedSize
+        let scale = min(size.width / 512.0, size.height / 512.0)
+        fittedSize = CGSize(width: 512.0 * scale, height: 512.0 * scale)
         for node in puppetSprites() {
-            node.size = puppetSize
+            node.size = fittedSize
             node.position = .zero
             node.zRotation = 0
         }
@@ -280,12 +322,25 @@ final class CompanionRigScene: SKScene {
     }
 
     private func apply(_ transform: CompanionPartTransform) {
-        if image != nil, !cutoutRoot.isHidden {
-            applyCutout(transform)
+        if usesRunFlipbook {
+            applyFlipbook(transform)
+            return
         }
-        if !puppetRoot.isHidden {
+        if image != nil {
+            applyCutout(transform)
+        } else if !puppetRoot.isHidden {
             applyPuppet(transform)
         }
+    }
+
+    private func applyFlipbook(_ transform: CompanionPartTransform) {
+        guard let node = flipbookNode, !runTextures.isEmpty else { return }
+        let index = Int(elapsed * 11.0) % runTextures.count
+        node.texture = runTextures[index]
+        root.zRotation = transform.lean
+        node.position = CGPoint(x: 0, y: transform.bodyY * 0.35)
+        node.xScale = transform.bodyScaleX
+        node.yScale = transform.bodyScaleY
     }
 
     private func applyCutout(_ transform: CompanionPartTransform) {

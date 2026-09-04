@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MotionView: View {
     let sitImage: PlatformImage?
+    var runFrames: [PlatformImage] = []
     let palette: CoatPalette
     let motionState: CompanionMotionState
     var runDistance: CGFloat = PosePlayback.runDistance
@@ -34,6 +35,9 @@ struct MotionView: View {
 
     private func character(_ snapshot: PoseSnapshot, elapsed: TimeInterval) -> some View {
         let travel = snapshot.travel
+        let showRunFlipbook = motionState == .runningIn
+            && travel.facingScaleX < 0
+            && !runFrames.isEmpty
         return ZStack(alignment: .bottom) {
             Ellipse()
                 .fill(Color.black.opacity(travel.shadowOpacity * travel.opacity))
@@ -43,12 +47,14 @@ struct MotionView: View {
 
             CompanionRigView(
                 image: sitImage,
+                runFrames: runFrames,
                 palette: palette,
                 state: CompanionRigMotion.rigState(from: motionState, elapsed: elapsed),
                 elapsed: elapsed,
                 isPaused: motionState == .away,
                 motion: motionState,
-                sideProfile: motionState == .runningIn && travel.facingScaleX < 0
+                showRunFlipbook: showRunFlipbook,
+                facingScaleX: showRunFlipbook ? 1 : travel.facingScaleX
             )
             .scaleEffect(x: travel.scaleX, y: travel.scaleY, anchor: .bottom)
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)

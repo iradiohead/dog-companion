@@ -319,6 +319,24 @@ enum PoseFrameSynthesizer {
     }
 }
 
+extension PoseCutoutSet {
+    /// Stored run poses, or frames synthesized from the sit cutout so run-in matches the owner dog.
+    func runFrameImages() -> [UIImage] {
+        var images: [UIImage] = []
+        for data in [runA, runB, runC, runD] {
+            guard let data, let image = UIImage(data: data) else { continue }
+            images.append(image)
+        }
+        if images.count >= 2 { return images }
+        if let sit {
+            let synthesized = PoseFrameSynthesizer.runCycle(from: sit)
+            let synthImages = synthesized.compactMap { UIImage(data: $0) }
+            if !synthImages.isEmpty { return synthImages }
+        }
+        return images
+    }
+}
+
 private extension Array {
     subscript(safe index: Int) -> Element? {
         guard indices.contains(index) else { return nil }

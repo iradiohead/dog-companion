@@ -3,6 +3,7 @@ import SwiftUI
 struct SceneView: View {
     let scene: SceneBackground
     let sitImage: PlatformImage?
+    var runFrames: [PlatformImage] = []
     let palette: CoatPalette
     let motionState: CompanionMotionState
     let isFocusActive: Bool
@@ -74,6 +75,7 @@ struct SceneView: View {
 
             MotionView(
                 sitImage: sitImage,
+                runFrames: runFrames,
                 palette: palette,
                 motionState: motionState,
                 runDistance: min(PosePlayback.runDistance, max(96, width * 0.34)),

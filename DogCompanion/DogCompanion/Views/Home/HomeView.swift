@@ -11,6 +11,7 @@ struct HomeView: View {
     @State private var showTimeline = false
     @State private var selectedTab: HomeTab = .decor
     @State private var sitImage: PlatformImage?
+    @State private var runFrames: [PlatformImage] = []
 
     private var currentScene: SceneBackground {
         SceneCatalog.scene(for: companion.selectedSceneId)
@@ -36,6 +37,7 @@ struct HomeView: View {
                 SceneView(
                     scene: currentScene,
                     sitImage: sitImage,
+                    runFrames: runFrames,
                     palette: companion.coatPalette,
                     motionState: viewModel.motionState,
                     isFocusActive: viewModel.phase == .running,
@@ -72,12 +74,22 @@ struct HomeView: View {
         }
         .task(id: companion.persistentModelID) {
             await viewModel.refreshCutoutIfNeeded(for: companion)
-            sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
+            refreshCompanionImages(for: companion)
         }
-        .onChange(of: companion.cutoutData, initial: true) { _, data in
-            sitImage = data.flatMap { PlatformImage.from(data: $0) }
+        .onChange(of: companion.cutoutData, initial: true) { _, _ in
+            refreshCompanionImages(for: companion)
+        }
+        .onChange(of: companion.cutoutRunAData) { _, _ in
+            refreshCompanionImages(for: companion)
+        }
+        .onChange(of: companion.cutoutRunBData) { _, _ in
+            refreshCompanionImages(for: companion)
         }
     }
+
+    private func refreshCompanionImages(for companion: Companion) {
+        sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
+        runFrames = companion.poseCutouts.runFrameImages()
 
     private var topBar: some View {
         HStack {

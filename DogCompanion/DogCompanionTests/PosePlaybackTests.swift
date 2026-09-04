@@ -104,6 +104,7 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertFalse(set.canFlipbook)
         XCTAssertEqual(set.data(for: .runA), Data([1]))
         XCTAssertEqual(set.data(for: .land), Data([1]))
+        XCTAssertTrue(set.runFrameImages().isEmpty)
     }
 
     func testRunInScaleChangesContinuously() {
