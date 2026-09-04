@@ -48,7 +48,7 @@ struct MotionView: View {
             )
             .scaleEffect(x: travel.scaleX, y: travel.scaleY, anchor: .bottom)
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)
-            .frame(width: 150, height: 168, alignment: .bottom)
+            .frame(width: 210, height: 196, alignment: .bottom)
             .offset(x: travel.x, y: travel.y)
             .opacity(travel.opacity)
             .onTapGesture(perform: onTap)

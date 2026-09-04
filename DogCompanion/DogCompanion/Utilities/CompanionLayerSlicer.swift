@@ -76,13 +76,14 @@ enum CompanionLayerSlicer {
         ny: Float,
         tailOnLeft: Bool
     ) -> Float {
-        let head = band(ny, -0.02, 0.0, 0.36, 0.48) * band(nx, 0.10, 0.20, 0.80, 0.90)
+        // Full width so ears and ruff are not shaved off the sit cutout.
+        let head = band(ny, -0.02, 0.0, 0.40, 0.52) * band(nx, -0.08, 0.0, 1.0, 1.08)
         switch part {
         case .head:
             return head
         case .body:
             // Keep the head off the torso layer, or nodding leaves a frozen head behind.
-            let torso = band(ny, 0.38, 0.48, 0.90, 1.02) * band(nx, 0.04, 0.14, 0.86, 0.96)
+            let torso = band(ny, 0.38, 0.48, 0.92, 1.04) * band(nx, -0.04, 0.02, 0.98, 1.04)
             return torso * (1.0 - head)
         case .frontLeg:
             return band(ny, 0.68, 0.78, 0.98, 1.05) * band(nx, 0.28, 0.38, 0.62, 0.72)

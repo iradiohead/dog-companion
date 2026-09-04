@@ -33,8 +33,6 @@ struct HomeView: View {
                     phase: viewModel.phase,
                     formattedTime: viewModel.formattedRemainingTime,
                     onStart: { viewModel.startFocus(with: companion) },
-                    onPause: { viewModel.pauseFocus() },
-                    onResume: { viewModel.resumeFocus(with: companion) },
                     onCancel: { viewModel.cancelFocus() }
                 )
                 .padding(.top, 4)

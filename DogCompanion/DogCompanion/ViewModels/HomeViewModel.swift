@@ -22,7 +22,7 @@ final class HomeViewModel {
     }
 
     var isFocusActive: Bool {
-        phase == .running || phase == .paused
+        phase == .running
     }
 
     func startFocus(with companion: Companion) {
@@ -31,18 +31,6 @@ final class HomeViewModel {
         phase = .running
         motionState = .runningIn
         scheduleRunInToSit()
-        startTimer(for: companion)
-    }
-
-    func pauseFocus() {
-        guard phase == .running else { return }
-        phase = .paused
-        stopTimer()
-    }
-
-    func resumeFocus(with companion: Companion) {
-        guard phase == .paused else { return }
-        phase = .running
         startTimer(for: companion)
     }
 

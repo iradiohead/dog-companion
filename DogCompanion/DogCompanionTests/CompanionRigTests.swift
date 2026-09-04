@@ -109,6 +109,16 @@ final class CompanionRigTests: XCTestCase {
             CompanionLayerSlicer.weight(for: .tail, nx: 0.08, ny: 0.7, tailOnLeft: true),
             0.2
         )
+        XCTAssertGreaterThan(
+            CompanionLayerSlicer.weight(for: .head, nx: 0.04, ny: 0.12, tailOnLeft: true),
+            0.35,
+            "Ears on the left of the sit cutout must stay on the head layer"
+        )
+        XCTAssertGreaterThan(
+            CompanionLayerSlicer.weight(for: .head, nx: 0.96, ny: 0.12, tailOnLeft: true),
+            0.35,
+            "Ears on the right of the sit cutout must stay on the head layer"
+        )
         XCTAssertLessThan(Self.opaqueCountInTopQuarter(body), Self.opaqueCountInTopQuarter(head))
     }
 

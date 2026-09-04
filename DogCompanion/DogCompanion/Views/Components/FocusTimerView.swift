@@ -4,18 +4,11 @@ struct FocusTimerCenterView: View {
     let phase: FocusSessionPhase
     let formattedTime: String
     let onStart: () -> Void
-    let onPause: () -> Void
-    let onResume: () -> Void
     let onCancel: () -> Void
 
     var body: some View {
-        VStack(spacing: 10) {
-            Text(formattedTime)
-                .font(HandDrawnFont.marker(64, weight: .bold))
-                .monospacedDigit()
-                .foregroundStyle(HandDrawnPalette.timerGreen)
-                .shadow(color: HandDrawnPalette.timerGreenStroke.opacity(0.35), radius: 0, x: 1.2, y: 1.4)
-                .contentTransition(.numericText())
+        VStack(spacing: 8) {
+            HandDrawnTimerText(time: formattedTime)
 
             HStack(spacing: 6) {
                 Image(systemName: "pencil")
@@ -27,7 +20,7 @@ struct FocusTimerCenterView: View {
 
             primaryControl
         }
-        .padding(.top, 8)
+        .padding(.top, 4)
     }
 
     @ViewBuilder
@@ -70,28 +63,18 @@ struct FocusTimerCenterView: View {
             .buttonStyle(.plain)
             .padding(.top, 4)
 
-        case .running:
-            HStack(spacing: 24) {
-                controlChip(title: "暂停", action: onPause)
-                controlChip(title: "放弃", action: onCancel)
-            }
-            .padding(.top, 8)
-
-        case .paused:
-            HStack(spacing: 24) {
-                controlChip(title: "继续", action: onResume)
-                controlChip(title: "放弃", action: onCancel)
-            }
-            .padding(.top, 8)
+        case .running, .paused:
+            controlChip(title: "放弃", action: onCancel)
+                .padding(.top, 8)
         }
     }
 
     private func controlChip(title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.title3.weight(.semibold))
+                .font(HandDrawnFont.brush(22))
                 .foregroundStyle(HandDrawnPalette.ink)
-                .padding(.horizontal, 18)
+                .padding(.horizontal, 22)
                 .padding(.vertical, 8)
                 .background {
                     WobblyEllipse(wobble: 2.2, seed: 80)
@@ -99,5 +82,38 @@ struct FocusTimerCenterView: View {
                 }
         }
         .buttonStyle(.plain)
+    }
+}
+
+struct HandDrawnTimerText: View {
+    let time: String
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 1) {
+            ForEach(Array(time.enumerated()), id: \.offset) { index, character in
+                let wobble = HandDrawnTexture.unit(index + 3, 19)
+                Text(String(character))
+                    .font(HandDrawnFont.marker(58))
+                    .foregroundStyle(HandDrawnPalette.timerGreen)
+                    .shadow(
+                        color: HandDrawnPalette.timerGreenStroke.opacity(0.55),
+                        radius: 0,
+                        x: 1.4,
+                        y: 1.8
+                    )
+                    .shadow(
+                        color: HandDrawnPalette.ink.opacity(0.12),
+                        radius: 0,
+                        x: 0.6,
+                        y: 0.8
+                    )
+                    .rotationEffect(.degrees(Double(wobble - 0.48) * 5.2))
+                    .offset(
+                        x: (wobble - 0.5) * 1.6,
+                        y: (wobble - 0.42) * 4.2
+                    )
+                    .padding(.horizontal, character == ":" ? -1 : 0)
+            }
+        }
     }
 }

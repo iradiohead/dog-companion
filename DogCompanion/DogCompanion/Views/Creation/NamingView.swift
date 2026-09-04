@@ -22,7 +22,7 @@ struct NamingView: View {
                             elapsed: context.date.timeIntervalSinceReferenceDate,
                             isPaused: false
                         )
-                        .frame(width: 180, height: 200)
+                        .frame(width: 230, height: 240)
                     }
                 }
 

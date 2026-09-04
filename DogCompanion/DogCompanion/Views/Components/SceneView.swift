@@ -13,7 +13,7 @@ struct SceneView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let floorHeight = max(geo.size.height * 0.40, 180)
+            let floorHeight = max(geo.size.height * 0.56, 240)
             let wallHeight = geo.size.height - floorHeight
 
             ZStack(alignment: .top) {
@@ -104,7 +104,7 @@ struct SceneView: View {
                         .padding(.trailing, 22)
                         .padding(.bottom, 18)
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, 36)
             }
         }
     }
@@ -133,11 +133,11 @@ struct SceneView: View {
                 onTap: onCompanionTap
             )
             .frame(
-                width: 160,
-                height: 168 + PosePlayback.hopFrontY,
+                width: 220,
+                height: 196 + PosePlayback.hopFrontY,
                 alignment: .bottom
             )
-            .padding(.bottom, 30)
+            .padding(.bottom, 62)
             .zIndex(inFront ? 6 : 3)
 
             LayeredChairView(
@@ -147,6 +147,6 @@ struct SceneView: View {
             )
             .zIndex(4)
         }
-        .frame(width: 210, height: 220)
+        .frame(width: 248, height: 300)
     }
 }

@@ -22,6 +22,7 @@ struct CompanionRigView: UIViewRepresentable {
         view.isUserInteractionEnabled = false
         view.preferredFramesPerSecond = 60
         view.layer.isOpaque = false
+        view.clipsToBounds = false
 
         let scene = context.coordinator.scene
         scene.image = image
@@ -190,7 +191,9 @@ final class CompanionRigScene: SKScene {
         if usesOwnerCutout, let image {
             let imageSize = image.size
             guard imageSize.width > 0, imageSize.height > 0 else { return }
-            let scale = min(size.width / imageSize.width, size.height / imageSize.height)
+            let fitWidth = max(1, size.width * 0.86)
+            let fitHeight = max(1, size.height * 0.92)
+            let scale = min(fitWidth / imageSize.width, fitHeight / imageSize.height)
             fittedSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
             for (part, node) in cutoutNodes {
                 node.size = fittedSize

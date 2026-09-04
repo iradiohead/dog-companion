@@ -1,4 +1,5 @@
 import XCTest
+import SwiftUI
 @testable import DogCompanion
 
 /// Smoke tests for UI theme symbols referenced across hand-drawn views.
@@ -27,6 +28,7 @@ final class HandDrawnPaletteTests: XCTestCase {
     func testHandDrawnTextureHelpersExist() {
         _ = HandDrawnFont.brush(18)
         _ = HandDrawnFont.marker(32)
+        _ = HandDrawnTimerText(time: "25:00")
         _ = HandDrawnTexture.hash(3, 5)
         _ = HandDrawnPalette.ink.lighter(by: 0.1)
         _ = HandDrawnPalette.wood.darker(by: 0.1)

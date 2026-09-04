@@ -20,8 +20,8 @@ enum HandDrawnFont {
         .custom("Kaiti SC", size: size)
     }
 
-    static func marker(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        .system(size: size, weight: weight, design: .rounded)
+    static func marker(_ size: CGFloat, weight _: Font.Weight = .bold) -> Font {
+        .custom("Marker Felt", size: size)
     }
 }
 
