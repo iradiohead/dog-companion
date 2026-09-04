@@ -1,0 +1,45 @@
+---
+description: After completing code changes, automatically commit and push to GitHub
+alwaysApply: true
+---
+
+# Auto-push to GitHub
+
+When you finish a task that modified project files, **always commit and push to GitHub** without waiting for the user to ask.
+
+## When to push
+
+Push after any implementation, fix, or refactor that leaves uncommitted changes — unless the user explicitly says not to commit/push in that turn.
+
+Do **not** push if:
+- There are no file changes
+- The only changes are secrets (`.env`, `Secrets.plist` with real keys, credentials)
+- The user said "don't commit" or "don't push" in the same message
+
+## Workflow
+
+1. `git status` and `git diff` to review changes
+2. Stage relevant files (never secrets)
+3. Commit with a concise message describing **why**
+4. Push to `origin` on the current branch
+
+## Remote
+
+- Repo: `https://github.com/iradiohead/dog-companion.git`
+- Default branch: `main`
+
+## Windows note
+
+If `git commit` fails with `unknown option 'trailer'`, use the full path:
+
+```
+"C:\Program Files\Git\cmd\git.exe"
+```
+
+Write commit messages to a temp file and use `git commit -F .git/COMMIT_MSG_TMP` when heredocs are unavailable in PowerShell.
+
+## Commit message style
+
+- One-line summary (imperative mood)
+- Optional second paragraph for context
+- Example: `Fix MattingService Vision API call signature.`

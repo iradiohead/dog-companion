@@ -82,12 +82,23 @@ struct HomeView: View {
             .sheet(isPresented: $showScenePicker) {
                 ScenePickerView(companion: companion)
             }
-            .sheet(isPresented: $viewModel.showGiftReveal) {
+            .sheet(isPresented: giftRevealBinding) {
                 GiftRevealView(title: viewModel.pendingGiftTitle ?? "收到礼物啦！") {
                     viewModel.dismissGift()
                 }
             }
         }
+    }
+
+    private var giftRevealBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.showGiftReveal },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissGift()
+                }
+            }
+        )
     }
 }
 
