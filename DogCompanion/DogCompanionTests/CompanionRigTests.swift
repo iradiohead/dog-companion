@@ -8,27 +8,33 @@ final class CompanionRigTests: XCTestCase {
         let headPeak = CompanionRigMotion.transform(state: .sitting, time: Double.pi / 2)
         let tailPeak = CompanionRigMotion.transform(state: .sitting, time: Double.pi / (2.0 * 0.7))
         XCTAssertEqual(rest.headY, 0, accuracy: 0.01)
-        XCTAssertGreaterThan(headPeak.headY, 2.5)
-        XCTAssertLessThan(headPeak.headY, 6)
-        XCTAssertGreaterThan(abs(tailPeak.tailRotation), 0.03)
-        XCTAssertLessThan(abs(tailPeak.tailRotation), 0.16)
-        XCTAssertGreaterThan(headPeak.bodyY, 0.6)
-        XCTAssertLessThan(headPeak.bodyY, 2.5)
-        XCTAssertGreaterThan(abs(headPeak.headRotation), 0.02)
-        XCTAssertLessThan(headPeak.bodyScaleY, 1.03)
+        XCTAssertGreaterThan(headPeak.headY, 6)
+        XCTAssertLessThan(headPeak.headY, 10)
+        XCTAssertGreaterThan(abs(tailPeak.tailRotation), 0.06)
+        XCTAssertLessThan(abs(tailPeak.tailRotation), 0.28)
+        XCTAssertGreaterThan(headPeak.bodyY, 1.5)
+        XCTAssertLessThan(headPeak.bodyY, 4)
+        XCTAssertGreaterThan(abs(headPeak.headRotation), 0.05)
+        XCTAssertGreaterThan(headPeak.bodyScaleY, 1.02)
+        XCTAssertGreaterThan(abs(headPeak.frontLegRotation), 0.03)
     }
 
-    func testJumpKeepsPartsStill() {
+    func testClimbMovesHeadLegsAndTail() {
         let crouch = CompanionRigMotion.transform(
             state: .jumping,
             time: PosePlayback.crouchDuration
         )
         let apex = CompanionRigMotion.transform(
             state: .jumping,
-            time: PosePlayback.jumpStart + PosePlayback.jumpDuration * 0.5
+            time: PosePlayback.jumpStart + PosePlayback.jumpDuration * 0.35
         )
-        XCTAssertEqual(crouch, .identity)
-        XCTAssertEqual(apex, .identity)
+        XCTAssertLessThan(crouch.headY, -8)
+        XCTAssertLessThan(crouch.bodyY, -4)
+        XCTAssertGreaterThan(abs(crouch.frontLegRotation), 0.2)
+        XCTAssertLessThan(crouch.tailRotation, -0.1)
+        XCTAssertLessThan(apex.frontLegRotation, -0.3)
+        XCTAssertGreaterThan(apex.tailRotation, 0.2)
+        XCTAssertGreaterThan(apex.bodyScaleY, 1.05)
     }
 
     func testJumpSettlesToRest() {
@@ -49,7 +55,7 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(abs(pose.frontLegRotation - pose.backLegRotation), 0.1)
     }
 
-    func testIdleMapsToSittingAndHopFreezesParts() {
+    func testIdleMapsToSittingAndClimbUsesJumping() {
         XCTAssertEqual(CompanionRigMotion.rigState(from: .idle), .sitting)
         XCTAssertEqual(CompanionRigMotion.rigState(from: .runningIn, elapsed: 0.2), .jumping)
         XCTAssertEqual(

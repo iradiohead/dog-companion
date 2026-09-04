@@ -133,11 +133,7 @@ final class CompanionRigScene: SKScene {
         let texture = SKTexture(image: image)
         texture.filteringMode = .linear
         let node = SKSpriteNode(texture: texture)
-        if part == .head {
-            node.anchorPoint = CGPoint(x: 0.5, y: headAnchorY)
-        } else {
-            node.anchorPoint = CGPoint(x: 0.5, y: 0)
-        }
+        node.anchorPoint = anchorPoint(for: part)
         return node
     }
 
@@ -170,11 +166,20 @@ final class CompanionRigScene: SKScene {
         nodes[.body]?.position = CGPoint(x: 0, y: isWholeSprite ? torsoY * 0.35 : torsoY)
         nodes[.body]?.xScale = isWholeSprite ? 1 : transform.bodyScaleX
         nodes[.body]?.yScale = isWholeSprite ? 1 : transform.bodyScaleY
-        nodes[.tail]?.position = CGPoint(x: 0, y: torsoY)
+        nodes[.tail]?.position = CGPoint(
+            x: 0,
+            y: restPosition(for: .tail).y + torsoY
+        )
         nodes[.tail]?.xScale = 1
         nodes[.tail]?.yScale = 1
-        nodes[.frontLeg]?.position = CGPoint(x: transform.frontLegX, y: torsoY)
-        nodes[.backLeg]?.position = CGPoint(x: transform.backLegX, y: torsoY)
+        nodes[.frontLeg]?.position = CGPoint(
+            x: transform.frontLegX,
+            y: restPosition(for: .frontLeg).y + torsoY
+        )
+        nodes[.backLeg]?.position = CGPoint(
+            x: transform.backLegX,
+            y: restPosition(for: .backLeg).y + torsoY
+        )
         nodes[.frontLeg]?.xScale = 1
         nodes[.backLeg]?.xScale = 1
         nodes[.frontLeg]?.yScale = 1
@@ -184,10 +189,23 @@ final class CompanionRigScene: SKScene {
         nodes[.backLeg]?.zRotation = transform.backLegRotation
     }
 
-    private func restPosition(for part: CompanionPart) -> CGPoint {
-        if part == .head {
-            return CGPoint(x: 0, y: fittedSize.height * headAnchorY)
+    private func anchorPoint(for part: CompanionPart) -> CGPoint {
+        switch part {
+        case .head:
+            return CGPoint(x: 0.5, y: headAnchorY)
+        case .frontLeg:
+            return CGPoint(x: 0.48, y: 0.36)
+        case .backLeg:
+            return CGPoint(x: 0.52, y: 0.34)
+        case .tail:
+            return CGPoint(x: 0.42, y: 0.40)
+        case .body:
+            return CGPoint(x: 0.5, y: 0)
         }
-        return .zero
+    }
+
+    private func restPosition(for part: CompanionPart) -> CGPoint {
+        let anchor = anchorPoint(for: part)
+        return CGPoint(x: 0, y: fittedSize.height * anchor.y)
     }
 }

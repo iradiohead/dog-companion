@@ -25,8 +25,8 @@ final class PosePlaybackTests: XCTestCase {
             state: .runningIn,
             elapsed: PosePlayback.crouchDuration * 0.9
         )
-        XCTAssertLessThan(crouch.scaleY, 0.90)
-        XCTAssertGreaterThan(crouch.scaleX, 1.08)
+        XCTAssertLessThan(crouch.scaleY, 0.96)
+        XCTAssertGreaterThan(crouch.scaleX, 1.02)
         XCTAssertEqual(crouch.x, 0, accuracy: 1)
         XCTAssertGreaterThan(crouch.y, 50)
         XCTAssertGreaterThan(crouch.opacity, 0.5)
@@ -72,7 +72,7 @@ final class PosePlaybackTests: XCTestCase {
             state: .runningIn,
             elapsed: PosePlayback.landStart + 0.03
         )
-        XCTAssertLessThan(land.scaleY, 0.90)
+        XCTAssertLessThan(land.scaleY, 0.96)
         XCTAssertEqual(land.x, 0, accuracy: 0.5)
 
         let settled = PosePlayback.snapshot(state: .runningIn, elapsed: PosePlayback.runningInDuration)

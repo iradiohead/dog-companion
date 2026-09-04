@@ -158,9 +158,9 @@ enum PosePlayback {
             let crouch = smoothstep(elapsed / crouchDuration)
             travel.x = 0
             travel.y = startY
-            travel.scaleX = cg(lerp(1.08, 1.18, crouch))
-            travel.scaleY = cg(lerp(1.08, 0.84, crouch))
-            travel.rotationDegrees = cg(lerp(0, 6.0, crouch))
+            travel.scaleX = cg(lerp(1.04, 1.10, crouch))
+            travel.scaleY = cg(lerp(1.04, 0.92, crouch))
+            travel.rotationDegrees = cg(lerp(0, 4.0, crouch))
             travel.shadowScale = cg(lerp(1.12, 1.22, crouch))
             return PoseSnapshot(pose: .sit, travel: travel)
         }
@@ -172,14 +172,14 @@ enum PosePlayback {
             travel.y = startY * cg(1.0 - t) - jumpHeight * cg(arc)
             if t < 0.28 {
                 let u = smoothstep(t / 0.28)
-                travel.scaleX = cg(lerp(1.18, 0.94, u))
-                travel.scaleY = cg(lerp(0.84, 1.16, u))
-                travel.rotationDegrees = cg(lerp(6.0, -10.0, u))
+                travel.scaleX = cg(lerp(1.10, 0.97, u))
+                travel.scaleY = cg(lerp(0.92, 1.08, u))
+                travel.rotationDegrees = cg(lerp(4.0, -6.0, u))
             } else {
                 let u = smoothstep((t - 0.28) / 0.72)
-                travel.scaleX = cg(lerp(0.94, 1.10, u))
-                travel.scaleY = cg(lerp(1.16, 0.88, u))
-                travel.rotationDegrees = cg(lerp(-10.0, 5.0, u))
+                travel.scaleX = cg(lerp(0.97, 1.06, u))
+                travel.scaleY = cg(lerp(1.08, 0.94, u))
+                travel.rotationDegrees = cg(lerp(-6.0, 3.0, u))
             }
             travel.shadowScale = cg(lerp(1.22, 1.0, t) - 0.28 * arc)
             travel.shadowOpacity = 0.16 * (0.4 + 0.6 * (1.0 - arc))
@@ -192,14 +192,14 @@ enum PosePlayback {
             travel.y = 0
             if t < 0.45 {
                 let u = smoothstep(t / 0.45)
-                travel.scaleX = cg(lerp(1.10, 1.16, u))
-                travel.scaleY = cg(lerp(0.88, 0.80, u))
-                travel.rotationDegrees = cg(lerp(5.0, 3.0, u))
+                travel.scaleX = cg(lerp(1.06, 1.10, u))
+                travel.scaleY = cg(lerp(0.94, 0.88, u))
+                travel.rotationDegrees = cg(lerp(3.0, 2.0, u))
             } else {
                 let u = smoothstep((t - 0.45) / 0.55)
-                travel.scaleX = cg(lerp(1.16, 1.04, u))
-                travel.scaleY = cg(lerp(0.80, 0.97, u))
-                travel.rotationDegrees = cg(lerp(3.0, 1.0, u))
+                travel.scaleX = cg(lerp(1.10, 1.02, u))
+                travel.scaleY = cg(lerp(0.88, 0.98, u))
+                travel.rotationDegrees = cg(lerp(2.0, 0.5, u))
             }
             travel.shadowScale = cg(lerp(1.14, 1.04, t))
             return PoseSnapshot(pose: .sit, travel: travel)
@@ -209,9 +209,9 @@ enum PosePlayback {
         return PoseSnapshot(
             pose: .sit,
             travel: .rest(
-                scaleX: cg(lerp(1.04, 1.0, settle)),
-                scaleY: cg(lerp(0.97, 1.0, settle)),
-                rotation: cg(lerp(1.0, 0, settle))
+                scaleX: cg(lerp(1.02, 1.0, settle)),
+                scaleY: cg(lerp(0.98, 1.0, settle)),
+                rotation: cg(lerp(0.5, 0, settle))
             )
         )
     }
