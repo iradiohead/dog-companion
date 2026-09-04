@@ -113,7 +113,7 @@ enum CompanionLayerSlicer {
         let vertical = band(ny, 0.68, 0.78, 0.99, 1.06)
         let left = band(nx, 0.0, 0.04, 0.26, 0.38)
         let right = band(nx, 0.62, 0.74, 0.96, 1.0)
-        min(1.0, vertical * (left + right))
+        return min(1.0, vertical * (left + right))
     }
 
     private static func tailWeight(nx: Float, ny: Float, tailOnLeft: Bool) -> Float {

@@ -130,6 +130,14 @@ final class CompanionRigTests: XCTestCase {
             0.08
         )
         XCTAssertGreaterThan(
+            CompanionLayerSlicer.weight(for: .backLeg, nx: 0.08, ny: 0.82, tailOnLeft: true),
+            0.2
+        )
+        XCTAssertGreaterThan(
+            CompanionLayerSlicer.weight(for: .backLeg, nx: 0.92, ny: 0.82, tailOnLeft: false),
+            0.2
+        )
+        XCTAssertGreaterThan(
             CompanionLayerSlicer.weight(for: .tail, nx: 0.08, ny: 0.7, tailOnLeft: true),
             0.2
         )
