@@ -10,8 +10,16 @@ final class PosePlaybackTests: XCTestCase {
             .runA
         )
         XCTAssertEqual(
-            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.anticipateDuration + 0.18),
+            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.anticipateDuration + 0.12),
             .runB
+        )
+        XCTAssertEqual(
+            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.anticipateDuration + 0.23),
+            .runC
+        )
+        XCTAssertEqual(
+            PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.anticipateDuration + 0.34),
+            .runD
         )
         XCTAssertEqual(
             PosePlayback.pose(state: .runningIn, elapsed: PosePlayback.anticipateDuration + PosePlayback.runDuration + 0.05),
@@ -109,9 +117,19 @@ final class PosePlaybackTests: XCTestCase {
         let filled = PoseCutoutSet(sit: sit, runA: nil, runB: nil, land: nil).withSynthesizedFallbacks()
         XCTAssertNotNil(filled.runA)
         XCTAssertNotNil(filled.runB)
+        XCTAssertNotNil(filled.runC)
+        XCTAssertNotNil(filled.runD)
         XCTAssertNotNil(filled.land)
         XCTAssertNotEqual(filled.runA, sit)
-        XCTAssertNotEqual(filled.runB, filled.runA)
+        XCTAssertNotEqual(filled.runA, filled.runC)
+    }
+
+    func testRunCycleMovesOppositeLegs() throws {
+        let sit = try makeOpaqueDogPNG()
+        let cycle = PoseFrameSynthesizer.runCycle(from: sit)
+        XCTAssertEqual(cycle.count, 4)
+        XCTAssertFalse(PoseFrameSynthesizer.looksLikeSamePose(cycle[0], cycle[2]))
+        XCTAssertTrue(PoseFrameSynthesizer.looksLikeSamePose(sit, sit))
     }
 
     func testRunningInDurationCoversTheFullBeat() {
@@ -133,12 +151,14 @@ final class PosePlaybackTests: XCTestCase {
     }
 
     private func makeOpaqueDogPNG() throws -> Data {
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64))
         let image = renderer.image { _ in
             UIColor.clear.setFill()
-            UIRectFill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIRectFill(CGRect(x: 0, y: 0, width: 64, height: 64))
             UIColor.brown.setFill()
-            UIRectFill(CGRect(x: 8, y: 10, width: 16, height: 18))
+            UIRectFill(CGRect(x: 18, y: 8, width: 28, height: 26))
+            UIRectFill(CGRect(x: 14, y: 32, width: 14, height: 24))
+            UIRectFill(CGRect(x: 36, y: 32, width: 14, height: 24))
         }
         guard let data = image.pngData() else {
             struct PNGError: Error {}

@@ -34,7 +34,7 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
         switch pose {
         case .sit:
             identity = "保留照片中狗狗的毛色、花纹和品种特征"
-        case .runA, .runB, .land:
+        case .runA, .runB, .runC, .runD, .land:
             identity = "必须与参考图是同一只狗：品种、毛色、花纹、耳朵、五官和画风完全一致。只改姿势，不要复制参考图里的坐姿"
         }
 

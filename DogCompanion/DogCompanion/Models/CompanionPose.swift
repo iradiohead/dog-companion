@@ -5,6 +5,8 @@ enum CompanionPose: String, CaseIterable, Equatable {
     case sit
     case runA
     case runB
+    case runC
+    case runD
     case land
 
     var promptInstruction: String {
@@ -13,8 +15,10 @@ enum CompanionPose: String, CaseIterable, Equatable {
             return "全身坐姿居中，臀部着地，前肢直立，表情放松"
         case .runA:
             return "必须是侧面奔跑中的狗，绝对不能坐着。左前腿向前大步伸直，右后腿向后蹬地，身体前倾，四腿离地或交错迈步，像在冲向画面右侧"
-        case .runB:
-            return "必须是侧面奔跑中的狗，绝对不能坐着。右前腿向前大步伸直，左后腿向后蹬地，与上一跑姿相反的交叉步，身体前倾"
+        case .runB, .runC:
+            return "必须是侧面奔跑中的狗，绝对不能坐着。右前腿向前大步伸直，左后腿向后蹬地，与交叉步相反，身体前倾"
+        case .runD:
+            return "必须是侧面奔跑中的狗，绝对不能坐着。四肢收拢准备下一次迈步，身体前倾"
         case .land:
             return "必须是刚刹车的站姿，绝对不能已经坐稳。后腿弯曲、前爪撑地，身体还前倾，正在准备坐下"
         }
@@ -25,10 +29,12 @@ struct PoseCutoutSet: Equatable {
     var sit: Data?
     var runA: Data?
     var runB: Data?
+    var runC: Data? = nil
+    var runD: Data? = nil
     var land: Data?
 
     var canFlipbook: Bool {
-        runA != nil || runB != nil || land != nil
+        runA != nil || runB != nil || runC != nil || runD != nil || land != nil
     }
 
     func data(for pose: CompanionPose) -> Data? {
@@ -38,7 +44,11 @@ struct PoseCutoutSet: Equatable {
         case .runA:
             return runA ?? runB ?? sit
         case .runB:
-            return runB ?? runA ?? sit
+            return runB ?? runC ?? runA ?? sit
+        case .runC:
+            return runC ?? runD ?? runA ?? sit
+        case .runD:
+            return runD ?? runA ?? sit
         case .land:
             return land ?? sit
         }
@@ -46,11 +56,14 @@ struct PoseCutoutSet: Equatable {
 
     func withSynthesizedFallbacks() -> PoseCutoutSet {
         guard let sit else { return self }
+        let cycle = PoseFrameSynthesizer.runCycle(from: sit)
         return PoseCutoutSet(
             sit: sit,
-            runA: runA ?? PoseFrameSynthesizer.runA(from: sit),
-            runB: runB ?? PoseFrameSynthesizer.runB(from: sit),
-            land: land ?? PoseFrameSynthesizer.land(from: sit)
+            runA: cycle.count > 0 ? cycle[0] : nil,
+            runB: cycle.count > 1 ? cycle[1] : nil,
+            runC: cycle.count > 2 ? cycle[2] : nil,
+            runD: cycle.count > 3 ? cycle[3] : nil,
+            land: PoseFrameSynthesizer.land(from: sit) ?? land
         )
     }
 }
@@ -108,7 +121,7 @@ enum PosePlayback {
     static let runDuration: TimeInterval = 1.42
     static let landDuration: TimeInterval = 0.32
     static let settleDuration: TimeInterval = 0.40
-    static let strideDuration: TimeInterval = 0.17
+    static let strideDuration: TimeInterval = 0.11
     static let runDistance: CGFloat = 236
     static let windup: CGFloat = 14
     static let hopHeight: CGFloat = 18
@@ -328,9 +341,9 @@ enum PosePlayback {
             let c = u / contactEnd
             return (
                 y: 0,
-                sx: cg(1.16 - 0.16 * c),
-                sy: cg(0.84 + 0.16 * c),
-                rot: cg(-11.0 - 5.0 * c),
+                sx: cg(1.06 - 0.04 * c),
+                sy: cg(0.94 + 0.04 * c),
+                rot: cg(-8.0 - 2.0 * c),
                 dust: (1.0 - c) * 0.95,
                 motion: 0.5 + 0.4 * c
             )
@@ -339,21 +352,21 @@ enum PosePlayback {
         let hop = 4.0 * a * (1.0 - a)
         return (
             y: -hopHeight * cg(hop),
-            sx: cg(0.93 + 0.03 * (1.0 - hop)),
-            sy: cg(1.05 + 0.07 * hop),
-            rot: cg(-18.0 + 7.0 * a),
+            sx: cg(0.98),
+            sy: cg(1.03 + 0.03 * hop),
+            rot: cg(-10.0 + 3.0 * a),
             dust: 0,
             motion: 0.9
         )
     }
 
     private static func strideBlend(runElapsed: TimeInterval) -> (pose: CompanionPose, next: CompanionPose, crossfade: Double) {
+        let frames: [CompanionPose] = [.runA, .runB, .runC, .runD]
         let index = Int(runElapsed / strideDuration)
         let u = runElapsed.truncatingRemainder(dividingBy: strideDuration) / strideDuration
-        let even = index.isMultiple(of: 2)
-        let pose: CompanionPose = even ? .runA : .runB
-        let next: CompanionPose = even ? .runB : .runA
-        let crossfade = smoothstep((u - 0.6) / 0.4)
+        let pose = frames[index % frames.count]
+        let next = frames[(index + 1) % frames.count]
+        let crossfade = smoothstep((u - 0.78) / 0.22)
         return (pose, next, crossfade)
     }
 

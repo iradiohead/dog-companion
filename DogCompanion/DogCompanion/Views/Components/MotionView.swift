@@ -137,12 +137,16 @@ private struct CachedPoseImages {
     var sit: PlatformImage?
     var runA: PlatformImage?
     var runB: PlatformImage?
+    var runC: PlatformImage?
+    var runD: PlatformImage?
     var land: PlatformImage?
 
     init(_ set: PoseCutoutSet) {
         sit = set.sit.flatMap(PlatformImage.from)
         runA = set.runA.flatMap(PlatformImage.from)
         runB = set.runB.flatMap(PlatformImage.from)
+        runC = set.runC.flatMap(PlatformImage.from)
+        runD = set.runD.flatMap(PlatformImage.from)
         land = set.land.flatMap(PlatformImage.from)
     }
 
@@ -153,7 +157,11 @@ private struct CachedPoseImages {
         case .runA:
             return runA ?? runB ?? sit
         case .runB:
-            return runB ?? runA ?? sit
+            return runB ?? runC ?? runA ?? sit
+        case .runC:
+            return runC ?? runD ?? runA ?? sit
+        case .runD:
+            return runD ?? runA ?? sit
         case .land:
             return land ?? sit
         }
