@@ -41,8 +41,7 @@ struct HomeView: View {
                 SceneView(
                     scene: currentScene,
                     furniture: currentFurniture,
-                    cutoutData: companion.cutoutData,
-                    portraitData: companion.comicPortraitData,
+                    poses: companion.poseCutouts,
                     motionState: viewModel.motionState,
                     isFocusActive: viewModel.phase == .running,
                     onCompanionTap: {

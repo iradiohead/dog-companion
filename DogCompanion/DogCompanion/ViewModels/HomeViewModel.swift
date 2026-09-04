@@ -131,7 +131,7 @@ final class HomeViewModel {
 
     private func scheduleRunInToSit() {
         Task {
-            try? await Task.sleep(nanoseconds: 1_550_000_000)
+            try? await Task.sleep(nanoseconds: 1_700_000_000)
             if motionState == .runningIn {
                 motionState = .idle
             }

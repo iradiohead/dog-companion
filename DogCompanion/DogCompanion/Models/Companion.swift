@@ -6,6 +6,9 @@ final class Companion {
     var name: String
     @Attribute(.externalStorage) var comicPortraitData: Data?
     @Attribute(.externalStorage) var cutoutData: Data?
+    @Attribute(.externalStorage) var cutoutRunAData: Data?
+    @Attribute(.externalStorage) var cutoutRunBData: Data?
+    @Attribute(.externalStorage) var cutoutLandData: Data?
     var styleTemplateRaw: String
     var createdAt: Date
     var regenerationCount: Int
@@ -18,6 +21,9 @@ final class Companion {
         name: String,
         comicPortraitData: Data?,
         cutoutData: Data?,
+        cutoutRunAData: Data? = nil,
+        cutoutRunBData: Data? = nil,
+        cutoutLandData: Data? = nil,
         styleTemplate: StyleTemplate,
         createdAt: Date = .now,
         regenerationCount: Int = 0,
@@ -29,6 +35,9 @@ final class Companion {
         self.name = name
         self.comicPortraitData = comicPortraitData
         self.cutoutData = cutoutData
+        self.cutoutRunAData = cutoutRunAData
+        self.cutoutRunBData = cutoutRunBData
+        self.cutoutLandData = cutoutLandData
         self.styleTemplateRaw = styleTemplate.rawValue
         self.createdAt = createdAt
         self.regenerationCount = regenerationCount
@@ -36,6 +45,15 @@ final class Companion {
         self.selectedFurnitureId = selectedFurnitureId
         self.completedFocusSessions = completedFocusSessions
         self.unlockedItemIdsRaw = unlockedItemIds.joined(separator: ",")
+    }
+
+    var poseCutouts: PoseCutoutSet {
+        PoseCutoutSet(
+            sit: cutoutData,
+            runA: cutoutRunAData,
+            runB: cutoutRunBData,
+            land: cutoutLandData
+        )
     }
 
     var styleTemplate: StyleTemplate {

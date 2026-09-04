@@ -30,6 +30,9 @@ enum GenerationError: LocalizedError {
 struct GenerationResult {
     let comicPortraitData: Data
     let cutoutData: Data
+    let cutoutRunAData: Data?
+    let cutoutRunBData: Data?
+    let cutoutLandData: Data?
 }
 
 struct GenerationService {
@@ -42,16 +45,23 @@ struct GenerationService {
     }
 
     func generateCompanionAssets(from image: UIImage, style: StyleTemplate) async throws -> GenerationResult {
-        let portraitData = try await generateComicPortrait(from: image, style: style)
+        let portraitData = try await generateComicPortrait(from: image, style: style, pose: .sit)
         guard let portraitImage = UIImage(data: portraitData) else {
             throw GenerationError.invalidImage
         }
 
         let cutoutData = try await mattingService.extractCutout(from: portraitImage)
-        return GenerationResult(comicPortraitData: portraitData, cutoutData: cutoutData)
+        let extras = await generateActionPoses(from: portraitImage, style: style)
+        return GenerationResult(
+            comicPortraitData: portraitData,
+            cutoutData: cutoutData,
+            cutoutRunAData: extras.runA,
+            cutoutRunBData: extras.runB,
+            cutoutLandData: extras.land
+        )
     }
 
-    func generateComicPortrait(from image: UIImage, style: StyleTemplate) async throws -> Data {
+    func generateComicPortrait(from image: UIImage, style: StyleTemplate, pose: CompanionPose = .sit) async throws -> Data {
         guard let apiKey = SecretsProvider.dashScopeAPIKey else {
             throw GenerationError.missingAPIToken
         }
@@ -63,14 +73,33 @@ struct GenerationService {
         let imageURL = try await createWanxiangImage(
             imageData: jpegData,
             style: style,
+            pose: pose,
             apiKey: apiKey
         )
         return try await downloadImage(from: imageURL)
     }
 
+    private func generateActionPoses(from sitImage: UIImage, style: StyleTemplate) async -> (runA: Data?, runB: Data?, land: Data?) {
+        async let runA = optionalPoseCutout(from: sitImage, style: style, pose: .runA)
+        async let runB = optionalPoseCutout(from: sitImage, style: style, pose: .runB)
+        async let land = optionalPoseCutout(from: sitImage, style: style, pose: .land)
+        return await (runA, runB, land)
+    }
+
+    private func optionalPoseCutout(from image: UIImage, style: StyleTemplate, pose: CompanionPose) async -> Data? {
+        do {
+            let portrait = try await generateComicPortrait(from: image, style: style, pose: pose)
+            guard let poseImage = UIImage(data: portrait) else { return nil }
+            return try await mattingService.extractCutout(from: poseImage)
+        } catch {
+            return nil
+        }
+    }
+
     private func createWanxiangImage(
         imageData: Data,
         style: StyleTemplate,
+        pose: CompanionPose,
         apiKey: String
     ) async throws -> URL {
         let base64 = imageData.base64EncodedString()
@@ -94,7 +123,7 @@ struct GenerationService {
                     [
                         "role": "user",
                         "content": [
-                            ["text": style.prompt],
+                            ["text": style.prompt(for: pose)],
                             ["image": dataURI]
                         ]
                     ]

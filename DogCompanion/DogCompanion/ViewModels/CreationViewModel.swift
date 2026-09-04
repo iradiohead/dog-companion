@@ -17,6 +17,9 @@ final class CreationViewModel: ComicGenerationFlow {
     var selectedStyle: StyleTemplate?
     var generatedPortraitData: Data?
     var generatedCutoutData: Data?
+    var generatedRunAData: Data?
+    var generatedRunBData: Data?
+    var generatedLandData: Data?
     var companionName: String = ""
     var isGenerating = false
     var errorMessage: String?
@@ -49,6 +52,9 @@ final class CreationViewModel: ComicGenerationFlow {
             let result = try await generationService.generateCompanionAssets(from: image, style: style)
             generatedPortraitData = result.comicPortraitData
             generatedCutoutData = result.cutoutData
+            generatedRunAData = result.cutoutRunAData
+            generatedRunBData = result.cutoutRunBData
+            generatedLandData = result.cutoutLandData
             sourceImage = nil
             step = .naming
         } catch {
@@ -77,6 +83,9 @@ final class CreationViewModel: ComicGenerationFlow {
             name: trimmed,
             comicPortraitData: portraitData,
             cutoutData: cutoutData,
+            cutoutRunAData: generatedRunAData,
+            cutoutRunBData: generatedRunBData,
+            cutoutLandData: generatedLandData,
             styleTemplate: style
         )
         context.insert(companion)
@@ -90,6 +99,9 @@ final class CreationViewModel: ComicGenerationFlow {
         selectedStyle = nil
         generatedPortraitData = nil
         generatedCutoutData = nil
+        generatedRunAData = nil
+        generatedRunBData = nil
+        generatedLandData = nil
         companionName = ""
         isGenerating = false
         errorMessage = nil

@@ -25,15 +25,30 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
     }
 
     var prompt: String {
-        let backgroundConstraint = "纯白色平面背景（#FFFFFF），无纸张纹理、无画框、无地毯、无阴影、无道具，狗狗全身坐姿居中，四肢完整，仅保留狗狗主体，适合透明抠图"
+        prompt(for: .sit)
+    }
+
+    func prompt(for pose: CompanionPose) -> String {
+        let background = "纯白色平面背景（#FFFFFF），无纸张纹理、无画框、无地毯、无阴影、无道具，狗狗全身居中，四肢完整，仅保留狗狗主体，适合透明抠图"
+        let identity: String
+        switch pose {
+        case .sit:
+            identity = "保留照片中狗狗的毛色、花纹和品种特征"
+        case .runA, .runB, .land:
+            identity = "必须与参考图是同一只狗：品种、毛色、花纹、耳朵、五官和画风完全一致，只改变姿势"
+        }
+
+        let styleLine: String
         switch self {
         case .anime:
-            return "将照片中的狗狗转换为可爱的日系动漫插画风格，保留毛色、花纹和品种特征，线条柔和，眼睛有神，色彩鲜明，高质量，\(backgroundConstraint)"
+            styleLine = "可爱的日系动漫插画风格，线条柔和，眼睛有神，色彩鲜明，高质量"
         case .flatCartoon:
-            return "将照片中的狗狗转换为扁平卡通插画风格，保留毛色和品种特征，简洁造型，现代应用插画感，色彩明快，\(backgroundConstraint)"
+            styleLine = "扁平卡通插画风格，简洁造型，现代应用插画感，色彩明快"
         case .watercolor:
-            return "将照片中的狗狗转换为水彩手绘风格，保留毛色和品种特征，温暖色调，手绘质感，艺术感，柔和边缘，\(backgroundConstraint)"
+            styleLine = "水彩手绘风格，温暖色调，手绘质感，艺术感"
         }
+
+        return "将图中的狗狗转换为\(styleLine)，\(identity)，\(pose.promptInstruction)，\(background)"
     }
 
     var negativePrompt: String {

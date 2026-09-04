@@ -3,8 +3,7 @@ import SwiftUI
 struct SceneView: View {
     let scene: SceneBackground
     let furniture: FurnitureItem
-    let cutoutData: Data?
-    let portraitData: Data?
+    let poses: PoseCutoutSet
     let motionState: CompanionMotionState
     let isFocusActive: Bool
     let onCompanionTap: () -> Void
@@ -87,8 +86,7 @@ struct SceneView: View {
                             .padding(.bottom, 4)
 
                         MotionView(
-                            cutoutData: cutoutData,
-                            portraitData: nil,
+                            poses: poses,
                             motionState: motionState,
                             onTap: onCompanionTap
                         )
