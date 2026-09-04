@@ -19,9 +19,37 @@ Do **not** push if:
 ## Workflow
 
 1. `git status` and `git diff` to review changes
-2. Stage relevant files (never secrets)
-3. Commit with a concise message describing **why**
-4. Push to `origin` on the current branch
+2. **Run tests** (see below) — fix failures before committing
+3. Stage relevant files (never secrets)
+4. Commit with a concise message describing **why**
+5. Push to `origin` on the current branch
+
+## Self-test before push
+
+After Swift/UI changes, verify the project compiles and tests pass:
+
+```bash
+xcodebuild test \
+  -project DogCompanion/DogCompanion.xcodeproj \
+  -scheme DogCompanion \
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -quiet
+```
+
+On Mac Catalyst changes, also build:
+
+```bash
+xcodebuild build \
+  -project DogCompanion/DogCompanion.xcodeproj \
+  -scheme DogCompanion \
+  -destination 'platform=macOS,variant=Mac Catalyst' \
+  -quiet
+```
+
+If `xcodebuild` is unavailable (e.g. Windows dev machine), at minimum:
+- Grep for symbols used across files (e.g. `HandDrawnPalette`, `PlatformImage`)
+- Ensure new `.swift` files are added to `project.pbxproj`
+- Add or update unit tests for new shared types
 
 ## Remote
 

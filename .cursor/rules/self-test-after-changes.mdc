@@ -1,0 +1,41 @@
+---
+description: Run self-tests after every code change before committing
+alwaysApply: true
+---
+
+# Self-test after code changes
+
+After modifying Swift/UI code in this project, **verify before commit**:
+
+## On Mac (preferred)
+
+```bash
+xcodebuild test \
+  -project DogCompanion/DogCompanion.xcodeproj \
+  -scheme DogCompanion \
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -quiet
+```
+
+For Mac Catalyst–related changes, also:
+
+```bash
+xcodebuild build \
+  -project DogCompanion/DogCompanion.xcodeproj \
+  -scheme DogCompanion \
+  -destination 'platform=macOS,variant=Mac Catalyst' \
+  -quiet
+```
+
+Fix any compile or test failures before pushing.
+
+## On Windows (no Xcode)
+
+When `xcodebuild` is unavailable:
+
+1. **Symbol cross-check** — grep usages of shared types (`HandDrawnPalette`, `PlatformImage`, `HomeTab`, etc.) and confirm definitions exist.
+2. **pbxproj** — new `.swift` files must be added to `DogCompanion.xcodeproj/project.pbxproj`.
+3. **Unit tests** — add smoke tests for new shared types (see `HandDrawnPaletteTests.swift`).
+4. Report to the user that full build was not run locally; they should verify in Xcode on Mac.
+
+Never commit with known missing symbols or unregistered source files.
