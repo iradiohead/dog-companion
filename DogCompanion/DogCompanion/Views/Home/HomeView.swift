@@ -90,6 +90,7 @@ struct HomeView: View {
     private func refreshCompanionImages(for companion: Companion) {
         sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
         runFrames = companion.poseCutouts.runFrameImages()
+    }
 
     private var topBar: some View {
         HStack {
