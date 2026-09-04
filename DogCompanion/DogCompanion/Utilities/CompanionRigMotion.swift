@@ -80,4 +80,8 @@ enum CompanionRigMotion {
             return .jumping
         }
     }
+
+    private static func cg(_ value: Double) -> CGFloat {
+        CGFloat(value)
+    }
 }
