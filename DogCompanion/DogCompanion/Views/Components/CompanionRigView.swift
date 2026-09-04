@@ -1,14 +1,11 @@
 import SwiftUI
 import SpriteKit
 
-struct CompanionRigView: UIViewRepresentable, Equatable {
+struct CompanionRigView: UIViewRepresentable {
     var image: PlatformImage
     var state: CompanionRigState
+    var elapsed: TimeInterval
     var isPaused: Bool
-
-    static func == (lhs: CompanionRigView, rhs: CompanionRigView) -> Bool {
-        lhs.image === rhs.image && lhs.state == rhs.state && lhs.isPaused == rhs.isPaused
-    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -21,12 +18,13 @@ struct CompanionRigView: UIViewRepresentable, Equatable {
         view.isAsynchronous = true
         view.ignoresSiblingOrder = true
         view.isUserInteractionEnabled = false
-        view.preferredFramesPerSecond = 30
+        view.preferredFramesPerSecond = 60
         view.layer.isOpaque = false
 
         let scene = context.coordinator.scene
         scene.image = image
         scene.rigState = state
+        scene.elapsed = elapsed
         view.presentScene(scene)
         view.isPaused = isPaused
         return view
@@ -35,6 +33,8 @@ struct CompanionRigView: UIViewRepresentable, Equatable {
     func updateUIView(_ view: SKView, context: Context) {
         context.coordinator.scene.image = image
         context.coordinator.scene.rigState = state
+        context.coordinator.scene.elapsed = elapsed
+        context.coordinator.scene.applyCurrent()
         if view.isPaused != isPaused {
             view.isPaused = isPaused
         }
@@ -52,6 +52,7 @@ final class CompanionRigScene: SKScene {
     private var lastImage: PlatformImage?
 
     var rigState: CompanionRigState = .sitting
+    var elapsed: TimeInterval = 0
 
     var image: PlatformImage? {
         didSet {
@@ -80,10 +81,15 @@ final class CompanionRigScene: SKScene {
 
     override func didChangeSize(_ oldSize: CGSize) {
         layoutParts()
+        applyCurrent()
     }
 
-    override func update(_ currentTime: TimeInterval) {
-        apply(CompanionRigMotion.transform(state: rigState, time: currentTime))
+    override func update(_: TimeInterval) {
+        applyCurrent()
+    }
+
+    func applyCurrent() {
+        apply(CompanionRigMotion.transform(state: rigState, time: elapsed))
     }
 
     private func rebuild() {
@@ -108,6 +114,7 @@ final class CompanionRigScene: SKScene {
             nodes[.body] = node
         }
         layoutParts()
+        applyCurrent()
     }
 
     private func makeSprite(from image: UIImage) -> SKSpriteNode {

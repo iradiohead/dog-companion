@@ -68,6 +68,7 @@ struct MotionView: View {
                     CompanionRigView(
                         image: sitImage,
                         state: CompanionRigMotion.rigState(from: motionState),
+                        elapsed: elapsed,
                         isPaused: motionState == .away
                     )
                 } else if motionState != .away {

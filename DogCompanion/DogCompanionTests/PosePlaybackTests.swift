@@ -102,6 +102,18 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertEqual(set.data(for: .land), Data([1]))
     }
 
+    func testJumpScaleChangesContinuously() {
+        var elapsed: TimeInterval = 0
+        var previous = PosePlayback.travel(state: .runningIn, elapsed: 0)
+        while elapsed < PosePlayback.runningInDuration {
+            elapsed += 1.0 / 60.0
+            let next = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
+            XCTAssertLessThan(abs(next.scaleY - previous.scaleY), 0.06)
+            XCTAssertLessThan(abs(next.rotationDegrees - previous.rotationDegrees), 3.5)
+            previous = next
+        }
+    }
+
     func testJumpDurationIsASingleBeat() {
         XCTAssertEqual(
             PosePlayback.runningInDuration,

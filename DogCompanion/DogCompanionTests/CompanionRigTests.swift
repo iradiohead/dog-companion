@@ -13,9 +13,25 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertGreaterThan(headPeak.bodyY, 1)
     }
 
-    func testJumpingLeavesPartsStill() {
-        let pose = CompanionRigMotion.transform(state: .jumping, time: 1.7)
-        XCTAssertEqual(pose, .identity)
+    func testJumpCrouchDipsTheHead() {
+        let pose = CompanionRigMotion.transform(state: .jumping, time: PosePlayback.crouchDuration)
+        XCTAssertLessThan(pose.headY, -3)
+        XCTAssertLessThan(pose.bodyY, -2)
+    }
+
+    func testJumpApexTucksTheLegs() {
+        let pose = CompanionRigMotion.transform(
+            state: .jumping,
+            time: PosePlayback.crouchDuration + PosePlayback.jumpDuration * 0.5
+        )
+        XCTAssertLessThan(pose.frontLegRotation, -0.1)
+        XCTAssertGreaterThan(pose.tailRotation, 0.1)
+    }
+
+    func testJumpSettlesToRest() {
+        let pose = CompanionRigMotion.transform(state: .jumping, time: PosePlayback.runningInDuration)
+        XCTAssertEqual(pose.headY, 0, accuracy: 0.2)
+        XCTAssertEqual(pose.frontLegRotation, 0, accuracy: 0.05)
     }
 
     func testWalkingSwingsLegsOpposite() {
