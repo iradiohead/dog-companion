@@ -11,29 +11,17 @@ struct FocusTimerCenterView: View {
     var body: some View {
         VStack(spacing: 10) {
             Text(formattedTime)
-                .font(.system(size: 64, weight: .bold, design: .rounded))
+                .font(HandDrawnFont.marker(64, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(HandDrawnPalette.timerGreen)
-                .overlay {
-                    Text(formattedTime)
-                        .font(.system(size: 64, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.clear)
-                        .overlay {
-                            Text(formattedTime)
-                                .font(.system(size: 64, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(HandDrawnPalette.timerGreenStroke.opacity(0.35))
-                                .offset(x: 1, y: 1)
-                        }
-                }
+                .shadow(color: HandDrawnPalette.timerGreenStroke.opacity(0.35), radius: 0, x: 1.2, y: 1.4)
                 .contentTransition(.numericText())
 
             HStack(spacing: 6) {
                 Image(systemName: "pencil")
                     .font(.caption.weight(.bold))
                 Text("专注")
-                    .font(.title3.weight(.semibold))
+                    .font(HandDrawnFont.brush(22))
             }
             .foregroundStyle(HandDrawnPalette.ink)
 
@@ -48,30 +36,34 @@ struct FocusTimerCenterView: View {
         case .idle, .completed:
             Button(action: onStart) {
                 ZStack {
-                    Ellipse()
+                    WobblyEllipse(wobble: 2.8, seed: 70)
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    HandDrawnPalette.startBlue.opacity(0.85),
-                                    HandDrawnPalette.startBlue.opacity(0.45),
-                                    Color(red: 0.62, green: 0.82, blue: 0.96).opacity(0.35)
+                                    Color(red: 0.70, green: 0.86, blue: 0.96),
+                                    HandDrawnPalette.startBlue,
+                                    Color(red: 0.58, green: 0.78, blue: 0.92).opacity(0.5)
                                 ],
-                                center: UnitPoint(x: 0.35, y: 0.3),
-                                startRadius: 8,
-                                endRadius: 70
+                                center: UnitPoint(x: 0.32, y: 0.28),
+                                startRadius: 6,
+                                endRadius: 72
                             )
                         )
-                        .frame(width: 124, height: 54)
                         .overlay {
-                            Ellipse()
-                                .strokeBorder(
-                                    HandDrawnPalette.ink.opacity(0.15),
-                                    style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [6, 4])
-                                )
+                            PencilHatchOverlay(opacity: 0.08, density: 10, angle: -16)
+                                .clipShape(WobblyEllipse(wobble: 2.8, seed: 70))
                         }
-                        .paperTextured(opacity: 0.15)
+                        .overlay {
+                            ZStack {
+                                WobblyEllipse(wobble: 3, seed: 71)
+                                    .stroke(HandDrawnPalette.ink.opacity(0.18), lineWidth: 2.6)
+                                WobblyEllipse(wobble: 2.4, seed: 72)
+                                    .stroke(HandDrawnPalette.ink.opacity(0.32), lineWidth: 1.4)
+                            }
+                        }
+                        .frame(width: 128, height: 56)
                     Text("开始")
-                        .font(.title2.weight(.bold))
+                        .font(HandDrawnFont.brush(26))
                         .foregroundStyle(HandDrawnPalette.ink)
                 }
             }
@@ -102,8 +94,8 @@ struct FocusTimerCenterView: View {
                 .padding(.horizontal, 18)
                 .padding(.vertical, 8)
                 .background {
-                    Ellipse()
-                        .fill(HandDrawnPalette.startBlue.opacity(0.7))
+                    WobblyEllipse(wobble: 2.2, seed: 80)
+                        .fill(HandDrawnPalette.startBlue.opacity(0.75))
                 }
         }
         .buttonStyle(.plain)

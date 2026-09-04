@@ -56,13 +56,20 @@ struct SceneView: View {
     private func floorArea(width: CGFloat, height: CGFloat) -> some View {
         ZStack(alignment: .bottom) {
             WoodenFloorView(
-                floorColor: scene.bottomColor.opacity(0.42),
+                floorColor: scene.bottomColor.opacity(0.5),
                 plankColor: HandDrawnPalette.ink
             )
             .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(HandDrawnPalette.ink.opacity(0.1))
-                    .frame(height: 2)
+                Canvas { context, size in
+                    var horizon = Path()
+                    horizon.move(to: CGPoint(x: 0, y: 3))
+                    horizon.addQuadCurve(
+                        to: CGPoint(x: size.width, y: 4),
+                        control: CGPoint(x: size.width * 0.5, y: -2)
+                    )
+                    context.stroke(horizon, with: .color(HandDrawnPalette.ink.opacity(0.12)), lineWidth: 1.6)
+                }
+                .frame(height: 8)
             }
 
             HStack(alignment: .bottom, spacing: 0) {

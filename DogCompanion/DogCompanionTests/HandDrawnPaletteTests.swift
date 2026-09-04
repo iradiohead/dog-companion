@@ -23,4 +23,12 @@ final class HandDrawnPaletteTests: XCTestCase {
         let tabs: [HomeTab] = [.stats, .timeline, .decor]
         XCTAssertEqual(tabs.count, 3)
     }
+
+    func testHandDrawnTextureHelpersExist() {
+        _ = HandDrawnFont.brush(18)
+        _ = HandDrawnFont.marker(32)
+        _ = HandDrawnTexture.hash(3, 5)
+        _ = HandDrawnPalette.ink.lighter(by: 0.1)
+        _ = HandDrawnPalette.wood.darker(by: 0.1)
+    }
 }

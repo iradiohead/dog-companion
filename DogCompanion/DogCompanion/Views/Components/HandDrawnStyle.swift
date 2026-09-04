@@ -18,32 +18,34 @@ enum HandDrawnPalette {
 struct PaperBackgroundView: View {
     var body: some View {
         ZStack {
-            HandDrawnPalette.paperBase
+            HandDrawnPalette.paper
 
             WatercolorWashOverlay(colors: [
                 HandDrawnPalette.cream,
-                Color(red: 0.94, green: 0.90, blue: 0.82),
-                HandDrawnPalette.warmGlow.opacity(0.6)
+                Color(red: 0.93, green: 0.88, blue: 0.78),
+                HandDrawnPalette.warmGlow.opacity(0.55),
+                Color(red: 0.86, green: 0.90, blue: 0.84)
             ])
 
             LinearGradient(
                 colors: [
-                    .white.opacity(0.42),
+                    Color.white.opacity(0.38),
                     .clear,
-                    HandDrawnPalette.ink.opacity(0.04)
+                    HandDrawnPalette.ink.opacity(0.05)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
             RadialGradient(
-                colors: [.clear, HandDrawnPalette.ink.opacity(0.05)],
+                colors: [.clear, HandDrawnPalette.ink.opacity(0.07)],
                 center: .center,
-                startRadius: 80,
-                endRadius: 420
+                startRadius: 70,
+                endRadius: 430
             )
 
-            PaperGrainOverlay(opacity: 0.62)
+            PencilHatchOverlay(opacity: 0.045, density: 16, angle: -22)
+            PaperFiberOverlay(opacity: 0.7, seed: 2)
         }
         .ignoresSafeArea()
     }
@@ -64,7 +66,7 @@ struct HandDrawnTextButton: View {
                         .frame(width: 8, height: 8)
                 }
                 Text(title)
-                    .font(.title3.weight(.semibold))
+                    .font(HandDrawnFont.brush(22))
                     .foregroundStyle(HandDrawnPalette.ink)
                 if let trailingIcon {
                     Image(systemName: trailingIcon)
@@ -92,7 +94,7 @@ struct HandDrawnActionButton: View {
                         .font(.headline)
                 }
                 Text(title)
-                    .font(.headline.weight(.semibold))
+                    .font(HandDrawnFont.brush(18))
             }
             .foregroundStyle(isPrimary ? HandDrawnPalette.paper : HandDrawnPalette.ink)
             .frame(maxWidth: .infinity)
@@ -133,7 +135,7 @@ struct BottomNavBar: View {
             onSelect(tab)
         } label: {
             Text(title)
-                .font(.title3.weight(.semibold))
+                .font(HandDrawnFont.brush(22))
                 .foregroundStyle(selectedTab == tab ? HandDrawnPalette.ink : HandDrawnPalette.inkLight)
         }
         .buttonStyle(.plain)
