@@ -8,7 +8,7 @@ import UIKit
 final class HomeViewModel {
     private(set) var phase: FocusSessionPhase = .idle
     private(set) var remainingSeconds: TimeInterval = FocusSessionConfig.defaultDuration
-    private(set) var motionState: CompanionMotionState = .away
+    private(set) var motionState: CompanionMotionState = .idle
     private(set) var pendingGiftTitle: String?
     private(set) var showGiftReveal = false
 

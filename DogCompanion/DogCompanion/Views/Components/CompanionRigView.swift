@@ -53,6 +53,7 @@ struct CompanionRigView: UIViewRepresentable {
         context.coordinator.scene.motion = motion
         context.coordinator.scene.showRunFlipbook = showRunFlipbook
         context.coordinator.scene.facingScaleX = facingScaleX
+        context.coordinator.scene.syncPresentation()
         context.coordinator.scene.applyCurrent()
         if view.isPaused != isPaused {
             view.isPaused = isPaused
@@ -84,18 +85,13 @@ final class CompanionRigScene: SKScene {
     var elapsed: TimeInterval = 0
     var motion: CompanionMotionState?
     var facingScaleX: CGFloat = 1
-    var showRunFlipbook = false {
-        didSet {
-            guard showRunFlipbook != oldValue else { return }
-            updatePresentation()
-        }
-    }
+    var showRunFlipbook = false
     var runFrames: [PlatformImage] = [] {
         didSet {
             guard image != nil else { return }
             rebuildFlipbook()
             layoutParts()
-            updatePresentation()
+            syncPresentation()
         }
     }
     var image: PlatformImage? {
@@ -152,7 +148,11 @@ final class CompanionRigScene: SKScene {
     }
 
     private var usesRunFlipbook: Bool {
-        showRunFlipbook && !runTextures.isEmpty
+        guard showRunFlipbook, let node = flipbookNode, !runTextures.isEmpty else { return false }
+        if node.size.width < 4 || node.size.height < 4 {
+            layoutFlipbookNode()
+        }
+        return node.size.width > 4 && node.size.height > 4
     }
 
     private func rebuild() {
@@ -173,8 +173,12 @@ final class CompanionRigScene: SKScene {
             buildSharedPuppet(into: puppetRoot)
         }
         layoutParts()
-        updatePresentation()
+        syncPresentation()
         applyCurrent()
+    }
+
+    func syncPresentation() {
+        updatePresentation()
     }
 
     private func rebuildFlipbook() {
@@ -196,7 +200,8 @@ final class CompanionRigScene: SKScene {
     private func updatePresentation() {
         if image != nil {
             puppetRoot.isHidden = true
-            let flipbook = usesRunFlipbook
+            cutoutRoot.isHidden = false
+            let flipbook = usesRunFlipbook && flipbookNode != nil
             flipbookNode?.isHidden = !flipbook
             for node in cutoutNodes.values {
                 node.isHidden = flipbook
@@ -282,8 +287,7 @@ final class CompanionRigScene: SKScene {
                 node.zRotation = 0
                 node.position = cutoutRest(for: part)
             }
-            flipbookNode?.size = fittedSize
-            flipbookNode?.position = .zero
+            layoutFlipbookNode()
             return
         }
         let scale = min(size.width / 512.0, size.height / 512.0)
@@ -293,6 +297,17 @@ final class CompanionRigScene: SKScene {
             node.position = .zero
             node.zRotation = 0
         }
+    }
+
+    private func layoutFlipbookNode() {
+        guard let node = flipbookNode else { return }
+        let texSize = node.texture?.size() ?? .zero
+        guard texSize.width > 1, texSize.height > 1 else { return }
+        let fitWidth = max(1, size.width * 0.78)
+        let fitHeight = max(1, size.height * 0.90)
+        let scale = min(fitWidth / texSize.width, fitHeight / texSize.height)
+        node.size = CGSize(width: texSize.width * scale, height: texSize.height * scale)
+        node.position = .zero
     }
 
     private func applyPalette() {
@@ -324,6 +339,9 @@ final class CompanionRigScene: SKScene {
     private func apply(_ transform: CompanionPartTransform) {
         if usesRunFlipbook {
             applyFlipbook(transform)
+            if flipbookNode?.isHidden != false {
+                applyCutout(transform)
+            }
             return
         }
         if image != nil {
@@ -334,7 +352,13 @@ final class CompanionRigScene: SKScene {
     }
 
     private func applyFlipbook(_ transform: CompanionPartTransform) {
-        guard let node = flipbookNode, !runTextures.isEmpty else { return }
+        guard let node = flipbookNode, !runTextures.isEmpty else {
+            syncPresentation()
+            return
+        }
+        if node.size.width < 1 || node.size.height < 1 {
+            layoutFlipbookNode()
+        }
         let index = Int(elapsed * 11.0) % runTextures.count
         node.texture = runTextures[index]
         root.zRotation = transform.lean
