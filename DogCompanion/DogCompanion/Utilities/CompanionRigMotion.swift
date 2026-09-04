@@ -140,13 +140,13 @@ enum CompanionRigMotion {
             headY: cg(2.0 + hop * 3.0),
             bodyY: cg(bounce * 2.6),
             tailRotation: cg(sin(elapsed * 8.0) * 0.12),
+            headRotation: cg(-0.16 + hop * 0.03),
+            lean: -0.05,
             frontLegY: cg(hop * 5.0),
             backLegY: cg(-hop * 4.0),
             frontLegScaleY: cg(0.90 + planted * 0.10),
             backLegScaleY: cg(0.90 + bounce * 0.10),
-            headRotation: cg(-0.16 + hop * 0.03),
             headX: cg(-7.0 + hop * 1.2),
-            lean: -0.05,
             bodyScaleX: cg(1.0 + bounce * 0.022),
             bodyScaleY: cg(1.0 - bounce * 0.018)
         )
