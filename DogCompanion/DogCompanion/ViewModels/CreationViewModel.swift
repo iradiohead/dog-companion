@@ -22,10 +22,14 @@ final class CreationViewModel: ComicGenerationFlow {
     var availableDogs: [String] = []
     var selectedDogName: String?
 
-    private let resourceLoader = ResourceDogLoader()
+    private let catalog = ResourceDogCatalog()
+    private var resourceLoader: ResourceDogLoader {
+        ResourceDogLoader(catalog: catalog)
+    }
 
     func refreshAvailableDogs() {
-        availableDogs = ResourceDogCatalog().availableDogNames()
+        availableDogs = catalog.availableDogNames()
+        ResourceDogPreviewLoader.preload(for: availableDogs, catalog: catalog)
     }
 
     func selectDog(_ name: String) {

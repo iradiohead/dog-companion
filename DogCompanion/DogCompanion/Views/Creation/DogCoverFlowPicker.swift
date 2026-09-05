@@ -5,53 +5,53 @@ struct DogCoverFlowPicker: View {
     @Binding var focusedDog: String?
     var onConfirm: (String) -> Void
 
-    private let cardSize: CGFloat = 200
-
     var body: some View {
-        VStack(spacing: 28) {
-            Spacer()
+        GeometryReader { geo in
+            let cardSize = min(max(geo.size.width * 0.46, 168), 220)
 
-            Text("滑动选狗")
-                .font(.title.bold())
-                .foregroundStyle(HandDrawnPalette.ink)
+            VStack(spacing: 24) {
+                Spacer(minLength: 8)
 
-            Text("像 iPod 选唱片一样，左右滑动挑选你的专注伙伴")
-                .font(.subheadline)
-                .foregroundStyle(HandDrawnPalette.inkLight)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 28)
+                VStack(spacing: 8) {
+                    Text("滑动选狗")
+                        .font(.title.bold())
+                        .foregroundStyle(HandDrawnPalette.ink)
+                    Text("左右滑动挑选，停在最中间的封面")
+                        .font(.subheadline)
+                        .foregroundStyle(HandDrawnPalette.inkLight)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 28)
+                }
 
-            coverFlow
-                .frame(height: cardSize * 1.15)
+                coverFlow(cardSize: cardSize)
+                    .frame(height: cardSize * 1.12)
 
-            if let focusedDog {
-                VStack(spacing: 6) {
+                if let focusedDog {
                     Text(focusedDog)
                         .font(.title2.bold())
                         .foregroundStyle(HandDrawnPalette.ink)
-                    Text("resource/\(focusedDog)")
-                        .font(.caption)
-                        .foregroundStyle(HandDrawnPalette.inkLight)
+                        .contentTransition(.numericText())
+                        .animation(.easeInOut(duration: 0.2), value: focusedDog)
                 }
-                .animation(.easeInOut(duration: 0.2), value: focusedDog)
-            }
 
-            Button {
-                if let focusedDog {
-                    onConfirm(focusedDog)
+                Button {
+                    if let focusedDog {
+                        onConfirm(focusedDog)
+                    }
+                } label: {
+                    Text("就选它了")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(.white)
                 }
-            } label: {
-                Text("就选它了")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(.white)
-            }
-            .padding(.horizontal, 32)
-            .disabled(focusedDog == nil)
+                .padding(.horizontal, 32)
+                .disabled(focusedDog == nil)
 
-            Spacer()
+                Spacer(minLength: 8)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .onAppear {
             if focusedDog == nil {
@@ -65,11 +65,11 @@ struct DogCoverFlowPicker: View {
         }
     }
 
-    private var coverFlow: some View {
+    private func coverFlow(cardSize: CGFloat) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 18) {
+            LazyHStack(spacing: 16) {
                 ForEach(dogs, id: \.self) { dogName in
-                    DogCoverCard(dogName: dogName, size: cardSize)
+                    DogCoverCard(dogName: dogName, size: cardSize, isFocused: focusedDog == dogName)
                         .scrollTransition(axis: .horizontal) { content, phase in
                             content
                                 .scaleEffect(phase.isIdentity ? 1.0 : 0.76)
@@ -86,15 +86,17 @@ struct DogCoverFlowPicker: View {
             }
             .scrollTargetLayout()
         }
-        .contentMargins(.horizontal, 56, for: .scrollContent)
+        .contentMargins(.horizontal, 48, for: .scrollContent)
         .scrollTargetBehavior(.viewAligned)
         .scrollPosition(id: $focusedDog, anchor: .center)
+        .sensoryFeedback(.selection, trigger: focusedDog)
     }
 }
 
 private struct DogCoverCard: View {
     let dogName: String
     let size: CGFloat
+    let isFocused: Bool
 
     @State private var previewImage: PlatformImage?
 
@@ -103,23 +105,21 @@ private struct DogCoverCard: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [
-                            HandDrawnPalette.cream,
-                            HandDrawnPalette.paper
-                        ],
+                        colors: [HandDrawnPalette.cream, HandDrawnPalette.paper],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
 
-            if let previewImage {
-                Image(platformImage: previewImage)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Image(systemName: "dog.fill")
-                    .font(.system(size: size * 0.28))
-                    .foregroundStyle(.orange.opacity(0.45))
+            Group {
+                if let previewImage {
+                    Image(platformImage: previewImage)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    ProgressView()
+                        .controlSize(.regular)
+                }
             }
 
             LinearGradient(
@@ -141,18 +141,20 @@ private struct DogCoverCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(HandDrawnPalette.ink.opacity(0.28), lineWidth: 2)
+                .strokeBorder(
+                    isFocused ? HandDrawnPalette.timerGreen : HandDrawnPalette.ink.opacity(0.28),
+                    lineWidth: isFocused ? 3 : 2
+                )
         }
-        .shadow(color: HandDrawnPalette.ink.opacity(0.22), radius: 10, y: 6)
+        .shadow(
+            color: HandDrawnPalette.ink.opacity(isFocused ? 0.28 : 0.16),
+            radius: isFocused ? 14 : 8,
+            y: isFocused ? 8 : 5
+        )
+        .animation(.easeOut(duration: 0.2), value: isFocused)
         .task(id: dogName) {
-            previewImage = loadPreview(for: dogName)
+            previewImage = await ResourceDogPreviewLoader.load(for: dogName)
         }
-    }
-
-    private func loadPreview(for dogName: String) -> PlatformImage? {
-        guard let url = ResourceDogCatalog().previewImageURL(for: dogName),
-              let data = try? Data(contentsOf: url) else { return nil }
-        return PlatformImage.from(data: data)
     }
 }
 

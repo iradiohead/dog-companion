@@ -67,4 +67,19 @@ final class ResourceDogCatalogTests: XCTestCase {
         let folder = try catalog.folderURL(for: "测试犬")
         XCTAssertEqual(catalog.originalImageURL(in: folder)?.lastPathComponent, "我的狗.jpg")
     }
+
+    func testPreviewImageURLPrefersHandDrawn() throws {
+        let folder = try catalog.folderURL(for: "雪纳瑞")
+        XCTAssertEqual(
+            catalog.previewImageURL(for: "雪纳瑞")?.lastPathComponent,
+            catalog.latestFile(in: folder, prefix: "hand-drawn")?.lastPathComponent
+        )
+    }
+
+    func testFolderContentsScansDirectoryOnce() throws {
+        let contents = try catalog.folderContents(for: "雪纳瑞")
+        XCTAssertEqual(contents.handDrawnURL?.lastPathComponent, "hand-drawn-sit-new.png")
+        XCTAssertEqual(contents.foregroundURL?.lastPathComponent, "foreground-dog-sit-a.png")
+        XCTAssertEqual(contents.originalURL?.lastPathComponent, "original.jpg")
+    }
 }

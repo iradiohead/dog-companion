@@ -4,14 +4,17 @@ import Observation
 struct GeneratingView<VM>: View where VM: ComicGenerationFlow & Observable {
     @Bindable var viewModel: VM
     var title: String = "正在生成你的专注伙伴"
+    var statusMessages: [String]?
     var performGeneration: (() async -> Void)?
 
-    private let messages = [
-        "正在认出它的样子…",
-        "正在画成你的狗…",
-        "正在抠出透明图层…",
-        "马上就好啦…"
-    ]
+    private var messages: [String] {
+        statusMessages ?? [
+            "正在认出它的样子…",
+            "正在画成你的狗…",
+            "正在抠出透明图层…",
+            "马上就好啦…"
+        ]
+    }
 
     @State private var messageIndex = 0
     @State private var timer: Timer?

@@ -21,6 +21,14 @@ struct CreationFlowView: View {
                         title: CompanionCreationConfig.useResourceCatalog
                             ? "正在准备 \(viewModel.selectedDogName ?? "你的狗狗")"
                             : "正在生成你的专注伙伴",
+                        statusMessages: CompanionCreationConfig.useResourceCatalog
+                            ? [
+                                "正在读取狗狗资源…",
+                                "正在生成手绘形象…",
+                                "正在准备前景图层…",
+                                "马上就好啦…"
+                            ]
+                            : nil,
                         performGeneration: {
                             await viewModel.startGeneration(context: modelContext)
                         }

@@ -13,13 +13,13 @@ struct ResourceDogLoader {
     var mattingService = MattingService()
 
     func loadAssets(for dogName: String) async throws -> ResourceDogAssets {
-        let folderURL = try catalog.folderURL(for: dogName)
+        let contents = try catalog.folderContents(for: dogName)
 
         let portraitData: Data
-        if let handDrawnURL = catalog.latestFile(in: folderURL, prefix: "hand-drawn") {
+        if let handDrawnURL = contents.handDrawnURL {
             portraitData = try Data(contentsOf: handDrawnURL)
         } else {
-            guard let originalURL = catalog.originalImageURL(in: folderURL) else {
+            guard let originalURL = contents.originalURL else {
                 throw ResourceDogError.missingOriginal(dogName)
             }
             guard let originalImage = UIImage(contentsOfFile: originalURL.path) else {
@@ -37,7 +37,7 @@ struct ResourceDogLoader {
         }
 
         let cutoutData: Data
-        if let foregroundURL = catalog.latestFile(in: folderURL, prefix: "foreground-dog") {
+        if let foregroundURL = contents.foregroundURL {
             cutoutData = try Data(contentsOf: foregroundURL)
         } else {
             cutoutData = try await mattingService.extractCutout(from: portraitImage, pose: .sit)

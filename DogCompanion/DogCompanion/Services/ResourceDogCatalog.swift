@@ -24,6 +24,38 @@ struct ResourceDogCatalog {
     static let resourceFolderName = "resource"
     private static let imageExtensions = Set(["png", "jpg", "jpeg", "heic"])
 
+    struct FolderContents {
+        let dogName: String
+        let folderURL: URL
+        let imageFiles: [URL]
+
+        var handDrawnURL: URL? {
+            ResourceDogCatalog.latestPrefixedFile(in: imageFiles, prefix: "hand-drawn")
+        }
+
+        var foregroundURL: URL? {
+            ResourceDogCatalog.latestPrefixedFile(in: imageFiles, prefix: "foreground-dog")
+        }
+
+        var originalURL: URL? {
+            imageFiles
+                .filter { !ResourceDogCatalog.isGeneratedAsset(fileName: $0.lastPathComponent) }
+                .sorted { $0.lastPathComponent > $1.lastPathComponent }
+                .first
+        }
+
+        var previewURL: URL? {
+            handDrawnURL ?? originalURL ?? foregroundURL
+        }
+    }
+
+    fileprivate static func latestPrefixedFile(in files: [URL], prefix: String) -> URL? {
+        files
+            .filter { $0.lastPathComponent.hasPrefix(prefix) }
+            .sorted { $0.lastPathComponent > $1.lastPathComponent }
+            .first
+    }
+
     var bundle: Bundle = .main
     /// Override in tests to point at a temporary `resource/` tree.
     var resourceRootOverride: URL?
@@ -69,34 +101,38 @@ struct ResourceDogCatalog {
         return url
     }
 
+    func folderContents(for dogName: String) throws -> FolderContents {
+        let folderURL = try folderURL(for: dogName)
+        return FolderContents(
+            dogName: dogName,
+            folderURL: folderURL,
+            imageFiles: imageFiles(in: folderURL)
+        )
+    }
+
     func latestFile(in folderURL: URL, prefix: String) -> URL? {
-        imageFiles(in: folderURL)
-            .filter { $0.lastPathComponent.hasPrefix(prefix) }
-            .sorted { $0.lastPathComponent > $1.lastPathComponent }
-            .first
+        Self.latestPrefixedFile(in: imageFiles(in: folderURL), prefix: prefix)
     }
 
     /// Any image in the folder that does **not** start with `hand-drawn` or `foreground-dog`
     /// is treated as the original photo (e.g. `金毛寻回犬.jpg`).
     func originalImageURL(in folderURL: URL) -> URL? {
-        imageFiles(in: folderURL)
+        let files = imageFiles(in: folderURL)
+        return files
             .filter { !Self.isGeneratedAsset(fileName: $0.lastPathComponent) }
             .sorted { $0.lastPathComponent > $1.lastPathComponent }
             .first
     }
 
-    func previewImageURL(for dogName: String) -> URL? {
-        guard let folderURL = try? folderURL(for: dogName) else { return nil }
-        if let handDrawn = latestFile(in: folderURL, prefix: "hand-drawn") {
-            return handDrawn
-        }
-        if let original = originalImageURL(in: folderURL) {
-            return original
-        }
-        return latestFile(in: folderURL, prefix: "foreground-dog")
+    func originalImageURL(for dogName: String) throws -> URL? {
+        try folderContents(for: dogName).originalURL
     }
 
-    private static func isGeneratedAsset(fileName: String) -> Bool {
+    func previewImageURL(for dogName: String) -> URL? {
+        try? folderContents(for: dogName).previewURL
+    }
+
+    fileprivate static func isGeneratedAsset(fileName: String) -> Bool {
         let lower = fileName.lowercased()
         return lower.hasPrefix("hand-drawn") || lower.hasPrefix("foreground-dog")
     }
