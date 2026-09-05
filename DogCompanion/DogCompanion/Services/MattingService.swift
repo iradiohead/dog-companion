@@ -471,19 +471,23 @@ enum CutoutImageProcessor {
         let colorSpace = CGColorSpaceCreateDeviceRGB()
 
         var pixelData = [UInt8](repeating: 0, count: height * bytesPerRow)
-        guard let context = CGContext(
-            data: &pixelData,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: bytesPerRow,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo
-        ) else {
-            return nil
+        let drew = pixelData.withUnsafeMutableBytes { buffer -> Bool in
+            guard let base = buffer.baseAddress else { return false }
+            guard let context = CGContext(
+                data: base,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: colorSpace,
+                bitmapInfo: bitmapInfo
+            ) else {
+                return false
+            }
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
         }
-
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        guard drew else { return nil }
 
         var pixels: [RGBA] = []
         pixels.reserveCapacity(width * height)
@@ -503,40 +507,55 @@ enum CutoutImageProcessor {
     /// Draws through a bitmap context so device color spaces / oriented images decode consistently.
     static func normalizedCGImage(from image: UIImage) -> CGImage? {
         guard image.size.width > 0, image.size.height > 0 else { return nil }
-        let renderer = UIGraphicsImageRenderer(size: image.size)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = max(image.scale, 1)
+        format.opaque = false
+        format.preferredRange = .standard
+        let renderer = UIGraphicsImageRenderer(size: image.size, format: format)
         return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: image.size))
         }.cgImage
     }
 
     private static func pngData(pixels: [RGBA], width: Int, height: Int) throws -> Data {
+        guard width > 0, height > 0, pixels.count == width * height else {
+            throw MattingError.exportFailed
+        }
+
         let bytesPerPixel = 4
         let bytesPerRow = bytesPerPixel * width
         var pixelData = [UInt8](repeating: 0, count: height * bytesPerRow)
 
+        // iOS bitmap contexts require premultiplied alpha. kCGImageAlphaLast fails on device.
         for index in pixels.indices {
+            let pixel = pixels[index]
             let offset = index * 4
-            pixelData[offset] = pixels[index].r
-            pixelData[offset + 1] = pixels[index].g
-            pixelData[offset + 2] = pixels[index].b
-            pixelData[offset + 3] = pixels[index].a
+            let alpha = Double(pixel.a) / 255.0
+            pixelData[offset] = UInt8(clamping: Int((Double(pixel.r) * alpha).rounded()))
+            pixelData[offset + 1] = UInt8(clamping: Int((Double(pixel.g) * alpha).rounded()))
+            pixelData[offset + 2] = UInt8(clamping: Int((Double(pixel.b) * alpha).rounded()))
+            pixelData[offset + 3] = pixel.a
         }
 
         let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGImageAlphaInfo.last.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
-        guard let context = CGContext(
-            data: &pixelData,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: bytesPerRow,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo
-        ), let cgImage = context.makeImage() else {
-            throw MattingError.exportFailed
+        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        let cgImage: CGImage? = pixelData.withUnsafeMutableBytes { buffer in
+            guard let base = buffer.baseAddress else { return nil }
+            guard let context = CGContext(
+                data: base,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: colorSpace,
+                bitmapInfo: bitmapInfo
+            ) else {
+                return nil
+            }
+            return context.makeImage()
         }
 
-        guard let pngData = UIImage(cgImage: cgImage).pngData() else {
+        guard let cgImage, let pngData = UIImage(cgImage: cgImage).pngData() else {
             throw MattingError.exportFailed
         }
         return pngData
@@ -565,7 +584,7 @@ struct MattingService {
            CutoutImageProcessor.hasMeaningfulTransparency(in: visionData) {
             // Vision already produced a mask; refineCutout's white-background pass eats light fur
             // (e.g. golden retriever) and leaves semi-transparent body holes on first generation.
-            return try CutoutImageProcessor.opaqueCutout(from: visionData)
+            return CutoutImageProcessor.forceOpaqueCutout(from: visionData)
         }
         return try CutoutImageProcessor.chromaKeyCutout(from: image)
     }

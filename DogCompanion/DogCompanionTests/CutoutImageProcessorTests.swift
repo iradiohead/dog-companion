@@ -31,6 +31,14 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertLessThan(cgImage.width, 32)
     }
 
+    func testOpaqueCutoutExportsPNG() throws {
+        let image = makeDogOnWhiteBackground()
+        let soft = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: soft)
+        XCTAssertFalse(opaque.isEmpty)
+        XCTAssertNotNil(UIImage(data: opaque))
+    }
+
     func testOpaqueCutoutSolidifiesSoftPixels() throws {
         let image = makeDogOnWhiteBackground()
         let soft = try CutoutImageProcessor.chromaKeyCutout(from: image)
