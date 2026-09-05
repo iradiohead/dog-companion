@@ -47,8 +47,7 @@ struct GenerationService {
         guard let portraitImage = UIImage(data: portraitData) else {
             throw GenerationError.invalidImage
         }
-        let cutoutData = try await mattingService.extractCutout(from: portraitImage)
-        archiveCutout(cutoutData, pose: .sit)
+        let cutoutData = try await mattingService.extractCutout(from: portraitImage, pose: .sit)
         return GenerationResult(
             comicPortraitData: portraitData,
             cutoutData: cutoutData,
@@ -201,16 +200,6 @@ struct GenerationService {
         } catch {
             #if DEBUG
             print("GeneratedImageArchive portrait save failed: \(error)")
-            #endif
-        }
-    }
-
-    private func archiveCutout(_ data: Data, pose: CompanionPose) {
-        do {
-            _ = try GeneratedImageArchive.saveCutout(data, pose: pose)
-        } catch {
-            #if DEBUG
-            print("GeneratedImageArchive cutout save failed: \(error)")
             #endif
         }
     }

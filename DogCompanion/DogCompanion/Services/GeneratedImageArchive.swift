@@ -31,8 +31,13 @@ enum GeneratedImageArchive {
     }
 
     @discardableResult
+    static func saveForegroundCutout(_ data: Data, pose: CompanionPose = .sit) throws -> URL {
+        try save(data, prefix: "foreground-dog-\(pose.rawValue)")
+    }
+
+    @discardableResult
     static func saveCutout(_ data: Data, pose: CompanionPose = .sit) throws -> URL {
-        try save(data, prefix: "cutout-\(pose.rawValue)")
+        try saveForegroundCutout(data, pose: pose)
     }
 
     private static func save(_ data: Data, prefix: String) throws -> URL {

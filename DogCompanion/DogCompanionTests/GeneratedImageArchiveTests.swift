@@ -24,11 +24,11 @@ final class GeneratedImageArchiveTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: saved), data)
     }
 
-    func testSaveCutoutUsesSeparatePrefix() throws {
+    func testSaveForegroundCutoutUsesDedicatedPrefix() throws {
         let data = Data([0x01, 0x02, 0x03])
-        let saved = try GeneratedImageArchive.saveCutout(data, pose: .sit)
+        let saved = try GeneratedImageArchive.saveForegroundCutout(data, pose: .sit)
 
-        XCTAssertTrue(saved.path.contains("cutout-sit"))
+        XCTAssertTrue(saved.path.contains("foreground-dog-sit"))
         XCTAssertEqual(try Data(contentsOf: saved), data)
     }
 }

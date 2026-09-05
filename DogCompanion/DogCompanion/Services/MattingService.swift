@@ -412,10 +412,22 @@ enum CutoutImageProcessor {
 }
 
 struct MattingService {
-    func extractCutout(from image: UIImage) async throws -> Data {
-        try await Task.detached(priority: .userInitiated) {
+    func extractCutout(from image: UIImage, pose: CompanionPose = .sit) async throws -> Data {
+        let data = try await Task.detached(priority: .userInitiated) {
             try Self.performCutout(on: image)
         }.value
+        archiveForegroundCutout(data, pose: pose)
+        return data
+    }
+
+    private func archiveForegroundCutout(_ data: Data, pose: CompanionPose) {
+        do {
+            _ = try GeneratedImageArchive.saveForegroundCutout(data, pose: pose)
+        } catch {
+            #if DEBUG
+            print("GeneratedImageArchive foreground cutout save failed: \(error)")
+            #endif
+        }
     }
 
     private static func performCutout(on image: UIImage) throws -> Data {
