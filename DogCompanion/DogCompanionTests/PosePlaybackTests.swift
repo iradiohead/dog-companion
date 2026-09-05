@@ -108,15 +108,16 @@ final class PosePlaybackTests: XCTestCase {
         XCTAssertTrue(set.runFrameImages().isEmpty)
     }
 
-    func testRunInScaleChangesContinuously() {
+    func testRunInScaleStaysUnityThroughout() {
         var elapsed: TimeInterval = 0
-        var previous = PosePlayback.travel(state: .runningIn, elapsed: 0)
-        while elapsed < PosePlayback.runningInDuration {
+        while elapsed <= PosePlayback.runningInDuration {
+            let travel = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
+            XCTAssertEqual(travel.scaleX, 1, accuracy: 0.001, "at \(elapsed)s")
+            XCTAssertEqual(travel.scaleY, 1, accuracy: 0.001, "at \(elapsed)s")
+            if elapsed >= PosePlayback.runDuration {
+                XCTAssertEqual(travel.opacity, 1, accuracy: 0.001, "at \(elapsed)s")
+            }
             elapsed += 1.0 / 60.0
-            let next = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
-            XCTAssertLessThan(abs(next.scaleY - previous.scaleY), 0.12)
-            XCTAssertLessThan(abs(next.rotationDegrees - previous.rotationDegrees), 6.0)
-            previous = next
         }
     }
 

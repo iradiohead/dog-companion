@@ -205,7 +205,9 @@ final class CompanionRigScene: SKScene {
             flipbookNode?.isHidden = !flipbook
             for node in cutoutNodes.values {
                 node.isHidden = flipbook
+                node.alpha = 1
             }
+            flipbookNode?.alpha = 1
         } else {
             cutoutRoot.isHidden = true
             puppetRoot.isHidden = false
@@ -300,13 +302,17 @@ final class CompanionRigScene: SKScene {
     }
 
     private func layoutFlipbookNode() {
-        guard let node = flipbookNode else { return }
-        let texSize = node.texture?.size() ?? .zero
-        guard texSize.width > 1, texSize.height > 1 else { return }
-        let fitWidth = max(1, size.width * 0.78)
-        let fitHeight = max(1, size.height * 0.90)
-        let scale = min(fitWidth / texSize.width, fitHeight / texSize.height)
-        node.size = CGSize(width: texSize.width * scale, height: texSize.height * scale)
+        guard let node = flipbookNode, let image else { return }
+        guard fittedSize.width > 1, fittedSize.height > 1 else { return }
+        var contentScale: CGFloat = 1
+        if let texture = node.texture {
+            let frameImage = UIImage(cgImage: texture.cgImage())
+            contentScale = PoseFrameSynthesizer.contentHeightScale(sitImage: image, frameImage: frameImage)
+        }
+        node.size = CGSize(
+            width: fittedSize.width * contentScale,
+            height: fittedSize.height * contentScale
+        )
         node.position = .zero
     }
 

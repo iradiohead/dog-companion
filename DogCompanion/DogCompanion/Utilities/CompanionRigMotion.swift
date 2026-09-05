@@ -140,9 +140,7 @@ enum CompanionRigMotion {
         let bounce = abs(hop)
         return CompanionPartTransform(
             bodyY: cg(bounce * 2.0),
-            lean: -0.05,
-            bodyScaleX: cg(1.0 + bounce * 0.02),
-            bodyScaleY: cg(1.0 - bounce * 0.018)
+            lean: -0.05
         )
     }
 

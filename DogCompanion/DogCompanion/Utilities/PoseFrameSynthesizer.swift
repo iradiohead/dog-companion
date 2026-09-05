@@ -39,6 +39,26 @@ enum PoseFrameSynthesizer {
         return poses.compactMap { render(pieces: pieces, pose: $0) }
     }
 
+    static func opaqueContentRect(of image: UIImage) -> CGRect? {
+        guard let cgImage = image.cgImage else { return nil }
+        return opaqueBounds(of: cgImage)
+    }
+
+    static func contentHeightScale(sitImage: UIImage, frameImage: UIImage) -> CGFloat {
+        guard
+            let sitBounds = opaqueContentRect(of: sitImage),
+            let frameBounds = opaqueContentRect(of: frameImage),
+            sitImage.size.height > 1,
+            frameImage.size.height > 1
+        else {
+            return 1
+        }
+        let sitFraction = sitBounds.height / sitImage.size.height
+        let frameFraction = frameBounds.height / frameImage.size.height
+        guard frameFraction > 0.02 else { return 1 }
+        return sitFraction / frameFraction
+    }
+
     static func land(from sitData: Data) -> Data? {
         guard let image = UIImage(data: sitData) else { return nil }
         guard let pieces = slicedPieces(from: image) else { return nil }

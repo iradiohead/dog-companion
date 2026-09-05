@@ -38,7 +38,20 @@ final class RunInEntranceTests: XCTestCase {
         let hidden = PosePlayback.travel(state: .runningIn, elapsed: 0).opacity
         let visible = PosePlayback.travel(state: .runningIn, elapsed: 0.12).opacity
         XCTAssertLessThan(hidden, 0.2)
-        XCTAssertGreaterThan(visible, 0.9)
+        XCTAssertEqual(visible, 1, accuracy: 0.001)
+    }
+
+    func testOpacityIsFullyOpaqueAfterDogReachesTheRug() {
+        for elapsed in stride(from: PosePlayback.runDuration, through: PosePlayback.runningInDuration, by: 0.04) {
+            let travel = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
+            XCTAssertEqual(travel.opacity, 1, accuracy: 0.001, "at \(elapsed)s")
+            XCTAssertEqual(PosePlayback.runInOpacity(elapsed: elapsed), 1, accuracy: 0.001)
+        }
+    }
+
+    func testIdleAfterRunInIsFullyOpaque() {
+        let idle = PosePlayback.travel(state: .idle, elapsed: 0)
+        XCTAssertEqual(idle.opacity, 1, accuracy: 0.001)
     }
 
     // MARK: - Horizontal run
@@ -163,10 +176,19 @@ final class RunInEntranceTests: XCTestCase {
         while elapsed < PosePlayback.runningInDuration {
             elapsed += 1.0 / 60.0
             let next = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
-            XCTAssertLessThan(abs(next.scaleY - previous.scaleY), 0.12)
+            XCTAssertEqual(next.scaleX, 1, accuracy: 0.001)
+            XCTAssertEqual(next.scaleY, 1, accuracy: 0.001)
             XCTAssertLessThan(abs(next.rotationDegrees - previous.rotationDegrees), 6.0)
             XCTAssertLessThan(abs(next.x - previous.x), 18)
             previous = next
+        }
+    }
+
+    func testRunInKeepsUnityScaleWhileMoving() {
+        for elapsed in stride(from: 0, through: PosePlayback.runningInDuration, by: 0.05) {
+            let travel = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
+            XCTAssertEqual(travel.scaleX, 1, accuracy: 0.001)
+            XCTAssertEqual(travel.scaleY, 1, accuracy: 0.001)
         }
     }
 
@@ -276,6 +298,11 @@ final class RunInEntranceTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(frames.count, 4)
         XCTAssertFalse(PoseFrameSynthesizer.looksLikeSamePose(sitData, frames[0]))
         XCTAssertFalse(PoseFrameSynthesizer.looksLikeSamePose(frames[0], frames[2]))
+
+        let sitImage = try XCTUnwrap(UIImage(data: sitData))
+        let frameImage = try XCTUnwrap(UIImage(data: frames[0]))
+        let scale = PoseFrameSynthesizer.contentHeightScale(sitImage: sitImage, frameImage: frameImage)
+        XCTAssertGreaterThan(scale, 1.1, "Synthesized run frames have extra canvas padding")
     }
 
     func testRunFrameImagesPrefersStoredFrames() throws {

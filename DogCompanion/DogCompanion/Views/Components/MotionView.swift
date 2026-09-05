@@ -25,16 +25,25 @@ struct MotionView: View {
         .onAppear {
             motionStarted = Date()
         }
-        .onChange(of: motionState) { oldState, newState in
-            if newState == .idle, oldState == .runningIn {
-                return
-            }
+        .onChange(of: motionState) { _, _ in
             motionStarted = Date()
+        }
+    }
+
+    private func characterOpacity(travel: PoseTravel, elapsed: TimeInterval) -> Double {
+        switch motionState {
+        case .away:
+            return 0
+        case .idle, .reacting, .celebrating:
+            return 1
+        case .runningIn:
+            return PosePlayback.runInOpacity(elapsed: elapsed)
         }
     }
 
     private func character(_ snapshot: PoseSnapshot, elapsed: TimeInterval) -> some View {
         let travel = snapshot.travel
+        let opacity = characterOpacity(travel: travel, elapsed: elapsed)
         let showRunFlipbook = RunInPresentation.showsFlipbook(
             motion: motionState,
             facingScaleX: travel.facingScaleX,
@@ -42,7 +51,7 @@ struct MotionView: View {
         )
         return ZStack(alignment: .bottom) {
             Ellipse()
-                .fill(Color.black.opacity(travel.shadowOpacity * travel.opacity))
+                .fill(Color.black.opacity(travel.shadowOpacity * opacity))
                 .frame(width: 74.0 * travel.shadowScale, height: 12.0 * travel.shadowScale)
                 .offset(x: travel.x, y: 6)
                 .blur(radius: 0.5)
@@ -62,7 +71,7 @@ struct MotionView: View {
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .offset(x: travel.x, y: travel.y)
-            .opacity(travel.opacity)
+            .opacity(opacity)
             .onTapGesture(perform: onTap)
         }
     }

@@ -180,7 +180,7 @@ enum PosePlayback {
     private static func runInSnapshot(elapsed: TimeInterval, distance: CGFloat) -> PoseSnapshot {
         let runEnd = runDuration
         var travel = PoseTravel.rest()
-        travel.opacity = min(1.0, elapsed / 0.10)
+        travel.opacity = runInOpacity(elapsed: elapsed)
         travel.occlusion = .seated
 
         if elapsed <= runEnd {
@@ -192,8 +192,8 @@ enum PosePlayback {
             travel.facingScaleX = -1
             travel.x = -distance * cg((1.0 - eased) * stride)
             travel.y = -cg(bounce * bounceAmp)
-            travel.scaleX = cg(1.02 + bounce * 0.02)
-            travel.scaleY = cg(0.96 + 0.05 * bounce)
+            travel.scaleX = 1
+            travel.scaleY = 1
             travel.rotationDegrees = cg(-5.0 + sin(elapsed * 11.0) * 2.5)
             travel.shadowScale = cg(1.16 - bounce * 0.24)
             travel.shadowOpacity = 0.16 + bounce * 0.06
@@ -207,12 +207,21 @@ enum PosePlayback {
         travel.x = 0
         travel.y = -cg(bounce * 4.0 * (1.0 - settleT) * 0.25)
         travel.facingScaleX = (elapsed - runEnd) >= turnDelay ? 1 : -1
-        travel.scaleX = cg(lerp(1.02, 1.0, settleT))
-        travel.scaleY = cg(lerp(0.99, 1.0, settleT))
+        travel.scaleX = 1
+        travel.scaleY = 1
         travel.rotationDegrees = cg(lerp(-5.0, 0, settleT))
         travel.shadowScale = cg(lerp(1.08, 1.0, settleT))
         travel.shadowOpacity = lerp(0.18, 0.16, settleT)
+        travel.opacity = 1
         return PoseSnapshot(pose: .sit, travel: travel)
+    }
+
+    /// Fade in only during the first stride off-screen; fully opaque once on the rug.
+    static func runInOpacity(elapsed: TimeInterval) -> Double {
+        if elapsed >= runDuration {
+            return 1
+        }
+        return elapsed < 0.10 ? min(1.0, elapsed / 0.10) : 1.0
     }
 
     private static func idleSnapshot(elapsed _: TimeInterval) -> PoseSnapshot {
