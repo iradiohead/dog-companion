@@ -32,7 +32,7 @@ final class ResourceDogServiceTests: XCTestCase {
 
     func testLoadAssetsUsesCachedPortraitWithoutCallingAPI() async throws {
         let cachedPortrait = makeTinyPNG()
-        let cachedCutout = makeTinyPNG()
+        let cachedCutout = try makeSoftCutoutPNG()
         try ResourceDogAssetCache.savePortrait(cachedPortrait, for: "金毛")
         try ResourceDogAssetCache.saveCutout(cachedCutout, for: "金毛")
 
@@ -98,7 +98,7 @@ final class ResourceDogServiceTests: XCTestCase {
 
     func testLoadAssetsCachesPortraitAfterFirstGeneration() async throws {
         let generatedPortrait = makeTinyPNG()
-        let generatedCutout = makeTinyPNG()
+        let generatedCutout = try makeSoftCutoutPNG()
         portraitSpy.result = generatedPortrait
         cutoutSpy.result = generatedCutout
 
@@ -121,6 +121,23 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertEqual(assets.portraitData, generatedPortrait)
         XCTAssertEqual(portraitSpy.callCount, 0)
         XCTAssertEqual(cutoutSpy.callCount, 0)
+    }
+
+    func testLoadPlanUsesBundledGoldenRetrieverCutoutWithoutExtracting() throws {
+        let dogFolder = tempRoot
+            .appendingPathComponent("resource", isDirectory: true)
+            .appendingPathComponent("金毛", isDirectory: true)
+        try makeTinyPNG().write(to: dogFolder.appendingPathComponent("hand-drawn-sit.png"))
+        try makeSoftCutoutPNG().write(to: dogFolder.appendingPathComponent("foreground-dog-sit.png"))
+
+        var service = ResourceDogService()
+        service.catalog = catalog
+        let plan = service.loadPlan(for: "金毛")
+
+        XCTAssertFalse(plan.willGeneratePortrait)
+        XCTAssertFalse(plan.willExtractCutout)
+        XCTAssertTrue(plan.messages.contains(ResourceDogLoadStatus.readingCutout.message))
+        XCTAssertFalse(plan.messages.contains(ResourceDogLoadStatus.extractingCutout.message))
     }
 
     func testLoadPlanDoesNotClaimPortraitGenerationWhenBundleHasHandDrawn() throws {

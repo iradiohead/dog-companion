@@ -70,8 +70,7 @@ enum CutoutImageProcessor {
             return true
         }
 
-        let opaqueCount = pixels.filter { $0.a > 220 }.count
-        return Double(opaqueCount) / Double(pixels.count) > 0.72
+        return false
     }
 
     /// Vision masks on device often leave light fur at alpha 20–200; treat as stale cutout.
@@ -126,40 +125,46 @@ enum CutoutImageProcessor {
         height: Int,
         holeRatio: Double = 0.12
     ) -> Bool {
-        var minX = width
-        var minY = height
-        var maxX = 0
-        var maxY = 0
-        for y in 0..<height {
-            for x in 0..<width where pixels[y * width + x].a > 18 {
-                minX = min(minX, x)
-                minY = min(minY, y)
-                maxX = max(maxX, x)
-                maxY = max(maxY, y)
+        guard width > 0, height > 0, pixels.count == width * height else { return true }
+
+        // Sitting dogs leave transparent gaps between legs/ears that still open to the
+        // canvas edge. Only count voids that the border flood cannot reach.
+        var reachableFromBorder = [Bool](repeating: false, count: pixels.count)
+        var stack: [Int] = []
+        stack.reserveCapacity(width * 2 + height * 2)
+
+        for x in 0..<width {
+            stack.append(x)
+            stack.append((height - 1) * width + x)
+        }
+        for y in 1..<(height - 1) {
+            stack.append(y * width)
+            stack.append(y * width + width - 1)
+        }
+
+        while let current = stack.popLast() {
+            if reachableFromBorder[current] { continue }
+            if pixels[current].a >= 12 { continue }
+            reachableFromBorder[current] = true
+            let x = current % width
+            let y = current / width
+            if x > 0 { stack.append(current - 1) }
+            if x + 1 < width { stack.append(current + 1) }
+            if y > 0 { stack.append(current - width) }
+            if y + 1 < height { stack.append(current + width) }
+        }
+
+        var opaque = 0
+        var enclosed = 0
+        for index in pixels.indices {
+            if pixels[index].a > 18 {
+                opaque += 1
+            } else if !reachableFromBorder[index] {
+                enclosed += 1
             }
         }
-        guard maxX - minX > 8, maxY - minY > 8 else { return false }
-
-        let insetX = max(1, (maxX - minX) / 5)
-        let insetY = max(1, (maxY - minY) / 5)
-        let innerMinX = minX + insetX
-        let innerMaxX = maxX - insetX
-        let innerMinY = minY + insetY
-        let innerMaxY = maxY - insetY
-        guard innerMaxX > innerMinX, innerMaxY > innerMinY else { return false }
-
-        var total = 0
-        var holes = 0
-        for y in innerMinY...innerMaxY {
-            for x in innerMinX...innerMaxX {
-                total += 1
-                if pixels[y * width + x].a < 12 {
-                    holes += 1
-                }
-            }
-        }
-        guard total > 0 else { return false }
-        return Double(holes) / Double(total) > holeRatio
+        guard opaque > 80 else { return false }
+        return Double(enclosed) / Double(opaque) > holeRatio
     }
 
     static func refineCutout(from image: UIImage) throws -> Data {
@@ -235,29 +240,29 @@ enum CutoutImageProcessor {
         }
         let background = estimateBackgroundColor(pixels: pixels, width: width, height: height)
 
-        for index in pixels.indices {
-            let pixel = pixels[index]
-            let alpha = backgroundAlpha(
-                for: pixel,
-                background: background,
-                tolerance: 36,
-                feather: 24
-            )
-            pixels[index].a = alpha
-        }
-
+        // Only walk inward from the corners. A global near-white key eats cream fur
+        // on golden retrievers (highlights sit within 20–40 of paper white).
         floodClearBackground(
             in: &pixels,
             width: width,
             height: height,
             background: background,
-            tolerance: 38
+            tolerance: 22
         )
 
-        removeNearWhiteBackground(
+        peelBackgroundFringe(
             in: &pixels,
-            threshold: 224,
-            feather: 20
+            width: width,
+            height: height,
+            background: background,
+            tolerance: 28,
+            passes: 3
+        )
+
+        removeSmallOpaqueIslands(
+            in: &pixels,
+            width: width,
+            height: height
         )
 
         guard let trimmed = trimTransparentBounds(
@@ -417,8 +422,7 @@ enum CutoutImageProcessor {
             let dg = Double(pixel.g) - background.g
             let db = Double(pixel.b) - background.b
             let similarToBackground = (dr * dr + dg * dg + db * db) <= maxDistance
-            let alreadyThin = pixel.a < 48
-            guard similarToBackground || alreadyThin else { continue }
+            guard similarToBackground else { continue }
 
             pixels[current].a = 0
 
@@ -428,6 +432,92 @@ enum CutoutImageProcessor {
             if x + 1 < width { queue.append(current + 1) }
             if y > 0 { queue.append(current - width) }
             if y + 1 < height { queue.append(current + width) }
+        }
+    }
+
+    /// Clear near-white wash that is still touching already-cleared paper.
+    private static func peelBackgroundFringe(
+        in pixels: inout [RGBA],
+        width: Int,
+        height: Int,
+        background: (r: Double, g: Double, b: Double),
+        tolerance: Double,
+        passes: Int
+    ) {
+        guard width > 0, height > 0, pixels.count == width * height, passes > 0 else { return }
+        let maxDistance = tolerance * tolerance
+
+        for _ in 0..<passes {
+            var toClear: [Int] = []
+            toClear.reserveCapacity(width + height)
+            for index in pixels.indices {
+                if pixels[index].a <= 12 { continue }
+                let pixel = pixels[index]
+                let dr = Double(pixel.r) - background.r
+                let dg = Double(pixel.g) - background.g
+                let db = Double(pixel.b) - background.b
+                guard (dr * dr + dg * dg + db * db) <= maxDistance else { continue }
+
+                let x = index % width
+                let y = index / width
+                var touchesPaper = false
+                if x == 0 || y == 0 || x == width - 1 || y == height - 1 {
+                    touchesPaper = true
+                } else if pixels[index - 1].a <= 12
+                    || pixels[index + 1].a <= 12
+                    || pixels[index - width].a <= 12
+                    || pixels[index + width].a <= 12 {
+                    touchesPaper = true
+                }
+                if touchesPaper {
+                    toClear.append(index)
+                }
+            }
+            for index in toClear {
+                pixels[index].a = 0
+            }
+        }
+    }
+
+    /// Drop leftover paper speckles; keep the main dog silhouette.
+    private static func removeSmallOpaqueIslands(
+        in pixels: inout [RGBA],
+        width: Int,
+        height: Int
+    ) {
+        guard width > 0, height > 0, pixels.count == width * height else { return }
+        var visited = [Bool](repeating: false, count: pixels.count)
+        var islands: [[Int]] = []
+        var largest = 0
+        var stack: [Int] = []
+
+        for start in 0..<pixels.count {
+            if visited[start] || pixels[start].a <= 12 { continue }
+            stack.append(start)
+            var island: [Int] = []
+            while let current = stack.popLast() {
+                if visited[current] { continue }
+                visited[current] = true
+                guard pixels[current].a > 12 else { continue }
+                island.append(current)
+                let x = current % width
+                let y = current / width
+                if x > 0 { stack.append(current - 1) }
+                if x + 1 < width { stack.append(current + 1) }
+                if y > 0 { stack.append(current - width) }
+                if y + 1 < height { stack.append(current + width) }
+            }
+            if !island.isEmpty {
+                islands.append(island)
+                largest = max(largest, island.count)
+            }
+        }
+
+        let minKeep = max(64, largest / 12)
+        for island in islands where island.count < minKeep {
+            for index in island {
+                pixels[index].a = 0
+            }
         }
     }
 

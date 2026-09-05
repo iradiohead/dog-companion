@@ -31,6 +31,23 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertLessThan(cgImage.width, 32)
     }
 
+    func testChromaKeyKeepsLightCreamFurOpaque() throws {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor(red: 0.98, green: 0.94, blue: 0.86, alpha: 1).setFill()
+            context.fill(CGRect(x: 10, y: 10, width: 12, height: 12))
+        }
+        let cutout = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: cutout)
+
+        XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: opaque))
+        XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: opaque))
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(opaque))
+        XCTAssertGreaterThan(countOpaquePixels(in: opaque), 80)
+    }
+
     func testOpaqueCutoutExportsPNG() throws {
         let image = makeDogOnWhiteBackground()
         let soft = try CutoutImageProcessor.chromaKeyCutout(from: image)
@@ -91,6 +108,44 @@ final class CutoutImageProcessorTests: XCTestCase {
         let image = makeDogOnWhiteBackground()
         let cutout = try CutoutImageProcessor.chromaKeyCutout(from: image)
         let opaque = try CutoutImageProcessor.opaqueCutout(from: cutout)
+        XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: opaque))
+    }
+
+    func testSittingPoseGapsAreNotInteriorHoles() throws {
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32), format: format)
+        let image = renderer.image { context in
+            context.cgContext.clear(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor.brown.setFill()
+            context.fill(CGRect(x: 6, y: 4, width: 20, height: 10))
+            context.fill(CGRect(x: 6, y: 14, width: 6, height: 14))
+            context.fill(CGRect(x: 20, y: 14, width: 6, height: 14))
+        }
+        guard let data = image.pngData() else {
+            return XCTFail("Failed to encode sitting silhouette")
+        }
+
+        XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: data))
+        XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: data))
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(data))
+    }
+
+    func testChromaKeyRemovesDetachedSpeckles() throws {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor.brown.setFill()
+            context.fill(CGRect(x: 10, y: 10, width: 12, height: 12))
+            context.fill(CGRect(x: 1, y: 1, width: 3, height: 3))
+        }
+        let cutout = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: cutout)
+
+        XCTAssertGreaterThan(countOpaquePixels(in: opaque), 80)
+        XCTAssertLessThan(countOpaquePixels(in: opaque), 160)
         XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: opaque))
     }
 
