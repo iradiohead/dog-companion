@@ -19,18 +19,22 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.isFocusActive)
     }
 
-    func testStartFocusEntersRunningIn() {
+    func testStartFocusHidesThenRunsIn() async {
         let viewModel = HomeViewModel()
         viewModel.startFocus(with: makeCompanion())
 
         XCTAssertEqual(viewModel.phase, .running)
-        XCTAssertEqual(viewModel.motionState, .runningIn)
+        XCTAssertEqual(viewModel.motionState, .away)
         XCTAssertTrue(viewModel.isFocusActive)
+
+        try? await Task.sleep(nanoseconds: 20_000_000)
+        XCTAssertEqual(viewModel.motionState, .runningIn)
     }
 
-    func testCancelFocusHidesCompanion() {
+    func testCancelFocusHidesCompanion() async {
         let viewModel = HomeViewModel()
         viewModel.startFocus(with: makeCompanion())
+        try? await Task.sleep(nanoseconds: 20_000_000)
         viewModel.cancelFocus()
 
         XCTAssertEqual(viewModel.phase, .idle)
@@ -41,6 +45,7 @@ final class HomeViewModelTests: XCTestCase {
     func testReactDuringRunInIsAllowed() async {
         let viewModel = HomeViewModel()
         viewModel.startFocus(with: makeCompanion())
+        try? await Task.sleep(nanoseconds: 20_000_000)
         XCTAssertEqual(viewModel.motionState, .runningIn)
 
         viewModel.reactToTap()
@@ -64,6 +69,7 @@ final class HomeViewModelTests: XCTestCase {
     func testRunInCompletesToIdleAfterAnimation() async {
         let viewModel = HomeViewModel()
         viewModel.startFocus(with: makeCompanion())
+        try? await Task.sleep(nanoseconds: 20_000_000)
         XCTAssertEqual(viewModel.motionState, .runningIn)
 
         let wait = PosePlayback.runningInDuration + 0.12

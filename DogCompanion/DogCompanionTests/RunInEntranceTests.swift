@@ -34,15 +34,8 @@ final class RunInEntranceTests: XCTestCase {
         XCTAssertEqual(start.y, 0, accuracy: 12)
     }
 
-    func testOpacityRampsInDuringFirstTenthSecond() {
-        let hidden = PosePlayback.travel(state: .runningIn, elapsed: 0).opacity
-        let visible = PosePlayback.travel(state: .runningIn, elapsed: 0.12).opacity
-        XCTAssertLessThan(hidden, 0.2)
-        XCTAssertEqual(visible, 1, accuracy: 0.001)
-    }
-
-    func testOpacityIsFullyOpaqueAfterDogReachesTheRug() {
-        for elapsed in stride(from: PosePlayback.runDuration, through: PosePlayback.runningInDuration, by: 0.04) {
+    func testOpacityStaysOpaqueThroughoutRunIn() {
+        for elapsed in stride(from: 0, through: PosePlayback.runningInDuration, by: 0.05) {
             let travel = PosePlayback.travel(state: .runningIn, elapsed: elapsed)
             XCTAssertEqual(travel.opacity, 1, accuracy: 0.001, "at \(elapsed)s")
             XCTAssertEqual(PosePlayback.runInOpacity(elapsed: elapsed), 1, accuracy: 0.001)
@@ -302,7 +295,8 @@ final class RunInEntranceTests: XCTestCase {
         let sitImage = try XCTUnwrap(UIImage(data: sitData))
         let frameImage = try XCTUnwrap(UIImage(data: frames[0]))
         let scale = PoseFrameSynthesizer.contentHeightScale(sitImage: sitImage, frameImage: frameImage)
-        XCTAssertGreaterThan(scale, 1.1, "Synthesized run frames have extra canvas padding")
+        XCTAssertGreaterThan(scale, 0.85)
+        XCTAssertLessThan(scale, 1.15)
     }
 
     func testRunFrameImagesPrefersStoredFrames() throws {

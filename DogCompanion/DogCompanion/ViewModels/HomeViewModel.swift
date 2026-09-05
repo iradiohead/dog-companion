@@ -29,9 +29,15 @@ final class HomeViewModel {
         guard phase == .idle || phase == .completed else { return }
         remainingSeconds = FocusSessionConfig.defaultDuration
         phase = .running
-        motionState = .runningIn
+        // Briefly hide the seated dog so run-in can start from off-screen left.
+        motionState = .away
         scheduleRunInToSit()
         startTimer(for: companion)
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 16_000_000)
+            guard phase == .running else { return }
+            motionState = .runningIn
+        }
     }
 
     func cancelFocus() {

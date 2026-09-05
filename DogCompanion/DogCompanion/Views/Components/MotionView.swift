@@ -25,8 +25,15 @@ struct MotionView: View {
         .onAppear {
             motionStarted = Date()
         }
-        .onChange(of: motionState) { _, _ in
-            motionStarted = Date()
+        .onChange(of: motionState) { oldState, newState in
+            switch (oldState, newState) {
+            case (.runningIn, .idle):
+                motionStarted = Date()
+            case (_, .runningIn), (_, .reacting), (_, .celebrating), (_, .away):
+                motionStarted = Date()
+            default:
+                break
+            }
         }
     }
 
@@ -65,7 +72,7 @@ struct MotionView: View {
                 isPaused: motionState == .away,
                 motion: motionState,
                 showRunFlipbook: showRunFlipbook,
-                facingScaleX: showRunFlipbook ? 1 : travel.facingScaleX
+                facingScaleX: travel.facingScaleX
             )
             .scaleEffect(x: travel.scaleX, y: travel.scaleY, anchor: .bottom)
             .rotationEffect(.degrees(Double(travel.rotationDegrees)), anchor: .bottom)

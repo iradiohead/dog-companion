@@ -139,12 +139,16 @@ final class CompanionRigScene: SKScene {
     }
 
     func applyCurrent() {
-        root.xScale = showRunFlipbook ? 1 : facingScaleX
+        root.xScale = flipbookActive ? 1 : facingScaleX
         if let motion {
-            apply(CompanionRigMotion.transform(motion: motion, elapsed: elapsed, usesRunFlipbook: usesRunFlipbook))
+            apply(CompanionRigMotion.transform(motion: motion, elapsed: elapsed, usesRunFlipbook: flipbookActive))
         } else {
             apply(CompanionRigMotion.transform(state: rigState, time: elapsed))
         }
+    }
+
+    private var flipbookActive: Bool {
+        showRunFlipbook && usesRunFlipbook
     }
 
     private var usesRunFlipbook: Bool {
@@ -201,7 +205,7 @@ final class CompanionRigScene: SKScene {
         if image != nil {
             puppetRoot.isHidden = true
             cutoutRoot.isHidden = false
-            let flipbook = usesRunFlipbook && flipbookNode != nil
+            let flipbook = flipbookActive
             flipbookNode?.isHidden = !flipbook
             for node in cutoutNodes.values {
                 node.isHidden = flipbook
@@ -302,17 +306,9 @@ final class CompanionRigScene: SKScene {
     }
 
     private func layoutFlipbookNode() {
-        guard let node = flipbookNode, let image else { return }
+        guard let node = flipbookNode else { return }
         guard fittedSize.width > 1, fittedSize.height > 1 else { return }
-        var contentScale: CGFloat = 1
-        if let texture = node.texture {
-            let frameImage = UIImage(cgImage: texture.cgImage())
-            contentScale = PoseFrameSynthesizer.contentHeightScale(sitImage: image, frameImage: frameImage)
-        }
-        node.size = CGSize(
-            width: fittedSize.width * contentScale,
-            height: fittedSize.height * contentScale
-        )
+        node.size = fittedSize
         node.position = .zero
     }
 
@@ -343,11 +339,8 @@ final class CompanionRigScene: SKScene {
     }
 
     private func apply(_ transform: CompanionPartTransform) {
-        if usesRunFlipbook {
+        if flipbookActive {
             applyFlipbook(transform)
-            if flipbookNode?.isHidden != false {
-                applyCutout(transform)
-            }
             return
         }
         if image != nil {

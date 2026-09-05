@@ -216,12 +216,9 @@ enum PosePlayback {
         return PoseSnapshot(pose: .sit, travel: travel)
     }
 
-    /// Fade in only during the first stride off-screen; fully opaque once on the rug.
-    static func runInOpacity(elapsed: TimeInterval) -> Double {
-        if elapsed >= runDuration {
-            return 1
-        }
-        return elapsed < 0.10 ? min(1.0, elapsed / 0.10) : 1.0
+    /// Fully opaque while on screen; run-in no longer fades the owner dog in.
+    static func runInOpacity(elapsed _: TimeInterval) -> Double {
+        1
     }
 
     private static func idleSnapshot(elapsed _: TimeInterval) -> PoseSnapshot {

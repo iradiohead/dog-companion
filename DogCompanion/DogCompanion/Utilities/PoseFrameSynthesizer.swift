@@ -172,13 +172,9 @@ enum PoseFrameSynthesizer {
     }
 
     private static func render(pieces: Pieces, pose: LimbPose) -> Data? {
-        let extraX = pieces.width * CGFloat(0.38)
-        let extraY = pieces.height * CGFloat(0.32)
-        let canvas = CGSize(
-            width: ceil(pieces.width + extraX * 2),
-            height: ceil(pieces.height + extraY * 2)
-        )
-        let origin = CGPoint(x: extraX, y: extraY)
+        // Keep the same canvas as the sit cutout so run-in matches seated size.
+        let canvas = CGSize(width: pieces.width, height: pieces.height)
+        let origin = CGPoint.zero
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         format.opaque = false
