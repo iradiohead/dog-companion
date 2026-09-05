@@ -258,12 +258,14 @@ enum CutoutImageProcessor {
             throw MattingError.invalidImage
         }
         let original = pixels
+        let background = estimateBackgroundColor(pixels: original, width: width, height: height)
         applyPaperFlood(
             original: original,
             into: &pixels,
             width: width,
             height: height,
-            minimumLuma: 220
+            background: background,
+            maxDistance: 30
         )
         if clearedPaperRatio(pixels) < 0.05 {
             applyPaperFlood(
@@ -271,7 +273,8 @@ enum CutoutImageProcessor {
                 into: &pixels,
                 width: width,
                 height: height,
-                minimumLuma: 205
+                background: background,
+                maxDistance: 42
             )
         }
 
@@ -279,6 +282,7 @@ enum CutoutImageProcessor {
             in: &pixels,
             width: width,
             height: height,
+            background: background,
             passes: 3
         )
 
@@ -458,22 +462,33 @@ enum CutoutImageProcessor {
         }
     }
 
-    /// Ink, cream, gold, and harness — never treated as paper.
-    private static func isSubjectPixel(_ pixel: RGBA) -> Bool {
+    /// Paper is whatever the corners look like. Absolute warmth fails on device because
+    /// color-managed whites go yellow and get classified as fur, so nothing is cleared.
+    private static func isPaperPixel(
+        _ pixel: RGBA,
+        background: (r: Double, g: Double, b: Double),
+        maxDistance: Double
+    ) -> Bool {
         let r = Double(pixel.r)
         let g = Double(pixel.g)
         let b = Double(pixel.b)
-        let chroma = max(r, g, b) - min(r, g, b)
-        let luma = 0.299 * r + 0.587 * g + 0.114 * b
-        let warmth = r - b
-        if warmth >= 14 || chroma > 18 { return true }
-        return luma < 205
+        let dr = r - background.r
+        let dg = g - background.g
+        let db = b - background.b
+        if (dr * dr + dg * dg + db * db) > (maxDistance * maxDistance) {
+            return false
+        }
+        let pixelChroma = max(r, g, b) - min(r, g, b)
+        let backgroundChroma = max(background.r, background.g, background.b)
+            - min(background.r, background.g, background.b)
+        return pixelChroma <= backgroundChroma + 14
     }
 
-    private static func isPaperPixel(_ pixel: RGBA, minimumLuma: Double = 220) -> Bool {
-        guard !isSubjectPixel(pixel) else { return false }
-        let luma = 0.299 * Double(pixel.r) + 0.587 * Double(pixel.g) + 0.114 * Double(pixel.b)
-        return luma >= minimumLuma
+    private static func isSubjectPixel(
+        _ pixel: RGBA,
+        background: (r: Double, g: Double, b: Double)
+    ) -> Bool {
+        !isPaperPixel(pixel, background: background, maxDistance: 36)
     }
 
     private static func clearedPaperRatio(_ pixels: [RGBA]) -> Double {
@@ -487,23 +502,26 @@ enum CutoutImageProcessor {
         into pixels: inout [RGBA],
         width: Int,
         height: Int,
-        minimumLuma: Double
+        background: (r: Double, g: Double, b: Double),
+        maxDistance: Double
     ) {
         pixels = original
         floodClearPaper(
             in: &pixels,
             width: width,
             height: height,
-            minimumLuma: minimumLuma
+            background: background,
+            maxDistance: maxDistance
         )
-        restoreSubjectPixels(original: original, into: &pixels)
+        restoreSubjectPixels(original: original, into: &pixels, background: background)
     }
 
     private static func floodClearPaper(
         in pixels: inout [RGBA],
         width: Int,
         height: Int,
-        minimumLuma: Double
+        background: (r: Double, g: Double, b: Double),
+        maxDistance: Double
     ) {
         guard width > 0, height > 0, pixels.count == width * height else { return }
 
@@ -519,7 +537,9 @@ enum CutoutImageProcessor {
         while let current = queue.popLast() {
             if visited[current] { continue }
             visited[current] = true
-            guard isPaperPixel(pixels[current], minimumLuma: minimumLuma) else { continue }
+            guard isPaperPixel(pixels[current], background: background, maxDistance: maxDistance) else {
+                continue
+            }
 
             pixels[current] = RGBA(r: 0, g: 0, b: 0, a: 0)
 
@@ -534,12 +554,13 @@ enum CutoutImageProcessor {
 
     private static func restoreSubjectPixels(
         original: [RGBA],
-        into pixels: inout [RGBA]
+        into pixels: inout [RGBA],
+        background: (r: Double, g: Double, b: Double)
     ) {
         guard original.count == pixels.count else { return }
         for index in pixels.indices {
             let source = original[index]
-            guard isSubjectPixel(source) else { continue }
+            guard isSubjectPixel(source, background: background) else { continue }
             var restored = source
             restored.a = 255
             pixels[index] = restored
@@ -551,6 +572,7 @@ enum CutoutImageProcessor {
         in pixels: inout [RGBA],
         width: Int,
         height: Int,
+        background: (r: Double, g: Double, b: Double),
         passes: Int
     ) {
         guard width > 0, height > 0, pixels.count == width * height, passes > 0 else { return }
@@ -560,7 +582,7 @@ enum CutoutImageProcessor {
             toClear.reserveCapacity(width + height)
             for index in pixels.indices {
                 if pixels[index].a <= 12 { continue }
-                guard !isSubjectPixel(pixels[index]) else { continue }
+                guard !isSubjectPixel(pixels[index], background: background) else { continue }
 
                 let x = index % width
                 let y = index / width

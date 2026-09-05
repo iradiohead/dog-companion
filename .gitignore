@@ -9,4 +9,5 @@ xcuserdata/
 .DS_Store
 
 .tmp-ref-frames/
+scripts/cutout-sim/
 
