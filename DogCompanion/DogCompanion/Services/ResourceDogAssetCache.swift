@@ -5,6 +5,8 @@ import os
 enum ResourceDogAssetCache {
     static let appFolderName = "DogCompanion"
     static let folderName = "resource-cache"
+    /// Bump when a cutout algorithm change must ignore previously cached white/empty PNGs.
+    static let cutoutFilePrefix = "foreground-dog-v2"
 
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.kejin.dogcompanion",
@@ -48,7 +50,7 @@ enum ResourceDogAssetCache {
     }
 
     static func cutoutURL(for dogName: String, pose: CompanionPose = .sit) -> URL? {
-        let url = fileURL(for: dogName, prefix: "foreground-dog", pose: pose)
+        let url = fileURL(for: dogName, prefix: cutoutFilePrefix, pose: pose)
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         return url
     }
@@ -70,7 +72,7 @@ enum ResourceDogAssetCache {
 
     @discardableResult
     static func saveCutout(_ data: Data, for dogName: String, pose: CompanionPose = .sit) throws -> URL {
-        try save(data, for: dogName, prefix: "foreground-dog", pose: pose)
+        try save(data, for: dogName, prefix: cutoutFilePrefix, pose: pose)
     }
 
     private static func save(

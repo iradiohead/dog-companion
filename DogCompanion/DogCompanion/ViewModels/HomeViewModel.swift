@@ -90,24 +90,23 @@ final class HomeViewModel {
     func refreshCutoutIfNeeded(for companion: Companion) async {
         if let existing = companion.cutoutData {
             let opaque = CutoutImageProcessor.forceOpaqueCutout(from: existing)
-            if opaque != existing {
-                companion.cutoutData = opaque
-            }
-            if !CutoutImageProcessor.needsCutoutRefresh(opaque),
-               !CutoutImageProcessor.hasInteriorHoles(in: opaque) {
+            if !CutoutImageProcessor.needsCutoutRefresh(opaque) {
+                if opaque != existing {
+                    companion.cutoutData = opaque
+                }
                 return
             }
         }
 
-        guard let portraitData = companion.comicPortraitData,
-              let portrait = UIImage(data: portraitData) else {
+        guard let portraitData = companion.comicPortraitData else {
             return
         }
         do {
             let chroma = try await Task.detached(priority: .userInitiated) {
-                let cutout = try CutoutImageProcessor.chromaKeyCutout(from: portrait)
+                let cutout = try CutoutImageProcessor.chromaKeyCutout(fromPNG: portraitData)
                 return CutoutImageProcessor.forceOpaqueCutout(from: cutout)
             }.value
+            guard !CutoutImageProcessor.needsCutoutRefresh(chroma) else { return }
             companion.cutoutData = chroma
         } catch {
             return

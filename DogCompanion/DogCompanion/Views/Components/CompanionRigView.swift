@@ -221,8 +221,7 @@ final class CompanionRigScene: SKScene {
 
     private func buildCutout(from image: PlatformImage, into parent: SKNode) {
         cutoutTailOnLeft = true
-        let displayImage = CutoutImageProcessor.opaqueUIImage(from: image) ?? image
-        let node = makeCutoutSprite(from: displayImage, part: .body)
+        let node = makeCutoutSprite(from: image, part: .body)
         node.zPosition = 2
         parent.addChild(node)
         cutoutNodes[.body] = node
@@ -251,12 +250,17 @@ final class CompanionRigScene: SKScene {
     }
 
     private func makeCutoutSprite(from image: UIImage, part: CompanionPart) -> SKSpriteNode {
-        let display = CutoutImageProcessor.opaqueUIImage(from: image) ?? image
-        let texture = SKTexture(image: display)
+        let texture: SKTexture
+        if let cgImage = CutoutImageProcessor.premultipliedCGImage(from: image) {
+            texture = SKTexture(cgImage: cgImage)
+        } else {
+            texture = SKTexture(image: image)
+        }
         texture.filteringMode = .linear
         texture.usesMipmaps = false
         let node = SKSpriteNode(texture: texture)
         node.blendMode = .alpha
+        node.colorBlendFactor = 0
         node.anchorPoint = cutoutAnchor(for: part)
         return node
     }

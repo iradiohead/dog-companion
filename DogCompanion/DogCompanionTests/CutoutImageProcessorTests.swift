@@ -167,6 +167,20 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertTrue(CutoutImageProcessor.needsCutoutRefresh(data))
     }
 
+    func testFullyTransparentPNGNeedsRefresh() throws {
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32), format: format)
+        let image = renderer.image { context in
+            context.cgContext.clear(CGRect(x: 0, y: 0, width: 32, height: 32))
+        }
+        guard let data = image.pngData() else {
+            return XCTFail("Failed to encode transparent image")
+        }
+        XCTAssertTrue(CutoutImageProcessor.needsCutoutRefresh(data))
+    }
+
     func testRefineCutoutCanPunchHolesInLightFur() throws {
         let visionLike = try makeVisionLikeLightDogCutout()
         let refined = try CutoutImageProcessor.refineCutout(from: UIImage(data: visionLike)!)

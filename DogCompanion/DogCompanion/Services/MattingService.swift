@@ -53,6 +53,11 @@ enum CutoutImageProcessor {
         let height = cgImage.height
         guard width > 0, height > 0 else { return true }
 
+        let opaqueCount = pixels.reduce(0) { $0 + ($1.a > 200 ? 1 : 0) }
+        if opaqueCount < max(80, pixels.count / 20) {
+            return true
+        }
+
         if hasSemiTransparentForeground(pixels: pixels, width: width, height: height) {
             return true
         }
@@ -262,9 +267,7 @@ enum CutoutImageProcessor {
     /// Decode the original PNG/JPEG bytes with ImageIO so device `UIImage.pngData()`
     /// cannot flatten alpha or wash cream fur toward paper white.
     static func chromaKeyCutout(fromPNG data: Data) throws -> Data {
-        let options = [kCGImageSourceShouldCache: false] as CFDictionary
-        guard let source = CGImageSourceCreateWithData(data as CFData, options),
-              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options),
+        guard let cgImage = cgImage(fromImageData: data),
               let pixels = rgbaPixels(fromNormalized: cgImage),
               !pixels.isEmpty else {
             throw MattingError.invalidImage
@@ -381,19 +384,22 @@ enum CutoutImageProcessor {
     }
 
     static func opaqueUIImage(from image: UIImage) -> UIImage? {
+        guard let cgImage = premultipliedCGImage(from: image) else { return nil }
+        return UIImage(cgImage: cgImage)
+    }
+
+    /// Premultiplied CGImage whose transparent pixels are 0,0,0,0.
+    /// SpriteKit treats unpremultiplied RGB=white + A=0 as a white rectangle.
+    static func premultipliedCGImage(from image: UIImage) -> CGImage? {
         guard let cgImage = image.cgImage,
               var pixels = rgbaPixels(fromNormalized: cgImage) else {
             return nil
         }
         solidifyForeground(in: &pixels)
-        guard let output = makeCGImage(
-            pixels: pixels,
-            width: cgImage.width,
-            height: cgImage.height
-        ) else {
-            return nil
+        for index in pixels.indices where pixels[index].a == 0 {
+            pixels[index] = RGBA(r: 0, g: 0, b: 0, a: 0)
         }
-        return UIImage(cgImage: output)
+        return makeCGImage(pixels: pixels, width: cgImage.width, height: cgImage.height)
     }
 
     /// Pixels that are visibly part of the dog become fully opaque so furniture does not show through.
@@ -786,7 +792,21 @@ enum CutoutImageProcessor {
         var height: Int
     }
 
+    private static func cgImage(fromImageData data: Data) -> CGImage? {
+        let options = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, options) else {
+            return UIImage(data: data)?.cgImage
+        }
+        return CGImageSourceCreateImageAtIndex(source, 0, options) ?? UIImage(data: data)?.cgImage
+    }
+
     private static func bitmapRGBA(from data: Data) -> BitmapRGBA? {
+        if let cgImage = cgImage(fromImageData: data),
+           let pixels = rgbaPixels(fromNormalized: cgImage),
+           !pixels.isEmpty,
+           pixels.count == cgImage.width * cgImage.height {
+            return BitmapRGBA(pixels: pixels, width: cgImage.width, height: cgImage.height)
+        }
         guard let image = UIImage(data: data) else { return nil }
         return bitmapRGBA(from: image)
     }

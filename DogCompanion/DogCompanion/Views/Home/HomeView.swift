@@ -110,7 +110,8 @@ struct HomeView: View {
         sitImage = opaqueData.flatMap { PlatformImage.from(data: $0) }
         runFrames = companion.poseCutouts.runFrameImages()
 
-        if let opaqueData, opaqueData != cutoutData {
+        if let opaqueData, opaqueData != cutoutData,
+           !CutoutImageProcessor.needsCutoutRefresh(opaqueData) {
             companion.cutoutData = opaqueData
             try? modelContext.save()
         }
