@@ -312,6 +312,14 @@ enum CutoutImageProcessor {
             width: width,
             height: height,
             background: background,
+            passes: 1
+        )
+        restoreSilhouetteFringe(
+            original: original,
+            into: &pixels,
+            width: width,
+            height: height,
+            background: background,
             passes: 3
         )
 
@@ -660,7 +668,7 @@ enum CutoutImageProcessor {
             toClear.reserveCapacity(width + height)
             for index in pixels.indices {
                 if pixels[index].a <= 12 { continue }
-                guard isPaperPixel(pixels[index], background: background, maxDistance: 28) else {
+                guard isPaperPixel(pixels[index], background: background, maxDistance: 10) else {
                     continue
                 }
 
@@ -681,6 +689,54 @@ enum CutoutImageProcessor {
             }
             for index in toClear {
                 pixels[index] = RGBA(r: 0, g: 0, b: 0, a: 0)
+            }
+        }
+    }
+
+    /// Grow back light cream fur that flood/peel ate at the silhouette, like the
+    /// 金毛 crown. Only restore pixels that are not nearly identical to paper.
+    private static func restoreSilhouetteFringe(
+        original: [RGBA],
+        into pixels: inout [RGBA],
+        width: Int,
+        height: Int,
+        background: (r: Double, g: Double, b: Double),
+        passes: Int
+    ) {
+        guard original.count == pixels.count, width > 0, height > 0, passes > 0 else { return }
+
+        for _ in 0..<passes {
+            var toRestore: [Int] = []
+            toRestore.reserveCapacity(width + height)
+            for index in pixels.indices {
+                if pixels[index].a > 12 { continue }
+                let source = original[index]
+                if isPaperPixel(source, background: background, maxDistance: 10) {
+                    continue
+                }
+                let r = Double(source.r)
+                let g = Double(source.g)
+                let b = Double(source.b)
+                if chroma(r, g, b) < 8,
+                   luma(r, g, b) >= luma(background.r, background.g, background.b) - 6 {
+                    continue
+                }
+
+                let x = index % width
+                let y = index / width
+                var touchesSubject = false
+                if x > 0 && pixels[index - 1].a > 12 { touchesSubject = true }
+                else if x + 1 < width && pixels[index + 1].a > 12 { touchesSubject = true }
+                else if y > 0 && pixels[index - width].a > 12 { touchesSubject = true }
+                else if y + 1 < height && pixels[index + width].a > 12 { touchesSubject = true }
+                if touchesSubject {
+                    toRestore.append(index)
+                }
+            }
+            for index in toRestore {
+                var restored = original[index]
+                restored.a = 255
+                pixels[index] = restored
             }
         }
     }

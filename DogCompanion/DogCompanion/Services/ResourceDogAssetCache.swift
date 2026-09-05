@@ -6,7 +6,7 @@ enum ResourceDogAssetCache {
     static let appFolderName = "DogCompanion"
     static let folderName = "resource-cache"
     /// Bump when a cutout algorithm change must ignore previously cached white/empty PNGs.
-    static let cutoutFilePrefix = "foreground-dog-v2"
+    static let cutoutFilePrefix = "foreground-dog-v3"
 
     private static let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier ?? "com.kejin.dogcompanion",

@@ -26,7 +26,7 @@ final class ResourceDogAssetCacheTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: cutoutURL.path))
         XCTAssertEqual(ResourceDogAssetCache.portraitData(for: "金毛"), portrait)
         XCTAssertEqual(ResourceDogAssetCache.cutoutData(for: "金毛"), cutout)
-        XCTAssertTrue(cutoutURL.lastPathComponent.contains("foreground-dog-v2"))
+        XCTAssertTrue(cutoutURL.lastPathComponent.contains("foreground-dog-v3"))
     }
 
     func testMissingCacheReturnsNil() {

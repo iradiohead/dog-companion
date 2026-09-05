@@ -113,6 +113,27 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertLessThan(countOpaquePixels(in: opaque), 220)
     }
 
+    func testChromaKeyKeepsPaleFurTuftOnCrown() throws {
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = true
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32), format: format)
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor(red: 0.96, green: 0.90, blue: 0.80, alpha: 1).setFill()
+            context.fill(CGRect(x: 8, y: 10, width: 16, height: 16))
+            UIColor(red: 250.0 / 255.0, green: 248.0 / 255.0, blue: 240.0 / 255.0, alpha: 1).setFill()
+            context.fill(CGRect(x: 18, y: 6, width: 8, height: 8))
+        }
+        let cutout = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: cutout)
+
+        XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: opaque))
+        XCTAssertGreaterThan(countOpaquePixels(in: opaque), 270)
+        XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: opaque))
+    }
+
     func testChromaKeyFromPNGDataClearsBackground() throws {
         let image = makeDogOnWhiteBackground()
         guard let png = image.pngData() else {
