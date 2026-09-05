@@ -225,21 +225,30 @@ enum CutoutImageProcessor {
 
     /// Bundled or cached cutouts may keep feathered alpha; make the subject fully opaque.
     static func opaqueCutout(from data: Data) throws -> Data {
-        guard let image = UIImage(data: data),
-              var pixels = rgbaPixels(from: image),
-              let cgImage = image.cgImage,
-              !pixels.isEmpty else {
+        guard var bitmap = bitmapRGBA(from: data) else {
             throw MattingError.invalidImage
         }
 
-        let width = cgImage.width
-        let height = cgImage.height
-        guard pixels.count == width * height else {
-            throw MattingError.invalidImage
-        }
+        solidifyForeground(in: &bitmap.pixels)
+        return try pngData(pixels: bitmap.pixels, width: bitmap.width, height: bitmap.height)
+    }
 
-        solidifyForeground(in: &pixels)
-        return try pngData(pixels: pixels, width: width, height: height)
+    /// Never falls back to the original soft cutout — used on the display path.
+    static func forceOpaqueCutout(from data: Data) -> Data {
+        if let opaque = try? opaqueCutout(from: data) {
+            return opaque
+        }
+        guard var bitmap = bitmapRGBA(from: data) else {
+            return data
+        }
+        solidifyForeground(in: &bitmap.pixels)
+        return (try? pngData(pixels: bitmap.pixels, width: bitmap.width, height: bitmap.height)) ?? data
+    }
+
+    static func opaqueUIImage(from image: UIImage) -> UIImage? {
+        guard let data = image.pngData() else { return nil }
+        let opaque = forceOpaqueCutout(from: data)
+        return UIImage(data: opaque)
     }
 
     /// Pixels that are visibly part of the dog become fully opaque so furniture does not show through.
@@ -425,11 +434,35 @@ enum CutoutImageProcessor {
         return (trimmed, trimmedWidth, trimmedHeight)
     }
 
-    private static func rgbaPixels(from image: UIImage) -> [RGBA]? {
-        guard let cgImage = normalizedCGImage(from: image) else { return nil }
+    private struct BitmapRGBA {
+        var pixels: [RGBA]
+        var width: Int
+        var height: Int
+    }
 
+    private static func bitmapRGBA(from data: Data) -> BitmapRGBA? {
+        guard let image = UIImage(data: data) else { return nil }
+        return bitmapRGBA(from: image)
+    }
+
+    private static func bitmapRGBA(from image: UIImage) -> BitmapRGBA? {
+        guard let cgImage = normalizedCGImage(from: image),
+              let pixels = rgbaPixels(fromNormalized: cgImage),
+              !pixels.isEmpty else {
+            return nil
+        }
         let width = cgImage.width
         let height = cgImage.height
+        guard pixels.count == width * height else { return nil }
+        return BitmapRGBA(pixels: pixels, width: width, height: height)
+    }
+
+    private static func rgbaPixels(from image: UIImage) -> [RGBA]? {
+        guard let cgImage = normalizedCGImage(from: image) else { return nil }
+        return rgbaPixels(fromNormalized: cgImage)
+    }
+
+    private static func rgbaPixels(fromNormalized cgImage: CGImage) -> [RGBA]? {
         let bytesPerPixel = 4
         let bytesPerRow = bytesPerPixel * width
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
@@ -467,14 +500,11 @@ enum CutoutImageProcessor {
 
     /// Draws through a bitmap context so device color spaces / oriented images decode consistently.
     static func normalizedCGImage(from image: UIImage) -> CGImage? {
-        if image.imageOrientation == .up, let cgImage = image.cgImage {
-            return cgImage
-        }
+        guard image.size.width > 0, image.size.height > 0 else { return nil }
         let renderer = UIGraphicsImageRenderer(size: image.size)
-        let normalized = renderer.image { _ in
+        return renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: image.size))
-        }
-        return normalized.cgImage
+        }.cgImage
     }
 
     private static func pngData(pixels: [RGBA], width: Int, height: Int) throws -> Data {
@@ -491,7 +521,7 @@ enum CutoutImageProcessor {
         }
 
         let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        let bitmapInfo = CGImageAlphaInfo.last.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
         guard let context = CGContext(
             data: &pixelData,
             width: width,

@@ -80,7 +80,6 @@ final class CompanionRigScene: SKScene {
     private let headAnchorY: CGFloat = 0.52
     private var lastImage: PlatformImage?
     private var lastPalette: CoatPalette?
-    private var cutoutBuildToken = UUID()
     private var cutoutTailOnLeft = true
 
     var rigState: CompanionRigState = .sitting
@@ -224,50 +223,12 @@ final class CompanionRigScene: SKScene {
     }
 
     private func buildCutout(from image: PlatformImage, into parent: SKNode) {
-        let token = UUID()
-        cutoutBuildToken = token
         cutoutTailOnLeft = true
-
-        let fastNode = makeCutoutSprite(from: image, part: .body)
-        fastNode.zPosition = 2
-        parent.addChild(fastNode)
-        cutoutNodes[.body] = fastNode
-
-        Task { @MainActor in
-            let sliceInput = image
-            let layers = await Task.detached(priority: .userInitiated) {
-                if let data = sliceInput.pngData(),
-                   let opaque = try? CutoutImageProcessor.opaqueCutout(from: data),
-                   let opaqueImage = UIImage(data: opaque) {
-                    return CompanionLayerSlicer.slice(opaqueImage)
-                }
-                return CompanionLayerSlicer.slice(sliceInput)
-            }.value
-            guard cutoutBuildToken == token, let layers else { return }
-            for node in cutoutNodes.values {
-                node.removeFromParent()
-            }
-            cutoutNodes.removeAll()
-            cutoutUnderlayNode?.removeFromParent()
-            cutoutUnderlayNode = nil
-
-            let underlay = makeCutoutSprite(from: image, part: .body)
-            underlay.zPosition = -1
-            parent.addChild(underlay)
-            cutoutUnderlayNode = underlay
-
-            cutoutTailOnLeft = layers.tailOnLeft
-            let drawOrder: [CompanionPart] = [.tail, .backLeg, .body, .frontLeg, .head]
-            for part in drawOrder {
-                guard let partImage = layers.image(for: part) else { continue }
-                let node = makeCutoutSprite(from: partImage, part: part)
-                node.zPosition = CGFloat(drawOrder.firstIndex(of: part) ?? 0)
-                parent.addChild(node)
-                cutoutNodes[part] = node
-            }
-            layoutParts()
-            syncPresentation()
-        }
+        let displayImage = CutoutImageProcessor.opaqueUIImage(from: image) ?? image
+        let node = makeCutoutSprite(from: displayImage, part: .body)
+        node.zPosition = 2
+        parent.addChild(node)
+        cutoutNodes[.body] = node
     }
 
     private func buildSharedPuppet(into parent: SKNode) {
@@ -293,7 +254,8 @@ final class CompanionRigScene: SKScene {
     }
 
     private func makeCutoutSprite(from image: UIImage, part: CompanionPart) -> SKSpriteNode {
-        let texture = SKTexture(image: image)
+        let display = CutoutImageProcessor.opaqueUIImage(from: image) ?? image
+        let texture = SKTexture(image: display)
         texture.filteringMode = .linear
         let node = SKSpriteNode(texture: texture)
         node.anchorPoint = cutoutAnchor(for: part)

@@ -88,14 +88,23 @@ final class HomeViewModel {
     }
 
     func refreshCutoutIfNeeded(for companion: Companion) async {
-        guard CutoutImageProcessor.needsCutoutRefresh(companion.cutoutData),
-              let portraitData = companion.comicPortraitData,
+        if let existing = companion.cutoutData {
+            let opaque = CutoutImageProcessor.forceOpaqueCutout(from: existing)
+            if opaque != existing {
+                companion.cutoutData = opaque
+            }
+            if !CutoutImageProcessor.needsCutoutRefresh(opaque) {
+                return
+            }
+        }
+
+        guard let portraitData = companion.comicPortraitData,
               let portrait = UIImage(data: portraitData) else {
             return
         }
         do {
             let extracted = try await MattingService().extractCutout(from: portrait)
-            companion.cutoutData = try CutoutImageProcessor.opaqueCutout(from: extracted)
+            companion.cutoutData = CutoutImageProcessor.forceOpaqueCutout(from: extracted)
         } catch {
             return
         }

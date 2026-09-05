@@ -88,12 +88,12 @@ struct ResourceDogService {
         let cutoutData: Data
         if let foregroundURL = contents.foregroundURL {
             let raw = try Data(contentsOf: foregroundURL)
-            cutoutData = try Self.finalizeCutout(raw)
+            cutoutData = Self.finalizeCutout(raw)
         } else if let cached = ResourceDogAssetCache.cutoutData(for: dogName) {
-            cutoutData = try Self.finalizeCutout(cached)
+            cutoutData = Self.finalizeCutout(cached)
         } else {
             let extracted = try await cutoutExtractor.extractCutout(from: portraitImage, pose: .sit)
-            let opaque = try Self.finalizeCutout(extracted)
+            let opaque = Self.finalizeCutout(extracted)
             try ResourceDogAssetCache.saveCutout(opaque, for: dogName)
             cutoutData = opaque
         }
@@ -105,8 +105,8 @@ struct ResourceDogService {
         )
     }
 
-    private static func finalizeCutout(_ data: Data) throws -> Data {
-        try CutoutImageProcessor.opaqueCutout(from: data)
+    private static func finalizeCutout(_ data: Data) -> Data {
+        CutoutImageProcessor.forceOpaqueCutout(from: data)
     }
 
     private func previewSourceData(for dogName: String) -> Data? {

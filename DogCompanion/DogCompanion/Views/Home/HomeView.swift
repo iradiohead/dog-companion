@@ -96,10 +96,7 @@ struct HomeView: View {
         let cutoutData = companion.cutoutData
         let opaqueData = await Task.detached(priority: .userInitiated) {
             guard let cutoutData else { return nil as Data? }
-            if let opaque = try? CutoutImageProcessor.opaqueCutout(from: cutoutData) {
-                return opaque
-            }
-            return cutoutData
+            return CutoutImageProcessor.forceOpaqueCutout(from: cutoutData)
         }.value
 
         sitImage = opaqueData.flatMap { PlatformImage.from(data: $0) }
