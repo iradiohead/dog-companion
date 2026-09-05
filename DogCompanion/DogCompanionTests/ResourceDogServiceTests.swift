@@ -123,6 +123,72 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertEqual(cutoutSpy.callCount, 0)
     }
 
+    func testLoadPlanDoesNotClaimPortraitGenerationWhenBundleHasHandDrawn() throws {
+        let dogFolder = tempRoot
+            .appendingPathComponent("resource", isDirectory: true)
+            .appendingPathComponent("雪纳瑞", isDirectory: true)
+        try FileManager.default.createDirectory(at: dogFolder, withIntermediateDirectories: true)
+        try makeTinyPNG().write(to: dogFolder.appendingPathComponent("hand-drawn-sit.png"))
+        try makeTinyPNG().write(to: dogFolder.appendingPathComponent("foreground-dog-sit.png"))
+
+        var service = ResourceDogService()
+        service.catalog = catalog
+        let plan = service.loadPlan(for: "雪纳瑞")
+
+        XCTAssertFalse(plan.willGeneratePortrait)
+        XCTAssertFalse(plan.willExtractCutout)
+        XCTAssertFalse(plan.messages.contains(ResourceDogLoadStatus.generatingPortrait.message))
+        XCTAssertTrue(plan.messages.contains(ResourceDogLoadStatus.readingPortrait.message))
+    }
+
+    func testLoadAssetsReportsReadingNotGeneratingWhenBundleHasHandDrawn() async throws {
+        let dogFolder = tempRoot
+            .appendingPathComponent("resource", isDirectory: true)
+            .appendingPathComponent("雪纳瑞", isDirectory: true)
+        try FileManager.default.createDirectory(at: dogFolder, withIntermediateDirectories: true)
+        try makeTinyPNG().write(to: dogFolder.appendingPathComponent("hand-drawn-sit.png"))
+        try makeTinyPNG().write(to: dogFolder.appendingPathComponent("foreground-dog-sit.png"))
+
+        var service = ResourceDogService()
+        service.catalog = catalog
+        service.portraitGenerator = portraitSpy
+        service.cutoutExtractor = cutoutSpy
+
+        var statuses: [ResourceDogLoadStatus] = []
+        _ = try await service.loadAssets(for: "雪纳瑞") { status in
+            statuses.append(status)
+        }
+
+        XCTAssertEqual(portraitSpy.callCount, 0)
+        XCTAssertEqual(cutoutSpy.callCount, 0)
+        XCTAssertEqual(
+            statuses,
+            [.readingResources, .readingPortrait, .readingCutout, .finishing]
+        )
+        XCTAssertFalse(statuses.contains(.generatingPortrait))
+        XCTAssertFalse(statuses.contains(.extractingCutout))
+    }
+
+    func testLoadAssetsReportsGeneratingPortraitWhenOnlyOriginalExists() async throws {
+        portraitSpy.result = makeTinyPNG()
+        cutoutSpy.result = makeTinyPNG()
+
+        var service = ResourceDogService()
+        service.catalog = catalog
+        service.portraitGenerator = portraitSpy
+        service.cutoutExtractor = cutoutSpy
+
+        var statuses: [ResourceDogLoadStatus] = []
+        _ = try await service.loadAssets(for: "金毛") { status in
+            statuses.append(status)
+        }
+
+        XCTAssertEqual(portraitSpy.callCount, 1)
+        XCTAssertTrue(statuses.contains(.generatingPortrait))
+        XCTAssertTrue(statuses.contains(.extractingCutout))
+        XCTAssertFalse(statuses.contains(.readingPortrait))
+    }
+
     private func makeSoftCutoutPNG() throws -> Data {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
         let image = renderer.image { context in

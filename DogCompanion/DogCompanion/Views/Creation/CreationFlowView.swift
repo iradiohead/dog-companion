@@ -18,6 +18,8 @@ struct CreationFlowView: View {
                     viewModel: viewModel,
                     title: viewModel.generatingTitle,
                     statusMessages: viewModel.generatingStatusMessages,
+                    liveStatusMessage: viewModel.currentStatusMessage,
+                    showsStyleBadge: viewModel.mode == .photo,
                     performGeneration: {
                         await viewModel.startGeneration(context: modelContext) {
                             onEnterFocusSession()

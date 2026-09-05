@@ -21,6 +21,8 @@ final class CreationViewModel: ComicGenerationFlow {
     var errorMessage: String?
     var availableDogs: [String] = []
     var selectedDogName: String?
+    var currentStatusMessage = "正在读取狗狗资源…"
+    private var resourceLoadPlan: ResourceDogLoadPlan?
 
     let mode: CreationMode = .current
 
@@ -39,11 +41,8 @@ final class CreationViewModel: ComicGenerationFlow {
     var generatingStatusMessages: [String] {
         switch mode {
         case .resourceCatalog:
-            return [
-                "正在读取狗狗资源…",
-                "正在生成手绘形象…",
-                "正在准备前景图层…",
-                "马上就好啦…"
+            return resourceLoadPlan?.messages ?? [
+                ResourceDogLoadStatus.readingResources.message
             ]
         case .photo:
             return [
@@ -68,6 +67,9 @@ final class CreationViewModel: ComicGenerationFlow {
         selectedDogName = name
         companionName = name
         errorMessage = nil
+        let plan = resourceService.loadPlan(for: name)
+        resourceLoadPlan = plan
+        currentStatusMessage = plan.messages.first ?? ResourceDogLoadStatus.readingResources.message
         step = .generating
     }
 
@@ -113,7 +115,9 @@ final class CreationViewModel: ComicGenerationFlow {
         }
 
         await runGeneration {
-            let assets = try await resourceService.loadAssets(for: dogName)
+            let assets = try await resourceService.loadAssets(for: dogName) { status in
+                currentStatusMessage = status.message
+            }
             generatedPortraitData = assets.portraitData
             generatedCutoutData = assets.cutoutData
             selectedPalette = assets.coatPalette
@@ -187,6 +191,8 @@ final class CreationViewModel: ComicGenerationFlow {
         selectedDogName = nil
         isGenerating = false
         errorMessage = nil
+        resourceLoadPlan = nil
+        currentStatusMessage = ResourceDogLoadStatus.readingResources.message
     }
 }
 
