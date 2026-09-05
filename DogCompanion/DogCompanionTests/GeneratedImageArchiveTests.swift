@@ -31,4 +31,10 @@ final class GeneratedImageArchiveTests: XCTestCase {
         XCTAssertTrue(saved.path.contains("foreground-dog-sit"))
         XCTAssertEqual(try Data(contentsOf: saved), data)
     }
+
+    func testDefaultArchiveDirectoryUsesDogCompanionFolder() {
+        let directory = GeneratedImageArchive.defaultArchiveDirectory()
+        XCTAssertTrue(directory.path.contains("DogCompanion"))
+        XCTAssertTrue(directory.path.hasSuffix("hand-drawn-portraits"))
+    }
 }

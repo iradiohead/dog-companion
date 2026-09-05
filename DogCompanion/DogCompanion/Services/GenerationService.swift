@@ -198,9 +198,7 @@ struct GenerationService {
         do {
             _ = try GeneratedImageArchive.savePortrait(data, pose: pose)
         } catch {
-            #if DEBUG
-            print("GeneratedImageArchive portrait save failed: \(error)")
-            #endif
+            print("DogCompanion [手绘肖像] 保存失败: \(error)")
         }
     }
 

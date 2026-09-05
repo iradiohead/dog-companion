@@ -424,9 +424,7 @@ struct MattingService {
         do {
             _ = try GeneratedImageArchive.saveForegroundCutout(data, pose: pose)
         } catch {
-            #if DEBUG
-            print("GeneratedImageArchive foreground cutout save failed: \(error)")
-            #endif
+            print("DogCompanion [前景抠图] 保存失败: \(error)")
         }
     }
 
