@@ -87,13 +87,14 @@ final class CreationViewModel: ComicGenerationFlow {
         }
     }
 
-    func startGeneration(context: ModelContext) async {
+    func startGeneration(context: ModelContext, onSuccess: () -> Void = {}) async {
         await startGeneration()
         guard errorMessage == nil,
               generatedPortraitData != nil,
               generatedCutoutData != nil else { return }
         do {
             try saveCompanion(context: context)
+            onSuccess()
         } catch {
             errorMessage = error.localizedDescription
             step = .pickDog

@@ -2,8 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
-    @Environment(\.modelContext) private var modelContext
     @Bindable var companion: Companion
+    var onBackToDogPicker: () -> Void
     @State private var viewModel = HomeViewModel()
     @State private var showRegeneration = false
     @State private var showScenePicker = false
@@ -86,6 +86,9 @@ struct HomeView: View {
         .onChange(of: companion.cutoutRunBData) { _, _ in
             refreshCompanionImages(for: companion)
         }
+        .navigationTitle("专注")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
     }
 
     private func refreshCompanionImages(for companion: Companion) {
@@ -114,8 +117,7 @@ struct HomeView: View {
         if viewModel.isFocusActive {
             viewModel.cancelFocus()
         }
-        modelContext.delete(companion)
-        try? modelContext.save()
+        onBackToDogPicker()
     }
 
     private func handleTab(_ tab: HomeTab) {
@@ -239,6 +241,8 @@ private struct TimelinePlaceholderSheet: View {
         cutoutData: nil,
         styleTemplate: .default
     )
-    return HomeView(companion: companion)
-        .modelContainer(for: Companion.self, inMemory: true)
+    return NavigationStack {
+        HomeView(companion: companion, onBackToDogPicker: {})
+    }
+    .modelContainer(for: Companion.self, inMemory: true)
 }

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ResourceDogPickerView: View {
     @Bindable var viewModel: CreationViewModel
+    var existingCompanionName: String? = nil
+    var onConfirm: (String) -> Void
     @State private var focusedDog: String?
 
     var body: some View {
@@ -19,12 +21,15 @@ struct ResourceDogPickerView: View {
                     dogs: viewModel.availableDogs,
                     focusedDog: $focusedDog,
                     loadPreview: viewModel.previewImage(for:),
-                    onConfirm: viewModel.selectDog
+                    onConfirm: onConfirm
                 )
             }
         }
         .onAppear {
             viewModel.refreshAvailableDogs()
+            if focusedDog == nil, let existingCompanionName {
+                focusedDog = existingCompanionName
+            }
         }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {

@@ -5,40 +5,54 @@ struct CreationFlowView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel = CreationViewModel()
 
+    var existingCompanionName: String? = nil
+    var onEnterFocusSession: () -> Void
+
     var body: some View {
-        NavigationStack {
-            Group {
-                switch viewModel.step {
-                case .pickDog:
-                    pickerView
-                case .generating:
-                    GeneratingView(
-                        viewModel: viewModel,
-                        title: viewModel.generatingTitle,
-                        statusMessages: viewModel.generatingStatusMessages,
-                        performGeneration: {
-                            await viewModel.startGeneration(context: modelContext)
+        Group {
+            switch viewModel.step {
+            case .pickDog:
+                pickerView
+            case .generating:
+                GeneratingView(
+                    viewModel: viewModel,
+                    title: viewModel.generatingTitle,
+                    statusMessages: viewModel.generatingStatusMessages,
+                    performGeneration: {
+                        await viewModel.startGeneration(context: modelContext) {
+                            onEnterFocusSession()
                         }
-                    )
-                }
+                    }
+                )
             }
-            .navigationTitle("狗狗伙伴")
-            .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationTitle("选狗狗")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     @ViewBuilder
     private var pickerView: some View {
         switch viewModel.mode {
         case .resourceCatalog:
-            ResourceDogPickerView(viewModel: viewModel)
+            ResourceDogPickerView(
+                viewModel: viewModel,
+                existingCompanionName: existingCompanionName,
+                onConfirm: confirmDog
+            )
         case .photo:
             PhotoPickerView(viewModel: viewModel)
         }
     }
+
+    private func confirmDog(_ name: String) {
+        // Always reload via bundle → ResourceDogAssetCache → API; never skip using SwiftData.
+        viewModel.selectDog(name)
+    }
 }
 
 #Preview {
-    CreationFlowView()
-        .modelContainer(for: Companion.self, inMemory: true)
+    NavigationStack {
+        CreationFlowView(onEnterFocusSession: {})
+    }
+    .modelContainer(for: Companion.self, inMemory: true)
 }
