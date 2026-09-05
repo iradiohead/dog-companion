@@ -161,6 +161,9 @@ final class CreationViewModel: ComicGenerationFlow {
             throw CreationError.missingAssets
         }
 
+        let existing = try context.fetch(FetchDescriptor<Companion>())
+        existing.forEach { context.delete($0) }
+
         let companion = Companion(
             name: trimmed,
             comicPortraitData: portraitData,

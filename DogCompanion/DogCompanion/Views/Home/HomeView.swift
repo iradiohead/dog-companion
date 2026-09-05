@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
+    @Environment(\.modelContext) private var modelContext
     @Bindable var companion: Companion
     @State private var viewModel = HomeViewModel()
     @State private var showRegeneration = false
@@ -94,14 +95,22 @@ struct HomeView: View {
 
     private var topBar: some View {
         HStack {
-            HandDrawnTextButton(title: "收藏", dotColor: .green) {
-                showStats = true
+            HandDrawnTextButton(title: "选狗狗", dotColor: .green) {
+                reselectCompanion()
             }
             Spacer()
             HandDrawnTextButton(title: "设置", trailingIcon: "dog.fill") {
                 showSettings = true
             }
         }
+    }
+
+    private func reselectCompanion() {
+        if viewModel.isFocusActive {
+            viewModel.cancelFocus()
+        }
+        modelContext.delete(companion)
+        try? modelContext.save()
     }
 
     private func handleTab(_ tab: HomeTab) {
