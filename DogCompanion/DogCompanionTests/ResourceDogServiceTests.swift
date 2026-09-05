@@ -44,7 +44,54 @@ final class ResourceDogServiceTests: XCTestCase {
         let assets = try await service.loadAssets(for: "金毛")
 
         XCTAssertEqual(assets.portraitData, cachedPortrait)
-        XCTAssertEqual(assets.cutoutData, cachedCutout)
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(assets.cutoutData))
+        XCTAssertEqual(portraitSpy.callCount, 0)
+        XCTAssertEqual(cutoutSpy.callCount, 0)
+    }
+
+    func testLoadAssetsOpaqueifiesSoftCachedCutout() async throws {
+        let softCutout = try makeSoftCutoutPNG()
+        try ResourceDogAssetCache.savePortrait(makeTinyPNG(), for: "金毛")
+        try ResourceDogAssetCache.saveCutout(softCutout, for: "金毛")
+
+        var service = ResourceDogService()
+        service.catalog = catalog
+        service.portraitGenerator = portraitSpy
+        service.cutoutExtractor = cutoutSpy
+
+        let assets = try await service.loadAssets(for: "金毛")
+
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(assets.cutoutData))
+        XCTAssertNotEqual(assets.cutoutData, softCutout)
+        XCTAssertEqual(cutoutSpy.callCount, 0)
+    }
+
+    func testLoadAssetsCachesOpaqueCutoutAfterFirstGeneration() async throws {
+        let generatedPortrait = makeTinyPNG()
+        let softCutout = try makeSoftCutoutPNG()
+        portraitSpy.result = generatedPortrait
+        cutoutSpy.result = softCutout
+
+        var service = ResourceDogService()
+        service.catalog = catalog
+        service.portraitGenerator = portraitSpy
+        service.cutoutExtractor = cutoutSpy
+
+        let firstLoad = try await service.loadAssets(for: "金毛")
+
+        XCTAssertEqual(portraitSpy.callCount, 1)
+        XCTAssertEqual(cutoutSpy.callCount, 1)
+        XCTAssertEqual(ResourceDogAssetCache.portraitData(for: "金毛"), generatedPortrait)
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(ResourceDogAssetCache.cutoutData(for: "金毛")))
+        XCTAssertEqual(ResourceDogAssetCache.cutoutData(for: "金毛"), firstLoad.cutoutData)
+
+        portraitSpy.callCount = 0
+        cutoutSpy.callCount = 0
+
+        let secondLoad = try await service.loadAssets(for: "金毛")
+
+        XCTAssertEqual(secondLoad.portraitData, generatedPortrait)
+        XCTAssertEqual(secondLoad.cutoutData, firstLoad.cutoutData)
         XCTAssertEqual(portraitSpy.callCount, 0)
         XCTAssertEqual(cutoutSpy.callCount, 0)
     }
@@ -65,7 +112,6 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertEqual(portraitSpy.callCount, 1)
         XCTAssertEqual(cutoutSpy.callCount, 1)
         XCTAssertEqual(ResourceDogAssetCache.portraitData(for: "金毛"), generatedPortrait)
-        XCTAssertEqual(ResourceDogAssetCache.cutoutData(for: "金毛"), generatedCutout)
 
         portraitSpy.callCount = 0
         cutoutSpy.callCount = 0
@@ -73,9 +119,19 @@ final class ResourceDogServiceTests: XCTestCase {
         let assets = try await service.loadAssets(for: "金毛")
 
         XCTAssertEqual(assets.portraitData, generatedPortrait)
-        XCTAssertEqual(assets.cutoutData, generatedCutout)
         XCTAssertEqual(portraitSpy.callCount, 0)
         XCTAssertEqual(cutoutSpy.callCount, 0)
+    }
+
+    private func makeSoftCutoutPNG() throws -> Data {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor.brown.setFill()
+            context.fill(CGRect(x: 10, y: 10, width: 12, height: 12))
+        }
+        return try CutoutImageProcessor.chromaKeyCutout(from: image)
     }
 
     private func makeTinyPNG() -> Data {

@@ -203,7 +203,7 @@ enum CutoutImageProcessor {
     }
 
     /// Pixels that are visibly part of the dog become fully opaque so furniture does not show through.
-    static func solidifyForeground(in pixels: inout [RGBA], minimumVisible: UInt8 = 40) {
+    static func solidifyForeground(in pixels: inout [RGBA], minimumVisible: UInt8 = 16) {
         for index in pixels.indices {
             var pixel = pixels[index]
             guard pixel.a > minimumVisible else { continue }
@@ -473,7 +473,9 @@ struct MattingService {
     private static func performCutout(on image: UIImage) throws -> Data {
         if let visionData = try? visionCutout(from: image),
            CutoutImageProcessor.hasMeaningfulTransparency(in: visionData) {
-            return try CutoutImageProcessor.refineCutout(from: UIImage(data: visionData) ?? image)
+            // Vision already produced a mask; refineCutout's white-background pass eats light fur
+            // (e.g. golden retriever) and leaves semi-transparent body holes on first generation.
+            return try CutoutImageProcessor.opaqueCutout(from: visionData)
         }
         return try CutoutImageProcessor.chromaKeyCutout(from: image)
     }

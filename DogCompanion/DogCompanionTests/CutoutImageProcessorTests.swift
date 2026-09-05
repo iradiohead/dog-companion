@@ -51,6 +51,74 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertTrue(CutoutImageProcessor.needsCutoutRefresh(data))
     }
 
+    func testRefineCutoutCanPunchHolesInLightFur() throws {
+        let visionLike = try makeVisionLikeLightDogCutout()
+        let refined = try CutoutImageProcessor.refineCutout(from: UIImage(data: visionLike)!)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: visionLike)
+
+        XCTAssertGreaterThan(countOpaquePixels(in: opaque), countOpaquePixels(in: refined))
+    }
+
+    private func makeVisionLikeLightDogCutout() throws -> Data {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor(red: 0.95, green: 0.88, blue: 0.72, alpha: 1).setFill()
+            context.fill(CGRect(x: 8, y: 8, width: 16, height: 16))
+        }
+        guard var cgImage = image.cgImage else {
+            throw XCTSkip("Failed to build test image")
+        }
+        let width = cgImage.width
+        let height = cgImage.height
+        let bytesPerRow = 4 * width
+        var pixelData = [UInt8](repeating: 0, count: height * bytesPerRow)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        guard let ctx = CGContext(
+            data: &pixelData,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo
+        ) else {
+            throw XCTSkip("Failed to create bitmap context")
+        }
+        ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * 4
+                let insideDog = x >= 8 && x < 24 && y >= 8 && y < 24
+                pixelData[offset + 3] = insideDog ? 220 : 0
+            }
+        }
+        guard let masked = ctx.makeImage(), let data = UIImage(cgImage: masked).pngData() else {
+            throw XCTSkip("Failed to encode masked image")
+        }
+        return data
+    }
+
+    private func countOpaquePixels(in data: Data) -> Int {
+        guard let image = UIImage(data: data),
+              let cgImage = image.cgImage,
+              let provider = cgImage.dataProvider,
+              let raw = provider.data,
+              let bytes = CFDataGetBytePtr(raw) else {
+            return 0
+        }
+        let bytesPerPixel = cgImage.bitsPerPixel / 8
+        guard bytesPerPixel == 4 else { return 0 }
+        var count = 0
+        let length = CFDataGetLength(raw)
+        for offset in stride(from: 3, to: length, by: 4) {
+            if bytes[offset] > 200 { count += 1 }
+        }
+        return count
+    }
+
     private func makeDogOnWhiteBackground() -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
         return renderer.image { context in
