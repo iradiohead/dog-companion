@@ -8,11 +8,22 @@ struct CompanionAssets {
     let coatPalette: CoatPalette
 }
 
+protocol ResourceDogPortraitGenerating {
+    func generateComicPortrait(from image: UIImage, style: StyleTemplate, pose: CompanionPose) async throws -> Data
+}
+
+protocol ResourceDogCutoutExtracting {
+    func extractCutout(from image: UIImage, pose: CompanionPose) async throws -> Data
+}
+
+extension GenerationService: ResourceDogPortraitGenerating {}
+extension MattingService: ResourceDogCutoutExtracting {}
+
 /// Single entry point for bundled `resource/` dogs: list, preview, and full asset loading.
 struct ResourceDogService {
     var catalog = ResourceDogCatalog()
-    var generationService = GenerationService()
-    var mattingService = MattingService()
+    var portraitGenerator: any ResourceDogPortraitGenerating = GenerationService()
+    var cutoutExtractor: any ResourceDogCutoutExtracting = MattingService()
 
     private static let previewCache = NSCache<NSString, UIImage>()
     private static let maxPreviewDimension: CGFloat = 480
@@ -37,8 +48,7 @@ struct ResourceDogService {
         }
 
         return await Task.detached(priority: .userInitiated) {
-            guard let url = catalog.previewImageURL(for: dogName),
-                  let data = try? Data(contentsOf: url),
+            guard let data = previewSourceData(for: dogName),
                   let image = Self.downsample(data: data) else {
                 return nil
             }
@@ -53,6 +63,8 @@ struct ResourceDogService {
         let portraitData: Data
         if let handDrawnURL = contents.handDrawnURL {
             portraitData = try Data(contentsOf: handDrawnURL)
+        } else if let cached = ResourceDogAssetCache.portraitData(for: dogName) {
+            portraitData = cached
         } else {
             guard let originalURL = contents.originalURL else {
                 throw ResourceDogError.missingOriginal(dogName)
@@ -60,11 +72,13 @@ struct ResourceDogService {
             guard let originalImage = UIImage(contentsOfFile: originalURL.path) else {
                 throw ResourceDogError.invalidImage(dogName)
             }
-            portraitData = try await generationService.generateComicPortrait(
+            let generated = try await portraitGenerator.generateComicPortrait(
                 from: originalImage,
                 style: .default,
                 pose: .sit
             )
+            try ResourceDogAssetCache.savePortrait(generated, for: dogName)
+            portraitData = generated
         }
 
         guard let portraitImage = UIImage(data: portraitData) else {
@@ -75,8 +89,12 @@ struct ResourceDogService {
         if let foregroundURL = contents.foregroundURL {
             let raw = try Data(contentsOf: foregroundURL)
             cutoutData = try CutoutImageProcessor.opaqueCutout(from: raw)
+        } else if let cached = ResourceDogAssetCache.cutoutData(for: dogName) {
+            cutoutData = cached
         } else {
-            cutoutData = try await mattingService.extractCutout(from: portraitImage, pose: .sit)
+            let extracted = try await cutoutExtractor.extractCutout(from: portraitImage, pose: .sit)
+            try ResourceDogAssetCache.saveCutout(extracted, for: dogName)
+            cutoutData = extracted
         }
 
         return CompanionAssets(
@@ -84,6 +102,26 @@ struct ResourceDogService {
             cutoutData: cutoutData,
             coatPalette: CoatSampler.snap(from: portraitImage)
         )
+    }
+
+    private func previewSourceData(for dogName: String) -> Data? {
+        if let contents = try? catalog.folderContents(for: dogName) {
+            if let handDrawnURL = contents.handDrawnURL,
+               let data = try? Data(contentsOf: handDrawnURL) {
+                return data
+            }
+            if let cached = ResourceDogAssetCache.portraitData(for: dogName) {
+                return cached
+            }
+            if let previewURL = contents.previewURL,
+               let data = try? Data(contentsOf: previewURL) {
+                return data
+            }
+        }
+        if let cachedURL = ResourceDogAssetCache.portraitURL(for: dogName) {
+            return try? Data(contentsOf: cachedURL)
+        }
+        return nil
     }
 
     private static func downsample(data: Data) -> UIImage? {

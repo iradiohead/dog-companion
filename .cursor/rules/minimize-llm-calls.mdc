@@ -1,0 +1,53 @@
+---
+description: Minimize DashScope / Wanxiang API calls — prefer bundle files and local cache
+alwaysApply: true
+---
+
+# Minimize LLM (大模型) Calls
+
+Dog Companion uses **阿里云百炼 / 万相** (`GenerationService.generateComicPortrait`) for hand-drawn portraits. API calls are **slow, costly, and rate-limited**. Treat them as a last resort.
+
+## Asset resolution order (never skip levels)
+
+For bundled dogs (`resource/<狗名>/`), `ResourceDogService.loadAssets` must resolve assets in this order:
+
+| Asset | 1 (best) | 2 | 3 (last resort) |
+|-------|----------|---|-------------------|
+| Portrait | bundle `hand-drawn*` | `ResourceDogAssetCache` | DashScope API from original |
+| Cutout | bundle `foreground-dog*` | `ResourceDogAssetCache` | local Vision matting |
+
+**Re-selecting a dog** (`选狗狗`) must **not** call the API if cache or bundle assets exist.
+
+## Do
+
+- Ship `hand-drawn*` + `foreground-dog*` in `resource/` for dogs that ship with the app (e.g. 雪纳瑞).
+- Persist first-time API results via `ResourceDogAssetCache` (`Application Support/DogCompanion/resource-cache/<狗名>/`).
+- Use `ResourceDogPortraitGenerating` / `ResourceDogCutoutExtracting` spies in tests — **never** hit the network in unit tests.
+- Read previews from bundle or cache (`previewSourceData`); do not generate thumbnails via API.
+- Prefer local processing (`MattingService`, `CutoutImageProcessor`) over API when only cutout is missing.
+
+## Do not
+
+- Call `generateComicPortrait` on every app launch, tab switch, or re-select.
+- Add features that re-generate portraits for idle animation, style tweaks, or UI refresh without explicit user opt-in.
+- Bypass `ResourceDogService` with direct `GenerationService` calls for catalog dogs.
+- Remove or weaken `ResourceDogAssetCache` without replacing it with equivalent persistence.
+
+## When API is acceptable
+
+- First time a bundle dog has **only an original photo** and no cached portrait.
+- User-initiated **photo creation** flow (`CreationMode.photo`) or explicit **regeneration** (`RegenerationFlowView`).
+- User explicitly taps a control labeled as re-generate / 重新生成.
+
+## Key files
+
+- `Services/ResourceDogService.swift` — single entry for catalog load + preview
+- `Services/ResourceDogAssetCache.swift` — per-dog persistent cache
+- `Services/ResourceDogCatalog.swift` — bundle folder rules (`hand-drawn`, `foreground-dog`, original)
+- `Services/GenerationService.swift` — API only; no callers should skip cache checks for catalog dogs
+
+## Before merging changes that touch generation
+
+1. Trace every new code path: does it call `generateComicPortrait`? Is that necessary?
+2. Add or extend tests proving re-select / reload uses cache (see `ResourceDogServiceTests`).
+3. Document any new cache invalidation rule if bundle originals can change.

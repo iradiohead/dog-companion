@@ -55,6 +55,7 @@
 		A10000000000000000000033 /* resource in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* resource */; };
 		A10000000000000000000034 /* DogCoverFlowPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* DogCoverFlowPicker.swift */; };
 		A10000000000000000000036 /* ResourceDogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* ResourceDogService.swift */; };
+		A10000000000000000000037 /* ResourceDogAssetCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* ResourceDogAssetCache.swift */; };
 		B10000000000000000000002 /* GiftUnlockPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* GiftUnlockPolicyTests.swift */; };
 		B10000000000000000000003 /* HandDrawnPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* HandDrawnPaletteTests.swift */; };
 		B10000000000000000000004 /* CutoutImageProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* CutoutImageProcessorTests.swift */; };
@@ -65,6 +66,8 @@
 		B10000000000000000000009 /* ResourceDogCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000009 /* ResourceDogCatalogTests.swift */; };
 		B1000000000000000000000A /* RunInEntranceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000A /* RunInEntranceTests.swift */; };
 		B1000000000000000000000B /* HomeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000B /* HomeViewModelTests.swift */; };
+		B1000000000000000000000C /* ResourceDogAssetCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000C /* ResourceDogAssetCacheTests.swift */; };
+		B1000000000000000000000D /* ResourceDogServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000D /* ResourceDogServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -127,6 +130,7 @@
 		A20000000000000000000033 /* resource */ = {isa = PBXFileReference; lastKnownFileType = folder; name = resource; path = ../resource; sourceTree = SOURCE_ROOT; };
 		A20000000000000000000034 /* DogCoverFlowPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogCoverFlowPicker.swift; sourceTree = "<group>"; };
 		A20000000000000000000036 /* ResourceDogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogService.swift; sourceTree = "<group>"; };
+		A20000000000000000000037 /* ResourceDogAssetCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogAssetCache.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* DogCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DogCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B20000000000000000000002 /* GiftUnlockPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftUnlockPolicyTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000003 /* HandDrawnPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandDrawnPaletteTests.swift; sourceTree = "<group>"; };
@@ -138,6 +142,8 @@
 		B20000000000000000000009 /* ResourceDogCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogCatalogTests.swift; sourceTree = "<group>"; };
 		B2000000000000000000000A /* RunInEntranceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunInEntranceTests.swift; sourceTree = "<group>"; };
 		B2000000000000000000000B /* HomeViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModelTests.swift; sourceTree = "<group>"; };
+		B2000000000000000000000C /* ResourceDogAssetCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogAssetCacheTests.swift; sourceTree = "<group>"; };
+		B2000000000000000000000D /* ResourceDogServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogServiceTests.swift; sourceTree = "<group>"; };
 		B30000000000000000000001 /* DogCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DogCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -218,6 +224,7 @@
 				A2000000000000000000002E /* GeneratedImageArchive.swift */,
 				A20000000000000000000030 /* ResourceDogCatalog.swift */,
 				A20000000000000000000036 /* ResourceDogService.swift */,
+				A20000000000000000000037 /* ResourceDogAssetCache.swift */,
 				A20000000000000000000006 /* SecretsProvider.swift */,
 				A20000000000000000000018 /* MattingService.swift */,
 			);
@@ -335,6 +342,8 @@
 				B20000000000000000000009 /* ResourceDogCatalogTests.swift */,
 				B2000000000000000000000A /* RunInEntranceTests.swift */,
 				B2000000000000000000000B /* HomeViewModelTests.swift */,
+				B2000000000000000000000C /* ResourceDogAssetCacheTests.swift */,
+				B2000000000000000000000D /* ResourceDogServiceTests.swift */,
 			);
 			path = DogCompanionTests;
 			sourceTree = "<group>";
@@ -462,6 +471,7 @@
 				A1000000000000000000002F /* CompanionCreationConfig.swift in Sources */,
 				A10000000000000000000030 /* ResourceDogCatalog.swift in Sources */,
 				A10000000000000000000036 /* ResourceDogService.swift in Sources */,
+				A10000000000000000000037 /* ResourceDogAssetCache.swift in Sources */,
 				A10000000000000000000006 /* SecretsProvider.swift in Sources */,
 				A10000000000000000000017 /* MattingService.swift in Sources */,
 				A10000000000000000000018 /* SceneCatalog.swift in Sources */,
@@ -514,6 +524,8 @@
 				B10000000000000000000009 /* ResourceDogCatalogTests.swift in Sources */,
 				B1000000000000000000000A /* RunInEntranceTests.swift in Sources */,
 				B1000000000000000000000B /* HomeViewModelTests.swift in Sources */,
+				B1000000000000000000000C /* ResourceDogAssetCacheTests.swift in Sources */,
+				B1000000000000000000000D /* ResourceDogServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
