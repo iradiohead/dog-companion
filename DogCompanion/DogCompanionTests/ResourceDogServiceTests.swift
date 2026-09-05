@@ -147,6 +147,16 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(data))
     }
 
+    func testChromaKeyExtractorUsesOriginalPNGBytes() async throws {
+        let image = makeDogOnWhiteBackground()
+        guard let png = image.pngData() else {
+            return XCTFail("Failed to encode source PNG")
+        }
+        let data = try await ChromaKeyCutoutExtractor().extractCutout(fromPNG: png, pose: .sit)
+        XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: data))
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(data))
+    }
+
     func testLoadPlanDoesNotClaimPortraitGenerationWhenBundleHasHandDrawn() throws {
         let dogFolder = tempRoot
             .appendingPathComponent("resource", isDirectory: true)

@@ -59,19 +59,23 @@ def current_is_paper(p, minimum_luma: float) -> bool:
     return luma(p[0], p[1], p[2]) >= minimum_luma
 
 
-def relative_is_paper(p, bg, max_dist: float = 30) -> bool:
+def relative_is_paper(p, bg, max_dist: float = 20) -> bool:
     r, g, b, _ = p
     dr, dg, db = r - bg[0], g - bg[1], b - bg[2]
     if dr * dr + dg * dg + db * db > max_dist * max_dist:
         return False
-    bg_chroma = chroma(*bg)
-    if chroma(r, g, b) > bg_chroma + 14:
+    if luma(r, g, b) < luma(*bg) - 12:
+        return False
+    if chroma(r, g, b) > chroma(*bg) + 14:
         return False
     return True
 
 
 def relative_is_subject(p, bg) -> bool:
-    return not relative_is_paper(p, bg, max_dist=36)
+    r, g, b, _ = p
+    if luma(r, g, b) < luma(*bg) - 8:
+        return True
+    return chroma(r, g, b) > chroma(*bg) + 12
 
 
 def flood(px, w, h, predicate):
@@ -218,9 +222,14 @@ def run_current(px, w, h):
 def run_relative(px, w, h):
     original = [tuple(p) for p in px]
     bg = estimate_background(original, w, h)
-    pixels = flood(original, w, h, lambda p: relative_is_paper(p, bg))
-    restore(original, pixels, lambda p: relative_is_subject(p, bg))
-    cleared = sum(1 for p in pixels if p[3] <= 12) / (w * h)
+    pixels = None
+    cleared = 0.0
+    for distance in (20, 32, 44):
+        pixels = flood(original, w, h, lambda p, d=distance: relative_is_paper(p, bg, d))
+        restore(original, pixels, lambda p: relative_is_subject(p, bg))
+        cleared = sum(1 for p in pixels if p[3] <= 12) / (w * h)
+        if cleared >= 0.08:
+            break
     peel(pixels, w, h, lambda p: relative_is_subject(p, bg))
     drop_islands(pixels, w, h)
     trimmed = trim(pixels, w, h)

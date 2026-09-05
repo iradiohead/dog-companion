@@ -96,6 +96,49 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertLessThan(countOpaquePixels(in: opaque), 220)
     }
 
+    func testChromaKeyKeepsGoldenFurOnWarmDevicePaper() throws {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let image = renderer.image { context in
+            UIColor(red: 0.995, green: 0.972, blue: 0.916, alpha: 1).setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor(red: 244.0 / 255.0, green: 222.0 / 255.0, blue: 198.0 / 255.0, alpha: 1).setFill()
+            context.fill(CGRect(x: 10, y: 10, width: 12, height: 12))
+        }
+        let cutout = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: cutout)
+
+        XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: opaque))
+        XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: opaque))
+        XCTAssertGreaterThan(countOpaquePixels(in: opaque), 80)
+        XCTAssertLessThan(countOpaquePixels(in: opaque), 220)
+    }
+
+    func testChromaKeyFromPNGDataClearsBackground() throws {
+        let image = makeDogOnWhiteBackground()
+        guard let png = image.pngData() else {
+            return XCTFail("Failed to encode source PNG")
+        }
+        let cutout = try CutoutImageProcessor.chromaKeyCutout(fromPNG: png)
+
+        XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: cutout))
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(cutout))
+        guard let cgImage = UIImage(data: cutout)?.cgImage else {
+            return XCTFail("Cutout PNG could not be decoded")
+        }
+        XCTAssertNotEqual(cgImage.alphaInfo, .none)
+        XCTAssertNotEqual(cgImage.alphaInfo, .noneSkipLast)
+        XCTAssertNotEqual(cgImage.alphaInfo, .noneSkipFirst)
+    }
+
+    func testChromaKeyThrowsWhenCanvasIsOnlyPaper() {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+        }
+        XCTAssertThrowsError(try CutoutImageProcessor.chromaKeyCutout(from: image))
+    }
+
     func testOpaqueCutoutExportsPNG() throws {
         let image = makeDogOnWhiteBackground()
         let soft = try CutoutImageProcessor.chromaKeyCutout(from: image)

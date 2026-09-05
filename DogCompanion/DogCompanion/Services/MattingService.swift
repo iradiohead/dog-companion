@@ -2,6 +2,7 @@ import UIKit
 import Vision
 import CoreImage
 import CoreML
+import ImageIO
 
 enum MattingError: LocalizedError {
     case invalidImage
@@ -21,7 +22,7 @@ enum MattingError: LocalizedError {
 }
 
 enum CutoutImageProcessor {
-    struct RGBA {
+    struct RGBA: Sendable {
         var r: UInt8
         var g: UInt8
         var b: UInt8
@@ -246,36 +247,61 @@ enum CutoutImageProcessor {
     }
 
     static func chromaKeyCutout(from image: UIImage) throws -> Data {
-        guard var pixels = rgbaPixels(from: image),
+        guard let pixels = rgbaPixels(from: image),
               let cgImage = image.cgImage,
               !pixels.isEmpty else {
             throw MattingError.invalidImage
         }
+        return try chromaKeyCutout(
+            pixels: pixels,
+            width: cgImage.width,
+            height: cgImage.height
+        )
+    }
 
-        let width = cgImage.width
-        let height = cgImage.height
-        guard pixels.count == width * height else {
+    /// Decode the original PNG/JPEG bytes with ImageIO so device `UIImage.pngData()`
+    /// cannot flatten alpha or wash cream fur toward paper white.
+    static func chromaKeyCutout(fromPNG data: Data) throws -> Data {
+        let options = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, options),
+              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, options),
+              let pixels = rgbaPixels(fromNormalized: cgImage),
+              !pixels.isEmpty else {
             throw MattingError.invalidImage
         }
-        let original = pixels
-        let background = estimateBackgroundColor(pixels: original, width: width, height: height)
-        applyPaperFlood(
-            original: original,
-            into: &pixels,
-            width: width,
-            height: height,
-            background: background,
-            maxDistance: 30
+        return try chromaKeyCutout(
+            pixels: pixels,
+            width: cgImage.width,
+            height: cgImage.height
         )
-        if clearedPaperRatio(pixels) < 0.05 {
+    }
+
+    private static func chromaKeyCutout(
+        pixels original: [RGBA],
+        width: Int,
+        height: Int
+    ) throws -> Data {
+        guard width > 0, height > 0, original.count == width * height else {
+            throw MattingError.invalidImage
+        }
+
+        var pixels = original
+        let background = estimateBackgroundColor(pixels: original, width: width, height: height)
+        let sourceCount = width * height
+
+        let distances: [Double] = [20, 32, 44]
+        for (index, distance) in distances.enumerated() {
             applyPaperFlood(
                 original: original,
                 into: &pixels,
                 width: width,
                 height: height,
                 background: background,
-                maxDistance: 42
+                maxDistance: distance
             )
+            if clearedPaperRatio(pixels) >= 0.08 || index == distances.count - 1 {
+                break
+            }
         }
 
         peelBackgroundFringe(
@@ -292,6 +318,21 @@ enum CutoutImageProcessor {
             height: height
         )
 
+        let cleared = clearedPaperRatio(pixels)
+        let opaqueCount = pixels.reduce(0) { $0 + ($1.a > 12 ? 1 : 0) }
+        print(
+            "DogCompanion [抠图] bg=(\(Int(background.r.rounded())),\(Int(background.g.rounded())),\(Int(background.b.rounded()))) cleared=\(String(format: "%.3f", cleared)) opaque=\(opaqueCount)/\(sourceCount)"
+        )
+
+        guard cleared >= 0.08 else {
+            print("DogCompanion [抠图] 失败: 纸没被清掉，结果会是整张白底")
+            throw MattingError.exportFailed
+        }
+        guard opaqueCount >= max(64, sourceCount / 50) else {
+            print("DogCompanion [抠图] 失败: 主体几乎被抠空")
+            throw MattingError.exportFailed
+        }
+
         guard let trimmed = trimTransparentBounds(
             pixels: pixels,
             width: width,
@@ -304,11 +345,17 @@ enum CutoutImageProcessor {
         var output = trimmed.pixels
         solidifyForeground(in: &output)
 
-        return try pngData(
+        let png = try pngData(
             pixels: output,
             width: trimmed.width,
             height: trimmed.height
         )
+        guard hasMeaningfulTransparency(in: png) else {
+            print("DogCompanion [抠图] 失败: 导出 PNG 没有透明通道")
+            throw MattingError.exportFailed
+        }
+        print("DogCompanion [抠图] 输出 \(trimmed.width)x\(trimmed.height)")
+        return png
     }
 
     /// Bundled or cached cutouts may keep feathered alpha; make the subject fully opaque.
@@ -334,9 +381,19 @@ enum CutoutImageProcessor {
     }
 
     static func opaqueUIImage(from image: UIImage) -> UIImage? {
-        guard let data = image.pngData() else { return nil }
-        let opaque = forceOpaqueCutout(from: data)
-        return UIImage(data: opaque)
+        guard let cgImage = image.cgImage,
+              var pixels = rgbaPixels(fromNormalized: cgImage) else {
+            return nil
+        }
+        solidifyForeground(in: &pixels)
+        guard let output = makeCGImage(
+            pixels: pixels,
+            width: cgImage.width,
+            height: cgImage.height
+        ) else {
+            return nil
+        }
+        return UIImage(cgImage: output)
     }
 
     /// Pixels that are visibly part of the dog become fully opaque so furniture does not show through.
@@ -462,8 +519,17 @@ enum CutoutImageProcessor {
         }
     }
 
-    /// Paper is whatever the corners look like. Absolute warmth fails on device because
-    /// color-managed whites go yellow and get classified as fur, so nothing is cleared.
+    private static func luma(_ r: Double, _ g: Double, _ b: Double) -> Double {
+        0.299 * r + 0.587 * g + 0.114 * b
+    }
+
+    private static func chroma(_ r: Double, _ g: Double, _ b: Double) -> Double {
+        max(r, g, b) - min(r, g, b)
+    }
+
+    /// Paper is close to the corner color, not much darker, and not more colorful.
+    /// Absolute warmth fails on device (warm whites look like fur). Matching only
+    /// distance+chroma eats cream fur after color management washes it toward paper.
     private static func isPaperPixel(
         _ pixel: RGBA,
         background: (r: Double, g: Double, b: Double),
@@ -478,17 +544,23 @@ enum CutoutImageProcessor {
         if (dr * dr + dg * dg + db * db) > (maxDistance * maxDistance) {
             return false
         }
-        let pixelChroma = max(r, g, b) - min(r, g, b)
-        let backgroundChroma = max(background.r, background.g, background.b)
-            - min(background.r, background.g, background.b)
-        return pixelChroma <= backgroundChroma + 14
+        if luma(r, g, b) < luma(background.r, background.g, background.b) - 12 {
+            return false
+        }
+        return chroma(r, g, b) <= chroma(background.r, background.g, background.b) + 14
     }
 
     private static func isSubjectPixel(
         _ pixel: RGBA,
         background: (r: Double, g: Double, b: Double)
     ) -> Bool {
-        !isPaperPixel(pixel, background: background, maxDistance: 36)
+        let r = Double(pixel.r)
+        let g = Double(pixel.g)
+        let b = Double(pixel.b)
+        if luma(r, g, b) < luma(background.r, background.g, background.b) - 8 {
+            return true
+        }
+        return chroma(r, g, b) > chroma(background.r, background.g, background.b) + 12
     }
 
     private static func clearedPaperRatio(_ pixels: [RGBA]) -> Double {
@@ -582,7 +654,9 @@ enum CutoutImageProcessor {
             toClear.reserveCapacity(width + height)
             for index in pixels.indices {
                 if pixels[index].a <= 12 { continue }
-                guard !isSubjectPixel(pixels[index], background: background) else { continue }
+                guard isPaperPixel(pixels[index], background: background, maxDistance: 28) else {
+                    continue
+                }
 
                 let x = index % width
                 let y = index / width
@@ -740,7 +814,7 @@ enum CutoutImageProcessor {
         let bytesPerPixel = 4
         let bytesPerRow = bytesPerPixel * width
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
 
         var pixelData = [UInt8](repeating: 0, count: height * bytesPerRow)
         let drew = pixelData.withUnsafeMutableBytes { buffer -> Bool in
@@ -764,14 +838,17 @@ enum CutoutImageProcessor {
         var pixels: [RGBA] = []
         pixels.reserveCapacity(width * height)
         for index in stride(from: 0, to: pixelData.count, by: 4) {
-            pixels.append(
-                RGBA(
-                    r: pixelData[index],
-                    g: pixelData[index + 1],
-                    b: pixelData[index + 2],
-                    a: pixelData[index + 3]
-                )
-            )
+            var r = pixelData[index]
+            var g = pixelData[index + 1]
+            var b = pixelData[index + 2]
+            let a = pixelData[index + 3]
+            if a > 0 && a < 255 {
+                let scale = 255.0 / Double(a)
+                r = UInt8(clamping: Int((Double(r) * scale).rounded()))
+                g = UInt8(clamping: Int((Double(g) * scale).rounded()))
+                b = UInt8(clamping: Int((Double(b) * scale).rounded()))
+            }
+            pixels.append(RGBA(r: r, g: g, b: b, a: a))
         }
         return pixels
     }
@@ -790,8 +867,29 @@ enum CutoutImageProcessor {
     }
 
     private static func pngData(pixels: [RGBA], width: Int, height: Int) throws -> Data {
-        guard width > 0, height > 0, pixels.count == width * height else {
+        guard let cgImage = makeCGImage(pixels: pixels, width: width, height: height) else {
             throw MattingError.exportFailed
+        }
+
+        let data = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            data,
+            "public.png" as CFString,
+            1,
+            nil
+        ) else {
+            throw MattingError.exportFailed
+        }
+        CGImageDestinationAddImage(destination, cgImage, nil)
+        guard CGImageDestinationFinalize(destination) else {
+            throw MattingError.exportFailed
+        }
+        return data as Data
+    }
+
+    private static func makeCGImage(pixels: [RGBA], width: Int, height: Int) -> CGImage? {
+        guard width > 0, height > 0, pixels.count == width * height else {
+            return nil
         }
 
         let bytesPerPixel = 4
@@ -809,9 +907,9 @@ enum CutoutImageProcessor {
             pixelData[offset + 3] = pixel.a
         }
 
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
-        let cgImage: CGImage? = pixelData.withUnsafeMutableBytes { buffer in
+        return pixelData.withUnsafeMutableBytes { buffer in
             guard let base = buffer.baseAddress else { return nil }
             guard let context = CGContext(
                 data: base,
@@ -826,11 +924,6 @@ enum CutoutImageProcessor {
             }
             return context.makeImage()
         }
-
-        guard let cgImage, let pngData = UIImage(cgImage: cgImage).pngData() else {
-            throw MattingError.exportFailed
-        }
-        return pngData
     }
 }
 

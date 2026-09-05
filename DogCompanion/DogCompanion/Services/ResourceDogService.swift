@@ -61,6 +61,16 @@ protocol ResourceDogPortraitGenerating {
 
 protocol ResourceDogCutoutExtracting {
     func extractCutout(from image: UIImage, pose: CompanionPose) async throws -> Data
+    func extractCutout(fromPNG data: Data, pose: CompanionPose) async throws -> Data
+}
+
+extension ResourceDogCutoutExtracting {
+    func extractCutout(fromPNG data: Data, pose: CompanionPose) async throws -> Data {
+        guard let image = UIImage(data: data) else {
+            throw MattingError.invalidImage
+        }
+        return try await extractCutout(from: image, pose: pose)
+    }
 }
 
 extension GenerationService: ResourceDogPortraitGenerating {}
@@ -68,16 +78,17 @@ extension MattingService: ResourceDogCutoutExtracting {}
 
 struct ChromaKeyCutoutExtractor: ResourceDogCutoutExtracting {
     func extractCutout(from image: UIImage, pose: CompanionPose) async throws -> Data {
-        _ = pose
         guard let png = image.pngData() else {
             throw MattingError.invalidImage
         }
+        return try await extractCutout(fromPNG: png, pose: pose)
+    }
+
+    func extractCutout(fromPNG data: Data, pose: CompanionPose) async throws -> Data {
+        _ = pose
         do {
             return try await Task.detached(priority: .userInitiated) {
-                guard let copy = UIImage(data: png) else {
-                    throw MattingError.invalidImage
-                }
-                let chroma = try CutoutImageProcessor.chromaKeyCutout(from: copy)
+                let chroma = try CutoutImageProcessor.chromaKeyCutout(fromPNG: data)
                 return CutoutImageProcessor.forceOpaqueCutout(from: chroma)
             }.value
         } catch {
@@ -185,7 +196,7 @@ struct ResourceDogService {
         } else {
             await report(.extractingCutout, onStatus)
             print("DogCompanion [ResourceDog] 开始抠图: \(dogName)")
-            let extracted = try await cutoutExtractor.extractCutout(from: portraitImage, pose: .sit)
+            let extracted = try await cutoutExtractor.extractCutout(fromPNG: portraitData, pose: .sit)
             let opaque = Self.finalizeCutout(extracted)
             let saved = try ResourceDogAssetCache.saveCutout(opaque, for: dogName)
             print("DogCompanion [ResourceDog] 已保存抠图: \(saved.path) bytes=\(opaque.count)")
