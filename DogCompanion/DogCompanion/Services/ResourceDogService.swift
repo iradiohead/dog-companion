@@ -69,10 +69,21 @@ extension MattingService: ResourceDogCutoutExtracting {}
 struct ChromaKeyCutoutExtractor: ResourceDogCutoutExtracting {
     func extractCutout(from image: UIImage, pose: CompanionPose) async throws -> Data {
         _ = pose
-        return try await Task.detached(priority: .userInitiated) {
-            let chroma = try CutoutImageProcessor.chromaKeyCutout(from: image)
-            return CutoutImageProcessor.forceOpaqueCutout(from: chroma)
-        }.value
+        guard let png = image.pngData() else {
+            throw MattingError.invalidImage
+        }
+        do {
+            return try await Task.detached(priority: .userInitiated) {
+                guard let copy = UIImage(data: png) else {
+                    throw MattingError.invalidImage
+                }
+                let chroma = try CutoutImageProcessor.chromaKeyCutout(from: copy)
+                return CutoutImageProcessor.forceOpaqueCutout(from: chroma)
+            }.value
+        } catch {
+            print("DogCompanion [抠图] 失败: \(error.localizedDescription)")
+            throw error
+        }
     }
 }
 
@@ -173,9 +184,11 @@ struct ResourceDogService {
             cutoutData = Self.finalizeCutout(cached)
         } else {
             await report(.extractingCutout, onStatus)
+            print("DogCompanion [ResourceDog] 开始抠图: \(dogName)")
             let extracted = try await cutoutExtractor.extractCutout(from: portraitImage, pose: .sit)
             let opaque = Self.finalizeCutout(extracted)
-            try ResourceDogAssetCache.saveCutout(opaque, for: dogName)
+            let saved = try ResourceDogAssetCache.saveCutout(opaque, for: dogName)
+            print("DogCompanion [ResourceDog] 已保存抠图: \(saved.path) bytes=\(opaque.count)")
             cutoutData = opaque
         }
 

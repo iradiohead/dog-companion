@@ -258,11 +258,22 @@ enum CutoutImageProcessor {
             throw MattingError.invalidImage
         }
         let original = pixels
-
-        // Paper is bright, desaturated, and not yellow. RGB-distance flood treats
-        // cream highlights as paper and walks into the golden retriever's body.
-        floodClearPaper(in: &pixels, width: width, height: height)
-        restoreNonPaperPixels(original: original, into: &pixels)
+        applyPaperFlood(
+            original: original,
+            into: &pixels,
+            width: width,
+            height: height,
+            minimumLuma: 220
+        )
+        if clearedPaperRatio(pixels) < 0.05 {
+            applyPaperFlood(
+                original: original,
+                into: &pixels,
+                width: width,
+                height: height,
+                minimumLuma: 205
+            )
+        }
 
         peelBackgroundFringe(
             in: &pixels,
@@ -447,21 +458,52 @@ enum CutoutImageProcessor {
         }
     }
 
-    /// White / gray paper only. Cream and gold stay solid even when close to white.
-    private static func isPaperPixel(_ pixel: RGBA) -> Bool {
+    /// Ink, cream, gold, and harness — never treated as paper.
+    private static func isSubjectPixel(_ pixel: RGBA) -> Bool {
         let r = Double(pixel.r)
         let g = Double(pixel.g)
         let b = Double(pixel.b)
         let chroma = max(r, g, b) - min(r, g, b)
         let luma = 0.299 * r + 0.587 * g + 0.114 * b
         let warmth = r - b
-        return luma >= 242 && chroma <= 16 && warmth < 14
+        if warmth >= 14 || chroma > 18 { return true }
+        return luma < 205
+    }
+
+    private static func isPaperPixel(_ pixel: RGBA, minimumLuma: Double = 220) -> Bool {
+        guard !isSubjectPixel(pixel) else { return false }
+        let luma = 0.299 * Double(pixel.r) + 0.587 * Double(pixel.g) + 0.114 * Double(pixel.b)
+        return luma >= minimumLuma
+    }
+
+    private static func clearedPaperRatio(_ pixels: [RGBA]) -> Double {
+        guard !pixels.isEmpty else { return 0 }
+        let cleared = pixels.reduce(0) { $0 + ($1.a <= 12 ? 1 : 0) }
+        return Double(cleared) / Double(pixels.count)
+    }
+
+    private static func applyPaperFlood(
+        original: [RGBA],
+        into pixels: inout [RGBA],
+        width: Int,
+        height: Int,
+        minimumLuma: Double
+    ) {
+        pixels = original
+        floodClearPaper(
+            in: &pixels,
+            width: width,
+            height: height,
+            minimumLuma: minimumLuma
+        )
+        restoreSubjectPixels(original: original, into: &pixels)
     }
 
     private static func floodClearPaper(
         in pixels: inout [RGBA],
         width: Int,
-        height: Int
+        height: Int,
+        minimumLuma: Double
     ) {
         guard width > 0, height > 0, pixels.count == width * height else { return }
 
@@ -477,7 +519,7 @@ enum CutoutImageProcessor {
         while let current = queue.popLast() {
             if visited[current] { continue }
             visited[current] = true
-            guard isPaperPixel(pixels[current]) else { continue }
+            guard isPaperPixel(pixels[current], minimumLuma: minimumLuma) else { continue }
 
             pixels[current] = RGBA(r: 0, g: 0, b: 0, a: 0)
 
@@ -490,14 +532,14 @@ enum CutoutImageProcessor {
         }
     }
 
-    private static func restoreNonPaperPixels(
+    private static func restoreSubjectPixels(
         original: [RGBA],
         into pixels: inout [RGBA]
     ) {
         guard original.count == pixels.count else { return }
         for index in pixels.indices {
             let source = original[index]
-            guard !isPaperPixel(source) else { continue }
+            guard isSubjectPixel(source) else { continue }
             var restored = source
             restored.a = 255
             pixels[index] = restored
@@ -518,7 +560,7 @@ enum CutoutImageProcessor {
             toClear.reserveCapacity(width + height)
             for index in pixels.indices {
                 if pixels[index].a <= 12 { continue }
-                guard isPaperPixel(pixels[index]) else { continue }
+                guard !isSubjectPixel(pixels[index]) else { continue }
 
                 let x = index % width
                 let y = index / width
