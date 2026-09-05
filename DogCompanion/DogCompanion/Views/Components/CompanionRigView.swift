@@ -254,7 +254,9 @@ final class CompanionRigScene: SKScene {
         let display = CutoutImageProcessor.opaqueUIImage(from: image) ?? image
         let texture = SKTexture(image: display)
         texture.filteringMode = .linear
+        texture.usesMipmaps = false
         let node = SKSpriteNode(texture: texture)
+        node.blendMode = .alpha
         node.anchorPoint = cutoutAnchor(for: part)
         return node
     }

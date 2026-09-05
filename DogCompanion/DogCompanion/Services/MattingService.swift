@@ -164,7 +164,26 @@ enum CutoutImageProcessor {
             }
         }
         guard opaque > 80 else { return false }
-        return Double(enclosed) / Double(opaque) > holeRatio
+        if Double(enclosed) / Double(opaque) > holeRatio {
+            return true
+        }
+
+        var minX = width
+        var minY = height
+        var maxX = 0
+        var maxY = 0
+        for y in 0..<height {
+            for x in 0..<width where pixels[y * width + x].a > 18 {
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
+            }
+        }
+        let bboxArea = (maxX - minX + 1) * (maxY - minY + 1)
+        guard bboxArea > 0 else { return false }
+        // Outline-only Vision masks are a thin ring; a sitting dog fills much more.
+        return Double(opaque) / Double(bboxArea) < 0.35
     }
 
     static func refineCutout(from image: UIImage) throws -> Data {
@@ -238,24 +257,17 @@ enum CutoutImageProcessor {
         guard pixels.count == width * height else {
             throw MattingError.invalidImage
         }
-        let background = estimateBackgroundColor(pixels: pixels, width: width, height: height)
+        let original = pixels
 
-        // Only walk inward from the corners. A global near-white key eats cream fur
-        // on golden retrievers (highlights sit within 20–40 of paper white).
-        floodClearBackground(
-            in: &pixels,
-            width: width,
-            height: height,
-            background: background,
-            tolerance: 22
-        )
+        // Paper is bright, desaturated, and not yellow. RGB-distance flood treats
+        // cream highlights as paper and walks into the golden retriever's body.
+        floodClearPaper(in: &pixels, width: width, height: height)
+        restoreNonPaperPixels(original: original, into: &pixels)
 
         peelBackgroundFringe(
             in: &pixels,
             width: width,
             height: height,
-            background: background,
-            tolerance: 28,
             passes: 3
         )
 
@@ -435,28 +447,78 @@ enum CutoutImageProcessor {
         }
     }
 
-    /// Clear near-white wash that is still touching already-cleared paper.
+    /// White / gray paper only. Cream and gold stay solid even when close to white.
+    private static func isPaperPixel(_ pixel: RGBA) -> Bool {
+        let r = Double(pixel.r)
+        let g = Double(pixel.g)
+        let b = Double(pixel.b)
+        let chroma = max(r, g, b) - min(r, g, b)
+        let luma = 0.299 * r + 0.587 * g + 0.114 * b
+        let warmth = r - b
+        return luma >= 242 && chroma <= 16 && warmth < 14
+    }
+
+    private static func floodClearPaper(
+        in pixels: inout [RGBA],
+        width: Int,
+        height: Int
+    ) {
+        guard width > 0, height > 0, pixels.count == width * height else { return }
+
+        var visited = [Bool](repeating: false, count: pixels.count)
+        var queue: [Int] = []
+        queue.reserveCapacity(width + height)
+
+        let seeds = [0, width - 1, (height - 1) * width, height * width - 1]
+        for seed in seeds where seed >= 0 && seed < pixels.count {
+            queue.append(seed)
+        }
+
+        while let current = queue.popLast() {
+            if visited[current] { continue }
+            visited[current] = true
+            guard isPaperPixel(pixels[current]) else { continue }
+
+            pixels[current] = RGBA(r: 0, g: 0, b: 0, a: 0)
+
+            let x = current % width
+            let y = current / width
+            if x > 0 { queue.append(current - 1) }
+            if x + 1 < width { queue.append(current + 1) }
+            if y > 0 { queue.append(current - width) }
+            if y + 1 < height { queue.append(current + width) }
+        }
+    }
+
+    private static func restoreNonPaperPixels(
+        original: [RGBA],
+        into pixels: inout [RGBA]
+    ) {
+        guard original.count == pixels.count else { return }
+        for index in pixels.indices {
+            let source = original[index]
+            guard !isPaperPixel(source) else { continue }
+            var restored = source
+            restored.a = 255
+            pixels[index] = restored
+        }
+    }
+
+    /// Clear leftover paper wash that is still touching already-cleared paper.
     private static func peelBackgroundFringe(
         in pixels: inout [RGBA],
         width: Int,
         height: Int,
-        background: (r: Double, g: Double, b: Double),
-        tolerance: Double,
         passes: Int
     ) {
         guard width > 0, height > 0, pixels.count == width * height, passes > 0 else { return }
-        let maxDistance = tolerance * tolerance
 
         for _ in 0..<passes {
             var toClear: [Int] = []
             toClear.reserveCapacity(width + height)
             for index in pixels.indices {
                 if pixels[index].a <= 12 { continue }
-                let pixel = pixels[index]
-                let dr = Double(pixel.r) - background.r
-                let dg = Double(pixel.g) - background.g
-                let db = Double(pixel.b) - background.b
-                guard (dr * dr + dg * dg + db * db) <= maxDistance else { continue }
+                guard isPaperPixel(pixels[index]) else { continue }
 
                 let x = index % width
                 let y = index / width
@@ -474,7 +536,7 @@ enum CutoutImageProcessor {
                 }
             }
             for index in toClear {
-                pixels[index].a = 0
+                pixels[index] = RGBA(r: 0, g: 0, b: 0, a: 0)
             }
         }
     }
@@ -592,7 +654,7 @@ enum CutoutImageProcessor {
     }
 
     private static func bitmapRGBA(from image: UIImage) -> BitmapRGBA? {
-        guard let cgImage = normalizedCGImage(from: image),
+        guard let cgImage = image.cgImage,
               let pixels = rgbaPixels(fromNormalized: cgImage),
               !pixels.isEmpty else {
             return nil
@@ -604,7 +666,7 @@ enum CutoutImageProcessor {
     }
 
     private static func rgbaPixels(from image: UIImage) -> [RGBA]? {
-        guard let cgImage = normalizedCGImage(from: image) else { return nil }
+        guard let cgImage = image.cgImage else { return nil }
         return rgbaPixels(fromNormalized: cgImage)
     }
 

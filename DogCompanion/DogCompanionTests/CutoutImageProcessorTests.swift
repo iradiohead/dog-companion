@@ -48,6 +48,22 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertGreaterThan(countOpaquePixels(in: opaque), 80)
     }
 
+    func testChromaKeyKeepsWashedCreamFurThatTouchesPaper() throws {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
+        let image = renderer.image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
+            UIColor(red: 0.99, green: 0.97, blue: 0.93, alpha: 1).setFill()
+            context.fill(CGRect(x: 8, y: 8, width: 16, height: 16))
+        }
+        let cutout = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: cutout)
+
+        XCTAssertTrue(CutoutImageProcessor.hasMeaningfulTransparency(in: opaque))
+        XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: opaque))
+        XCTAssertGreaterThan(countOpaquePixels(in: opaque), 180)
+    }
+
     func testOpaqueCutoutExportsPNG() throws {
         let image = makeDogOnWhiteBackground()
         let soft = try CutoutImageProcessor.chromaKeyCutout(from: image)
