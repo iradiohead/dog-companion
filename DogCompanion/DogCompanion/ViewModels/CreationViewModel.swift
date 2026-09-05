@@ -115,8 +115,8 @@ final class CreationViewModel: ComicGenerationFlow {
         }
 
         await runGeneration {
-            let assets = try await resourceService.loadAssets(for: dogName) { status in
-                currentStatusMessage = status.message
+            let assets = try await resourceService.loadAssets(for: dogName) { [self] status in
+                self.currentStatusMessage = status.message
             }
             generatedPortraitData = assets.portraitData
             generatedCutoutData = assets.cutoutData

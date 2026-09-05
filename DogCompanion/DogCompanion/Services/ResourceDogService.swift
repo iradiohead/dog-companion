@@ -118,7 +118,7 @@ struct ResourceDogService {
 
     func loadAssets(
         for dogName: String,
-        onStatus: ((ResourceDogLoadStatus) -> Void)? = nil
+        onStatus: (@MainActor (ResourceDogLoadStatus) -> Void)? = nil
     ) async throws -> CompanionAssets {
         await report(.readingResources, onStatus)
         let contents = try catalog.folderContents(for: dogName)
@@ -177,12 +177,10 @@ struct ResourceDogService {
 
     private func report(
         _ status: ResourceDogLoadStatus,
-        _ onStatus: ((ResourceDogLoadStatus) -> Void)?
+        _ onStatus: (@MainActor (ResourceDogLoadStatus) -> Void)?
     ) async {
         guard let onStatus else { return }
-        await MainActor.run {
-            onStatus(status)
-        }
+        await onStatus(status)
     }
 
     private static func finalizeCutout(_ data: Data) -> Data {

@@ -1,43 +1,38 @@
 ---
-description: Run self-tests after every code change before committing
+description: After every edit, re-read, compile-check, and test before telling the user it is done
 alwaysApply: true
 ---
 
-# Self-test after code changes
+# Self-check and self-test after every change
 
-After modifying Swift/UI code in this project, **verify before commit**:
+Do **not** tell the user a change is done, and do **not** commit/push, until this pass is finished. User Xcode screenshots of compile errors count as failed tests.
 
-## On Mac (preferred)
+## 1. Re-read what you just changed
 
-```bash
-xcodebuild test \
-  -project DogCompanion/DogCompanion.xcodeproj \
-  -scheme DogCompanion \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
-  -quiet
-```
+After each patch, read the **entire function** (not only the diff):
 
-For Mac Catalyst–related changes, also:
+- Every name the body uses (`width`, `height`, `self`, types) must be in scope.
+- Splitting a function: copy the locals the body still needs.
+- Escaping / `async` closures that touch instance properties: use explicit `self.` (Swift 6).
+- `@MainActor` callbacks must match callers and tests.
 
-```bash
-xcodebuild build \
-  -project DogCompanion/DogCompanion.xcodeproj \
-  -scheme DogCompanion \
-  -destination 'platform=macOS,variant=Mac Catalyst' \
-  -quiet
-```
+Recent misses: `rgbaPixels(fromNormalized:)` dropped `width`/`height`; `loadAssets` status closure needed `self.currentStatusMessage`.
 
-Fix any compile or test failures before pushing.
+## 2. Static compile check (Windows, no Xcode)
 
-## On Windows (no Xcode)
+Grep the edited files for:
 
-When `xcodebuild` is unavailable:
+- closure assignments missing `self.`
+- `CGImageAlphaInfo.last` in `CGContext` (use `premultipliedLast` on iOS)
+- new `.swift` files not in `project.pbxproj`
+- mixed `UInt8` / `Int` / `CGFloat` in `min`/`max`/`*`
 
-1. **Treat Xcode issue screenshots as failing tests** — fix compile errors before anything else.
-2. **Numeric types** — `UInt8` / `Int` / `Double` / `CGFloat` must not mix in `min`/`max`/`*` (this already broke `MattingService`).
-3. **Symbol cross-check** — grep usages of shared types (`HandDrawnPalette`, `PlatformImage`, `HomeTab`, `CutoutImageProcessor`, etc.) and confirm definitions exist.
-4. **pbxproj** — new `.swift` files must be added to `DogCompanion.xcodeproj/project.pbxproj`.
-5. **Unit tests** — add or extend tests that actually call new logic (not only symbol smoke tests).
-6. Report to the user that full `xcodebuild` was not run locally; they should verify in Xcode on Mac.
+## 3. Tests
 
-Never commit with known missing symbols, unregistered source files, or unresolved Xcode compile errors.
+- Add or extend a unit test that **calls the new path** (not a symbol-only smoke test).
+- On Mac: `xcodebuild test` for DogCompanion (iPhone 16 simulator); Catalyst UI also `xcodebuild build` for Mac Catalyst.
+- On Windows: say `xcodebuild` was not run; still do steps 1–2.
+
+## 4. Stop if it would not compile
+
+Never hand the user code with known missing symbols, missing `self`, unregistered files, or unresolved Xcode errors.

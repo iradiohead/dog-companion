@@ -141,6 +141,7 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertTrue(plan.messages.contains(ResourceDogLoadStatus.readingPortrait.message))
     }
 
+    @MainActor
     func testLoadAssetsReportsReadingNotGeneratingWhenBundleHasHandDrawn() async throws {
         let dogFolder = tempRoot
             .appendingPathComponent("resource", isDirectory: true)
@@ -169,6 +170,7 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertFalse(statuses.contains(.extractingCutout))
     }
 
+    @MainActor
     func testLoadAssetsReportsGeneratingPortraitWhenOnlyOriginalExists() async throws {
         portraitSpy.result = makeTinyPNG()
         cutoutSpy.result = makeTinyPNG()
