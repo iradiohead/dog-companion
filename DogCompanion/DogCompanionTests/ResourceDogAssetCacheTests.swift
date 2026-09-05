@@ -32,4 +32,8 @@ final class ResourceDogAssetCacheTests: XCTestCase {
         XCTAssertNil(ResourceDogAssetCache.portraitData(for: "不存在"))
         XCTAssertNil(ResourceDogAssetCache.cutoutData(for: "不存在"))
     }
+
+    func testDirectoryURLUsesOverrideRoot() {
+        XCTAssertEqual(ResourceDogAssetCache.directoryURL(), tempDirectory)
+    }
 }

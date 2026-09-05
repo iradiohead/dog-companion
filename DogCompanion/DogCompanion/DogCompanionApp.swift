@@ -3,6 +3,10 @@ import SwiftData
 
 @main
 struct DogCompanionApp: App {
+    init() {
+        ResourceDogAssetCache.logDirectoryOnLaunch()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

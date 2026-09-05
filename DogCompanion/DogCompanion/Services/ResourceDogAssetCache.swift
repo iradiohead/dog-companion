@@ -1,12 +1,30 @@
 import Foundation
+import os
 
 /// Persists per-dog generated assets so re-selecting a bundle dog does not re-call the API.
 enum ResourceDogAssetCache {
     static let appFolderName = "DogCompanion"
     static let folderName = "resource-cache"
 
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.kejin.dogcompanion",
+        category: "ResourceDogAssetCache"
+    )
+
     /// Override in tests to write into a temporary directory.
     static var rootDirectory: URL?
+
+    static func directoryURL() -> URL {
+        cacheRootURL()
+    }
+
+    static func logDirectoryOnLaunch() {
+        let directory = directoryURL()
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let message = "DogCompanion [ResourceDogAssetCache] 目录: \(directory.path)"
+        logger.info("\(message)")
+        print(message)
+    }
 
     static func portraitURL(for dogName: String, pose: CompanionPose = .sit) -> URL? {
         let url = fileURL(for: dogName, prefix: "hand-drawn", pose: pose)
