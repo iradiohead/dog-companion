@@ -85,6 +85,17 @@ struct ResourceDogCatalog {
             .first
     }
 
+    func previewImageURL(for dogName: String) -> URL? {
+        guard let folderURL = try? folderURL(for: dogName) else { return nil }
+        if let handDrawn = latestFile(in: folderURL, prefix: "hand-drawn") {
+            return handDrawn
+        }
+        if let original = originalImageURL(in: folderURL) {
+            return original
+        }
+        return latestFile(in: folderURL, prefix: "foreground-dog")
+    }
+
     private static func isGeneratedAsset(fileName: String) -> Bool {
         let lower = fileName.lowercased()
         return lower.hasPrefix("hand-drawn") || lower.hasPrefix("foreground-dog")

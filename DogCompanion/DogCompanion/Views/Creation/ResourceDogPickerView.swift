@@ -2,41 +2,38 @@ import SwiftUI
 
 struct ResourceDogPickerView: View {
     @Bindable var viewModel: CreationViewModel
+    @State private var focusedDog: String?
 
     var body: some View {
-        Group {
-            if viewModel.availableDogs.isEmpty {
-                ContentUnavailableView(
-                    "没有可用的狗狗",
-                    systemImage: "dog.fill",
-                    description: Text("请在 App Bundle 的 resource/ 下添加以狗名命名的文件夹。")
-                )
-            } else {
-                List(viewModel.availableDogs, id: \.self) { dogName in
-                    Button {
-                        viewModel.selectDog(dogName)
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "pawprint.fill")
-                                .font(.title3)
-                                .foregroundStyle(.orange)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(dogName)
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                Text("从 resource/\(dogName) 加载")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+        ZStack {
+            PaperBackgroundView()
+
+            Group {
+                if viewModel.availableDogs.isEmpty {
+                    ContentUnavailableView(
+                        "没有可用的狗狗",
+                        systemImage: "dog.fill",
+                        description: Text("请在 App Bundle 的 resource/ 下添加以狗名命名的文件夹。")
+                    )
+                } else {
+                    DogCoverFlowPicker(
+                        dogs: viewModel.availableDogs,
+                        focusedDog: $focusedDog,
+                        onConfirm: { dogName in
+                            viewModel.selectDog(dogName)
                         }
-                        .padding(.vertical, 4)
-                    }
+                    )
                 }
-                .listStyle(.insetGrouped)
             }
         }
         .onAppear {
             viewModel.refreshAvailableDogs()
+            focusedDog = viewModel.availableDogs.first
+        }
+        .onChange(of: viewModel.availableDogs) { _, dogs in
+            if focusedDog == nil || !(focusedDog.map { dogs.contains($0) } ?? false) {
+                focusedDog = dogs.first
+            }
         }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {
