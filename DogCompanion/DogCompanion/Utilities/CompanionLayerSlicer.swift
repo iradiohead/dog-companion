@@ -29,9 +29,9 @@ enum CompanionLayerSlicer {
         var a: UInt8
     }
 
-    static func slice(_ image: UIImage) -> CompanionLayerSet? {
-        guard let pixels = rgbaPixels(from: image),
-              let cgImage = image.cgImage else {
+    static func slice(_ sourceImage: UIImage) -> CompanionLayerSet? {
+        guard let pixels = rgbaPixels(from: sourceImage),
+              let cgImage = sourceImage.cgImage else {
             return nil
         }
 
@@ -79,7 +79,7 @@ enum CompanionLayerSlicer {
         for part in parts {
             guard let buffer = partBuffers[part],
                   opaqueCount(in: buffer) > 8,
-                  let png = image(from: buffer, width: width, height: height, scale: image.scale) else {
+                  let png = image(from: buffer, width: width, height: height, scale: sourceImage.scale) else {
                 continue
             }
             images[part] = png
@@ -89,8 +89,8 @@ enum CompanionLayerSlicer {
         }
 
         return CompanionLayerSet(
-            canvasSize: CGSize(width: CGFloat(width) / image.scale, height: CGFloat(height) / image.scale),
-            scale: image.scale,
+            canvasSize: CGSize(width: CGFloat(width) / sourceImage.scale, height: CGFloat(height) / sourceImage.scale),
+            scale: sourceImage.scale,
             images: images,
             tailOnLeft: tailOnLeft
         )
