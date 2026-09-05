@@ -463,6 +463,8 @@ enum CutoutImageProcessor {
     }
 
     private static func rgbaPixels(fromNormalized cgImage: CGImage) -> [RGBA]? {
+        let width = cgImage.width
+        let height = cgImage.height
         let bytesPerPixel = 4
         let bytesPerRow = bytesPerPixel * width
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
