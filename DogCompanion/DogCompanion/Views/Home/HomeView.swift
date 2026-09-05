@@ -138,14 +138,16 @@ private struct SettingsSheet: View {
                 Section("伙伴") {
                     LabeledContent("名字", value: companion.name)
                 }
-                Section {
-                    Button("换造型") {
-                        dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                            showRegeneration = true
+                if !CompanionCreationConfig.useResourceCatalog {
+                    Section {
+                        Button("换造型") {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                showRegeneration = true
+                            }
                         }
+                        .disabled(!companion.canRegenerate)
                     }
-                    .disabled(!companion.canRegenerate)
                 }
             }
             .navigationTitle("设置")

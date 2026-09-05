@@ -4,6 +4,7 @@ import Observation
 struct GeneratingView<VM>: View where VM: ComicGenerationFlow & Observable {
     @Bindable var viewModel: VM
     var title: String = "正在生成你的专注伙伴"
+    var performGeneration: (() async -> Void)?
 
     private let messages = [
         "正在认出它的样子…",
@@ -50,7 +51,11 @@ struct GeneratingView<VM>: View where VM: ComicGenerationFlow & Observable {
             timer = nil
         }
         .task {
-            await viewModel.startGeneration()
+            if let performGeneration {
+                await performGeneration()
+            } else {
+                await viewModel.startGeneration()
+            }
         }
     }
 }
