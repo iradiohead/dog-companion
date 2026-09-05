@@ -191,6 +191,37 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertFalse(statuses.contains(.readingPortrait))
     }
 
+    @MainActor
+    func testLoadAssetsIgnoresHollowCachedCutoutAndExtractsAgain() async throws {
+        try ResourceDogAssetCache.savePortrait(makeTinyPNG(), for: "金毛")
+        try ResourceDogAssetCache.saveCutout(makeHollowCutoutPNG(), for: "金毛")
+        cutoutSpy.result = makeTinyPNG()
+
+        var service = ResourceDogService()
+        service.catalog = catalog
+        service.portraitGenerator = portraitSpy
+        service.cutoutExtractor = cutoutSpy
+
+        _ = try await service.loadAssets(for: "金毛")
+
+        XCTAssertEqual(cutoutSpy.callCount, 1)
+        XCTAssertEqual(portraitSpy.callCount, 0)
+    }
+
+    private func makeHollowCutoutPNG() -> Data {
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32), format: format)
+        let image = renderer.image { context in
+            UIColor.brown.setFill()
+            context.fill(CGRect(x: 4, y: 4, width: 24, height: 24))
+            context.cgContext.setBlendMode(.clear)
+            context.fill(CGRect(x: 10, y: 10, width: 12, height: 12))
+        }
+        return image.pngData()!
+    }
+
     private func makeSoftCutoutPNG() throws -> Data {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
         let image = renderer.image { context in

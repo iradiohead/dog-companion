@@ -81,6 +81,36 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(forced))
     }
 
+    func testInteriorHolesDetectedForHollowSubject() throws {
+        let hollow = try makeHollowCutoutPNG()
+        XCTAssertTrue(CutoutImageProcessor.hasInteriorHoles(in: hollow))
+        XCTAssertTrue(CutoutImageProcessor.needsCutoutRefresh(hollow))
+    }
+
+    func testSolidChromaKeyCutoutHasNoInteriorHoles() throws {
+        let image = makeDogOnWhiteBackground()
+        let cutout = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: cutout)
+        XCTAssertFalse(CutoutImageProcessor.hasInteriorHoles(in: opaque))
+    }
+
+    private func makeHollowCutoutPNG() throws -> Data {
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32), format: format)
+        let image = renderer.image { context in
+            UIColor.brown.setFill()
+            context.fill(CGRect(x: 4, y: 4, width: 24, height: 24))
+            context.cgContext.setBlendMode(.clear)
+            context.fill(CGRect(x: 10, y: 10, width: 12, height: 12))
+        }
+        guard let data = image.pngData() else {
+            throw XCTSkip("Failed to encode hollow cutout")
+        }
+        return data
+    }
+
     private func makeVisionLikeLightDogCutout() throws -> Data {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
         let image = renderer.image { context in
@@ -89,7 +119,7 @@ final class CutoutImageProcessorTests: XCTestCase {
             UIColor(red: 0.95, green: 0.88, blue: 0.72, alpha: 1).setFill()
             context.fill(CGRect(x: 8, y: 8, width: 16, height: 16))
         }
-        guard var cgImage = image.cgImage else {
+        guard let cgImage = image.cgImage else {
             throw XCTSkip("Failed to build test image")
         }
         let width = cgImage.width

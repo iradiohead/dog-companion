@@ -66,11 +66,21 @@ protocol ResourceDogCutoutExtracting {
 extension GenerationService: ResourceDogPortraitGenerating {}
 extension MattingService: ResourceDogCutoutExtracting {}
 
+struct ChromaKeyCutoutExtractor: ResourceDogCutoutExtracting {
+    func extractCutout(from image: UIImage, pose: CompanionPose) async throws -> Data {
+        _ = pose
+        try await Task.detached(priority: .userInitiated) {
+            let chroma = try CutoutImageProcessor.chromaKeyCutout(from: image)
+            return CutoutImageProcessor.forceOpaqueCutout(from: chroma)
+        }.value
+    }
+}
+
 /// Single entry point for bundled `resource/` dogs: list, preview, and full asset loading.
 struct ResourceDogService {
     var catalog = ResourceDogCatalog()
     var portraitGenerator: any ResourceDogPortraitGenerating = GenerationService()
-    var cutoutExtractor: any ResourceDogCutoutExtracting = MattingService()
+    var cutoutExtractor: any ResourceDogCutoutExtracting = ChromaKeyCutoutExtractor()
 
     private static let previewCache = NSCache<NSString, UIImage>()
     private static let maxPreviewDimension: CGFloat = 480
@@ -109,10 +119,11 @@ struct ResourceDogService {
         let hasBundledPortrait = contents?.handDrawnURL != nil
         let hasCachedPortrait = ResourceDogAssetCache.portraitData(for: dogName) != nil
         let hasBundledCutout = contents?.foregroundURL != nil
-        let hasCachedCutout = ResourceDogAssetCache.cutoutData(for: dogName) != nil
+        let cachedCutout = ResourceDogAssetCache.cutoutData(for: dogName)
+        let hasUsableCachedCutout = cachedCutout.map { Self.isUsableCutout($0) } ?? false
         return ResourceDogLoadPlan(
             willGeneratePortrait: !hasBundledPortrait && !hasCachedPortrait,
-            willExtractCutout: !hasBundledCutout && !hasCachedCutout
+            willExtractCutout: !hasBundledCutout && !hasUsableCachedCutout
         )
     }
 
@@ -156,7 +167,8 @@ struct ResourceDogService {
             await report(.readingCutout, onStatus)
             let raw = try Data(contentsOf: foregroundURL)
             cutoutData = Self.finalizeCutout(raw)
-        } else if let cached = ResourceDogAssetCache.cutoutData(for: dogName) {
+        } else if let cached = ResourceDogAssetCache.cutoutData(for: dogName),
+                  Self.isUsableCutout(cached) {
             await report(.readingCutout, onStatus)
             cutoutData = Self.finalizeCutout(cached)
         } else {
@@ -185,6 +197,12 @@ struct ResourceDogService {
 
     private static func finalizeCutout(_ data: Data) -> Data {
         CutoutImageProcessor.forceOpaqueCutout(from: data)
+    }
+
+    private static func isUsableCutout(_ data: Data) -> Bool {
+        let opaque = finalizeCutout(data)
+        return !CutoutImageProcessor.needsCutoutRefresh(opaque)
+            && !CutoutImageProcessor.hasInteriorHoles(in: opaque)
     }
 
     private func previewSourceData(for dogName: String) -> Data? {

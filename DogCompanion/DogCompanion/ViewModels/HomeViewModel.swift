@@ -93,7 +93,8 @@ final class HomeViewModel {
             if opaque != existing {
                 companion.cutoutData = opaque
             }
-            if !CutoutImageProcessor.needsCutoutRefresh(opaque) {
+            if !CutoutImageProcessor.needsCutoutRefresh(opaque),
+               !CutoutImageProcessor.hasInteriorHoles(in: opaque) {
                 return
             }
         }
@@ -103,8 +104,11 @@ final class HomeViewModel {
             return
         }
         do {
-            let extracted = try await MattingService().extractCutout(from: portrait)
-            companion.cutoutData = CutoutImageProcessor.forceOpaqueCutout(from: extracted)
+            let chroma = try await Task.detached(priority: .userInitiated) {
+                let cutout = try CutoutImageProcessor.chromaKeyCutout(from: portrait)
+                return CutoutImageProcessor.forceOpaqueCutout(from: cutout)
+            }.value
+            companion.cutoutData = chroma
         } catch {
             return
         }

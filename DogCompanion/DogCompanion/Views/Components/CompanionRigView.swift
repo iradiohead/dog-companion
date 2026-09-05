@@ -174,9 +174,6 @@ final class CompanionRigScene: SKScene {
         if let image {
             buildCutout(from: image, into: cutoutRoot)
             rebuildFlipbook()
-        } else {
-            cutoutTailOnLeft = true
-            buildSharedPuppet(into: puppetRoot)
         }
         layoutParts()
         syncPresentation()
@@ -218,7 +215,7 @@ final class CompanionRigScene: SKScene {
             flipbookNode?.alpha = 1
         } else {
             cutoutRoot.isHidden = true
-            puppetRoot.isHidden = false
+            puppetRoot.isHidden = true
         }
     }
 

@@ -38,7 +38,7 @@ struct HomeView: View {
 
                 SceneView(
                     scene: currentScene,
-                    sitImage: sitImage,
+                    sitImage: displayedSitImage,
                     runFrames: runFrames,
                     palette: companion.coatPalette,
                     motionState: viewModel.motionState,
@@ -75,6 +75,10 @@ struct HomeView: View {
             }
         }
         .task(id: companion.persistentModelID) {
+            if sitImage == nil {
+                sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
+            }
+            await refreshCompanionImages(for: companion)
             await viewModel.refreshCutoutIfNeeded(for: companion)
             await refreshCompanionImages(for: companion)
         }
@@ -90,6 +94,10 @@ struct HomeView: View {
         .navigationTitle("专注")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+    }
+
+    private var displayedSitImage: PlatformImage? {
+        sitImage ?? companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
     }
 
     private func refreshCompanionImages(for companion: Companion) async {

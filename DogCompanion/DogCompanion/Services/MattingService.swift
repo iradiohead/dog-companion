@@ -56,6 +56,10 @@ enum CutoutImageProcessor {
             return true
         }
 
+        if hasInteriorHoles(pixels: pixels, width: width, height: height) {
+            return true
+        }
+
         let cornerSamples = [
             pixels[0],
             pixels[width - 1],
@@ -104,6 +108,58 @@ enum CutoutImageProcessor {
         }
         guard foreground > 0 else { return false }
         return Double(soft) / Double(foreground) > 0.02
+    }
+
+    /// Vision often keeps the dark outline of a cream-colored dog and punches the body empty.
+    static func hasInteriorHoles(in data: Data) -> Bool {
+        guard let image = UIImage(data: data),
+              let cgImage = image.cgImage,
+              let pixels = rgbaPixels(from: image) else {
+            return true
+        }
+        return hasInteriorHoles(pixels: pixels, width: cgImage.width, height: cgImage.height)
+    }
+
+    private static func hasInteriorHoles(
+        pixels: [RGBA],
+        width: Int,
+        height: Int,
+        holeRatio: Double = 0.12
+    ) -> Bool {
+        var minX = width
+        var minY = height
+        var maxX = 0
+        var maxY = 0
+        for y in 0..<height {
+            for x in 0..<width where pixels[y * width + x].a > 18 {
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
+            }
+        }
+        guard maxX - minX > 8, maxY - minY > 8 else { return false }
+
+        let insetX = max(1, (maxX - minX) / 5)
+        let insetY = max(1, (maxY - minY) / 5)
+        let innerMinX = minX + insetX
+        let innerMaxX = maxX - insetX
+        let innerMinY = minY + insetY
+        let innerMaxY = maxY - insetY
+        guard innerMaxX > innerMinX, innerMaxY > innerMinY else { return false }
+
+        var total = 0
+        var holes = 0
+        for y in innerMinY...innerMaxY {
+            for x in innerMinX...innerMaxX {
+                total += 1
+                if pixels[y * width + x].a < 12 {
+                    holes += 1
+                }
+            }
+        }
+        guard total > 0 else { return false }
+        return Double(holes) / Double(total) > holeRatio
     }
 
     static func refineCutout(from image: UIImage) throws -> Data {
@@ -580,13 +636,18 @@ struct MattingService {
     }
 
     private static func performCutout(on image: UIImage) throws -> Data {
+        let chroma = try CutoutImageProcessor.chromaKeyCutout(from: image)
+        let chromaOpaque = CutoutImageProcessor.forceOpaqueCutout(from: chroma)
+
         if let visionData = try? visionCutout(from: image),
            CutoutImageProcessor.hasMeaningfulTransparency(in: visionData) {
-            // Vision already produced a mask; refineCutout's white-background pass eats light fur
-            // (e.g. golden retriever) and leaves semi-transparent body holes on first generation.
-            return CutoutImageProcessor.forceOpaqueCutout(from: visionData)
+            let visionOpaque = CutoutImageProcessor.forceOpaqueCutout(from: visionData)
+            if CutoutImageProcessor.hasInteriorHoles(in: visionOpaque) {
+                return chromaOpaque
+            }
+            return visionOpaque
         }
-        return try CutoutImageProcessor.chromaKeyCutout(from: image)
+        return chromaOpaque
     }
 
     private static func visionCutout(from image: UIImage) throws -> Data {
