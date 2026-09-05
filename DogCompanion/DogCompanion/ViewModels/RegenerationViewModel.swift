@@ -3,7 +3,6 @@ import SwiftUI
 
 enum RegenerationStep: Int, CaseIterable {
     case photo
-    case style
     case generating
 }
 
@@ -12,7 +11,7 @@ enum RegenerationStep: Int, CaseIterable {
 final class RegenerationViewModel: ComicGenerationFlow {
     var step: RegenerationStep = .photo
     var sourceImage: UIImage?
-    var selectedStyle: StyleTemplate?
+    var selectedStyle: StyleTemplate = .default
     var errorMessage: String?
     var isGenerating = false
     var isComplete = false
@@ -38,12 +37,7 @@ final class RegenerationViewModel: ComicGenerationFlow {
 
     func selectPhoto(_ image: UIImage) {
         sourceImage = image
-        errorMessage = nil
-        step = .style
-    }
-
-    func selectStyle(_ style: StyleTemplate) {
-        selectedStyle = style
+        selectedStyle = .default
         errorMessage = nil
         step = .generating
     }
@@ -54,11 +48,12 @@ final class RegenerationViewModel: ComicGenerationFlow {
             return
         }
 
-        guard let image = sourceImage, let style = selectedStyle else {
-            errorMessage = "请先选择照片和风格"
+        guard let image = sourceImage else {
+            errorMessage = "请先选择照片"
             step = .photo
             return
         }
+        let style = selectedStyle
 
         isGenerating = true
         errorMessage = nil
@@ -86,15 +81,14 @@ final class RegenerationViewModel: ComicGenerationFlow {
 
     private func applyRegeneration() {
         guard let portraitData = generatedPortraitData,
-              let cutoutData = generatedCutoutData,
-              let style = selectedStyle else { return }
+              let cutoutData = generatedCutoutData else { return }
         companion.comicPortraitData = portraitData
         companion.cutoutData = cutoutData
         companion.coatPalette = generatedPalette
         companion.cutoutRunAData = nil
         companion.cutoutRunBData = nil
         companion.cutoutLandData = nil
-        companion.styleTemplateRaw = style.rawValue
+        companion.styleTemplateRaw = StyleTemplate.default.rawValue
         companion.regenerationCount += 1
     }
 }

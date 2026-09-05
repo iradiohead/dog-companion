@@ -10,8 +10,6 @@ struct CreationFlowView: View {
                 switch viewModel.step {
                 case .photo:
                     PhotoPickerView(viewModel: viewModel)
-                case .style:
-                    StylePickerView(viewModel: viewModel)
                 case .generating:
                     GeneratingView(viewModel: viewModel)
                 case .naming:

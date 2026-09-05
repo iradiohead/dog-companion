@@ -31,13 +31,11 @@ struct GeneratingView<VM>: View where VM: ComicGenerationFlow & Observable {
                     .animation(.easeInOut, value: messageIndex)
             }
 
-            if let style = viewModel.selectedStyle {
-                Label(style.displayName, systemImage: style.iconName)
-                    .font(.caption)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.accentColor.opacity(0.12), in: Capsule())
-            }
+            Label(StyleTemplate.default.displayName, systemImage: StyleTemplate.default.iconName)
+                .font(.caption)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.accentColor.opacity(0.12), in: Capsule())
 
             Spacer()
         }

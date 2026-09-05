@@ -39,7 +39,6 @@
 		A10000000000000000000009 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* HomeViewModel.swift */; };
 		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
 		A1000000000000000000000B /* PhotoPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* PhotoPickerView.swift */; };
-		A1000000000000000000000C /* StylePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* StylePickerView.swift */; };
 		A1000000000000000000000D /* GeneratingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* GeneratingView.swift */; };
 		A1000000000000000000000E /* NamingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* NamingView.swift */; };
 		A1000000000000000000000F /* CreationFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* CreationFlowView.swift */; };
@@ -101,7 +100,6 @@
 		A20000000000000000000009 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		A2000000000000000000000B /* PhotoPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPickerView.swift; sourceTree = "<group>"; };
-		A2000000000000000000000C /* StylePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StylePickerView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000D /* GeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratingView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* NamingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamingView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000F /* CreationFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationFlowView.swift; sourceTree = "<group>"; };
@@ -260,7 +258,6 @@
 			children = (
 				A2000000000000000000000F /* CreationFlowView.swift */,
 				A2000000000000000000000B /* PhotoPickerView.swift */,
-				A2000000000000000000000C /* StylePickerView.swift */,
 				A2000000000000000000000D /* GeneratingView.swift */,
 				A2000000000000000000000E /* NamingView.swift */,
 			);
@@ -456,7 +453,6 @@
 				A10000000000000000000009 /* HomeViewModel.swift in Sources */,
 				A1000000000000000000000A /* SharedComponents.swift in Sources */,
 				A1000000000000000000000B /* PhotoPickerView.swift in Sources */,
-				A1000000000000000000000C /* StylePickerView.swift in Sources */,
 				A1000000000000000000000D /* GeneratingView.swift in Sources */,
 				A1000000000000000000000E /* NamingView.swift in Sources */,
 				A1000000000000000000000F /* CreationFlowView.swift in Sources */,

@@ -65,7 +65,7 @@ final class Companion {
     }
 
     var styleTemplate: StyleTemplate {
-        StyleTemplate(rawValue: styleTemplateRaw) ?? .anime
+        StyleTemplate(rawValue: styleTemplateRaw) ?? .default
     }
 
     var canRegenerate: Bool {

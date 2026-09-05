@@ -4,7 +4,6 @@ import SwiftData
 
 enum CreationStep: Int, CaseIterable {
     case photo
-    case style
     case generating
     case naming
 }
@@ -14,7 +13,7 @@ enum CreationStep: Int, CaseIterable {
 final class CreationViewModel: ComicGenerationFlow {
     var step: CreationStep = .photo
     var sourceImage: UIImage?
-    var selectedStyle: StyleTemplate?
+    var selectedStyle: StyleTemplate = .default
     var generatedPortraitData: Data?
     var generatedCutoutData: Data?
     var selectedPalette: CoatPalette = .brown
@@ -26,22 +25,18 @@ final class CreationViewModel: ComicGenerationFlow {
 
     func selectPhoto(_ image: UIImage) {
         sourceImage = image
-        errorMessage = nil
-        step = .style
-    }
-
-    func selectStyle(_ style: StyleTemplate) {
-        selectedStyle = style
+        selectedStyle = .default
         errorMessage = nil
         step = .generating
     }
 
     func startGeneration() async {
-        guard let image = sourceImage, let style = selectedStyle else {
-            errorMessage = "请先选择照片和风格"
+        guard let image = sourceImage else {
+            errorMessage = "请先选择照片"
             step = .photo
             return
         }
+        let style = selectedStyle
 
         isGenerating = true
         errorMessage = nil
@@ -67,8 +62,7 @@ final class CreationViewModel: ComicGenerationFlow {
             errorMessage = "请给你的狗狗起个名字"
             return
         }
-        guard let style = selectedStyle,
-              let portraitData = generatedPortraitData,
+        guard let portraitData = generatedPortraitData,
               let cutoutData = generatedCutoutData else {
             errorMessage = "缺少生成数据，请重新开始"
             step = .photo
@@ -80,7 +74,7 @@ final class CreationViewModel: ComicGenerationFlow {
             comicPortraitData: portraitData,
             cutoutData: cutoutData,
             coatPalette: selectedPalette,
-            styleTemplate: style
+            styleTemplate: .default
         )
         context.insert(companion)
         try context.save()
@@ -90,7 +84,7 @@ final class CreationViewModel: ComicGenerationFlow {
     func reset() {
         step = .photo
         sourceImage = nil
-        selectedStyle = nil
+        selectedStyle = .default
         generatedPortraitData = nil
         generatedCutoutData = nil
         selectedPalette = .brown

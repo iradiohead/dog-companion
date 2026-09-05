@@ -1,36 +1,27 @@
 import Foundation
 import SwiftData
 
-enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
-    case anime
-    case flatCartoon
-    case watercolor
+/// The app uses one hand-drawn illustration look for every companion.
+enum StyleTemplate: String, Codable {
+    case handDrawn
 
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .anime: return "日系动漫"
-        case .flatCartoon: return "扁平卡通"
-        case .watercolor: return "水彩手绘"
+    /// Legacy stored values map to the unified hand-drawn style.
+    init?(rawValue: String) {
+        switch rawValue {
+        case Self.handDrawn.rawValue, "anime", "flatCartoon", "watercolor":
+            self = .handDrawn
+        default:
+            return nil
         }
     }
 
-    var iconName: String {
-        switch self {
-        case .anime: return "sparkles"
-        case .flatCartoon: return "square.on.circle"
-        case .watercolor: return "paintbrush.pointed"
-        }
-    }
+    static let `default` = StyleTemplate.handDrawn
 
-    var shortDescription: String {
-        switch self {
-        case .anime: return "日系插画，保留照片里那只"
-        case .flatCartoon: return "扁平插画，品种花纹不改"
-        case .watercolor: return "水彩手绘，还是你的狗"
-        }
-    }
+    var displayName: String { "手绘" }
+
+    var iconName: String { "paintbrush.pointed" }
+
+    var shortDescription: String { "温暖手绘线条，保留照片里那只狗" }
 
     var prompt: String {
         prompt(for: .sit)
@@ -47,15 +38,7 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
             poseLine = pose.promptInstruction
         }
 
-        let styleLine: String
-        switch self {
-        case .anime:
-            styleLine = "可爱的日系动漫插画风格，线条柔和，眼睛有神，色彩鲜明，高质量"
-        case .flatCartoon:
-            styleLine = "扁平卡通插画风格，简洁造型，现代应用插画感，色彩明快"
-        case .watercolor:
-            styleLine = "水彩手绘风格，温暖色调，手绘质感，艺术感"
-        }
+        let styleLine = "温暖手绘插画风格，手绘线条与墨水描边，纸本水彩质感，柔和阴影，亲切可爱，高质量"
 
         return "【姿势必须遵守】\(poseLine)。将图中的狗狗转换为\(styleLine)。\(identity)。再次强调姿势：\(poseLine)。\(background)"
     }
@@ -65,7 +48,7 @@ enum StyleTemplate: String, CaseIterable, Identifiable, Codable {
     }
 
     func negativePrompt(for pose: CompanionPose) -> String {
-        var prompt = "模糊，低画质，变形，畸形，丑陋，人体，文字，水印，低分辨率，另一只狗，通用卡通吉祥物，背景纹理，纸张质感，画框，地毯，阴影，场景，家具"
+        var prompt = "模糊，低画质，变形，畸形，丑陋，人体，文字，水印，低分辨率，另一只狗，通用卡通吉祥物，3D渲染，照片写实，背景纹理，纸张质感，画框，地毯，阴影，场景，家具"
         if pose != .sit {
             prompt += "，坐着，坐姿，蹲坐，正面证件照，sitting, seated, lying down, sitting down, front portrait"
         }

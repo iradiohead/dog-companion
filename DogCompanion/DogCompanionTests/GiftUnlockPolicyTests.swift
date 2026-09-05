@@ -7,7 +7,7 @@ final class GiftUnlockPolicyTests: XCTestCase {
             name: "Test",
             comicPortraitData: nil,
             cutoutData: nil,
-            styleTemplate: .anime
+            styleTemplate: .default
         )
 
         let unlocked = GiftUnlockPolicy.applyRewards(for: 1, to: companion)
@@ -21,7 +21,7 @@ final class GiftUnlockPolicyTests: XCTestCase {
             name: "Test",
             comicPortraitData: nil,
             cutoutData: nil,
-            styleTemplate: .anime
+            styleTemplate: .default
         )
 
         let unlocked = GiftUnlockPolicy.applyRewards(for: 2, to: companion)

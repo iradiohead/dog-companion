@@ -137,7 +137,6 @@ private struct SettingsSheet: View {
             List {
                 Section("伙伴") {
                     LabeledContent("名字", value: companion.name)
-                    LabeledContent("风格", value: companion.styleTemplate.displayName)
                 }
                 Section {
                     Button("换造型") {
@@ -222,7 +221,7 @@ private struct TimelinePlaceholderSheet: View {
         name: "旺财",
         comicPortraitData: nil,
         cutoutData: nil,
-        styleTemplate: .anime
+        styleTemplate: .default
     )
     return HomeView(companion: companion)
         .modelContainer(for: Companion.self, inMemory: true)

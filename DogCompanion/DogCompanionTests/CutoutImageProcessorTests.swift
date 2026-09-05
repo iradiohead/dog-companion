@@ -8,12 +8,12 @@ final class CutoutImageProcessorTests: XCTestCase {
     }
 
     func testStylePromptRequiresFlatWhiteBackground() {
-        for style in StyleTemplate.allCases {
-            XCTAssertTrue(style.prompt.contains("#FFFFFF"), "\(style) should request flat white background")
-            XCTAssertTrue(style.prompt.contains("一眼能认出"), "\(style) should keep the photo dog")
-            XCTAssertTrue(style.negativePrompt.contains("纸张质感"))
-            XCTAssertFalse(style.prompt.contains("共用的圆滚"))
-        }
+        let style = StyleTemplate.default
+        XCTAssertTrue(style.prompt.contains("#FFFFFF"))
+        XCTAssertTrue(style.prompt.contains("一眼能认出"))
+        XCTAssertTrue(style.prompt.contains("手绘"))
+        XCTAssertTrue(style.negativePrompt.contains("纸张质感"))
+        XCTAssertFalse(style.prompt.contains("共用的圆滚"))
     }
 
     func testChromaKeyMakesWhiteBackgroundTransparent() throws {

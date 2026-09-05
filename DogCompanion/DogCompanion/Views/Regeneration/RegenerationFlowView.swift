@@ -18,11 +18,6 @@ struct RegenerationFlowView: View {
                         title: "拍一张新照片",
                         subtitle: "用新照片重新生成漫画形象（剩余 \(viewModel.remainingRegenerations) 次）"
                     )
-                case .style:
-                    StylePickerView(
-                        viewModel: viewModel,
-                        backButtonTitle: "重新选照片"
-                    )
                 case .generating:
                     GeneratingView(
                         viewModel: viewModel,

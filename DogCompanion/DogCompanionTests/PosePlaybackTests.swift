@@ -86,17 +86,18 @@ final class PosePlaybackTests: XCTestCase {
     }
 
     func testSitPromptPreservesPhotoIdentity() {
-        let prompt = StyleTemplate.anime.prompt(for: .sit)
+        let prompt = StyleTemplate.default.prompt(for: .sit)
         XCTAssertTrue(prompt.contains("一眼能认出"))
         XCTAssertTrue(prompt.contains("坐姿"))
         XCTAssertTrue(prompt.contains("#FFFFFF"))
+        XCTAssertTrue(prompt.contains("手绘"))
         XCTAssertFalse(prompt.contains("共用"))
         XCTAssertFalse(prompt.contains("剪纸"))
-        XCTAssertEqual(StyleTemplate.anime.displayName, "日系动漫")
-        XCTAssertEqual(StyleTemplate.flatCartoon.displayName, "扁平卡通")
-        XCTAssertEqual(StyleTemplate.watercolor.displayName, "水彩手绘")
-        XCTAssertTrue(StyleTemplate.anime.shortDescription.contains("那只"))
-        XCTAssertTrue(StyleTemplate.anime.negativePrompt(for: .runA).contains("sitting"))
+        XCTAssertEqual(StyleTemplate.default.displayName, "手绘")
+        XCTAssertTrue(StyleTemplate.default.shortDescription.contains("那只"))
+        XCTAssertTrue(StyleTemplate.default.negativePrompt(for: .runA).contains("sitting"))
+        XCTAssertEqual(StyleTemplate(rawValue: "anime"), .handDrawn)
+        XCTAssertEqual(StyleTemplate(rawValue: "watercolor"), .handDrawn)
     }
 
     func testFlipbookFallsBackToSitWhenRunFramesMissing() {
