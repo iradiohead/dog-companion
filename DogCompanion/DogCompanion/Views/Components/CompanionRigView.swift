@@ -70,7 +70,6 @@ final class CompanionRigScene: SKScene {
     private var cutoutRoot = SKNode()
     private var puppetRoot = SKNode()
     private var cutoutNodes: [CompanionPart: SKSpriteNode] = [:]
-    private var cutoutUnderlayNode: SKSpriteNode?
     private var flipbookNode: SKSpriteNode?
     private var runTextures: [SKTexture] = []
     private var fillNodes: [PuppetPart: SKSpriteNode] = [:]
@@ -80,6 +79,7 @@ final class CompanionRigScene: SKScene {
     private let headAnchorY: CGFloat = 0.52
     private var lastImage: PlatformImage?
     private var lastPalette: CoatPalette?
+    private var cutoutBuildToken = UUID()
     private var cutoutTailOnLeft = true
 
     var rigState: CompanionRigState = .sitting
@@ -164,7 +164,6 @@ final class CompanionRigScene: SKScene {
         cutoutRoot.removeAllChildren()
         puppetRoot.removeAllChildren()
         cutoutNodes.removeAll()
-        cutoutUnderlayNode = nil
         flipbookNode = nil
         runTextures.removeAll()
         fillNodes.removeAll()
@@ -209,12 +208,10 @@ final class CompanionRigScene: SKScene {
             cutoutRoot.isHidden = false
             let flipbook = flipbookActive
             flipbookNode?.isHidden = !flipbook
-            cutoutUnderlayNode?.isHidden = flipbook
             for node in cutoutNodes.values {
                 node.isHidden = flipbook
                 node.alpha = 1
             }
-            cutoutUnderlayNode?.alpha = 1
             flipbookNode?.alpha = 1
         } else {
             cutoutRoot.isHidden = true
@@ -223,15 +220,27 @@ final class CompanionRigScene: SKScene {
     }
 
     private func buildCutout(from image: PlatformImage, into parent: SKNode) {
-        let underlay = makeCutoutSprite(from: image, part: .body)
-        underlay.zPosition = -1
-        parent.addChild(underlay)
-        cutoutUnderlayNode = underlay
+        let token = UUID()
+        cutoutBuildToken = token
+        cutoutTailOnLeft = true
 
-        let layers = CompanionLayerSlicer.slice(image)
-        let drawOrder: [CompanionPart] = [.tail, .backLeg, .body, .frontLeg, .head]
-        if let layers {
+        let fastNode = makeCutoutSprite(from: image, part: .body)
+        fastNode.zPosition = 2
+        parent.addChild(fastNode)
+        cutoutNodes[.body] = fastNode
+
+        Task { @MainActor in
+            let layers = await Task.detached(priority: .userInitiated) {
+                CompanionLayerSlicer.slice(image)
+            }.value
+            guard cutoutBuildToken == token, let layers else { return }
+            for node in cutoutNodes.values {
+                node.removeFromParent()
+            }
+            cutoutNodes.removeAll()
+
             cutoutTailOnLeft = layers.tailOnLeft
+            let drawOrder: [CompanionPart] = [.tail, .backLeg, .body, .frontLeg, .head]
             for part in drawOrder {
                 guard let partImage = layers.image(for: part) else { continue }
                 let node = makeCutoutSprite(from: partImage, part: part)
@@ -239,12 +248,8 @@ final class CompanionRigScene: SKScene {
                 parent.addChild(node)
                 cutoutNodes[part] = node
             }
-        } else {
-            cutoutTailOnLeft = true
-            let node = makeCutoutSprite(from: image, part: .body)
-            node.zPosition = 2
-            parent.addChild(node)
-            cutoutNodes[.body] = node
+            layoutParts()
+            syncPresentation()
         }
     }
 
@@ -297,8 +302,6 @@ final class CompanionRigScene: SKScene {
             let fitHeight = max(1, size.height * 0.90)
             let scale = min(fitWidth / imageSize.width, fitHeight / imageSize.height)
             fittedSize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
-            cutoutUnderlayNode?.size = fittedSize
-            cutoutUnderlayNode?.position = cutoutRest(for: .body)
             for (part, node) in cutoutNodes {
                 node.size = fittedSize
                 node.zRotation = 0
@@ -390,14 +393,6 @@ final class CompanionRigScene: SKScene {
         cutoutNodes[.head]?.zRotation = transform.headRotation
 
         let bodyRest = cutoutRest(for: .body)
-        cutoutUnderlayNode?.position = CGPoint(
-            x: bodyRest.x,
-            y: bodyRest.y + (isWholeSprite ? torsoY * 0.35 : torsoY)
-        )
-        cutoutUnderlayNode?.xScale = isWholeSprite ? 1 : transform.bodyScaleX
-        cutoutUnderlayNode?.yScale = isWholeSprite ? 1 : transform.bodyScaleY
-        cutoutUnderlayNode?.zRotation = 0
-
         cutoutNodes[.body]?.position = CGPoint(
             x: bodyRest.x,
             y: bodyRest.y + (isWholeSprite ? torsoY * 0.35 : torsoY)

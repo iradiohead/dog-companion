@@ -7,7 +7,7 @@ struct ContentView: View {
     @State private var showDogPicker = false
 
     var body: some View {
-        Group {
+        NavigationStack {
             if let companion = companions.first, !showDogPicker {
                 HomeView(
                     companion: companion,

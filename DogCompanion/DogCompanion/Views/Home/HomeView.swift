@@ -75,29 +75,33 @@ struct HomeView: View {
         }
         .task(id: companion.persistentModelID) {
             await viewModel.refreshCutoutIfNeeded(for: companion)
-            refreshCompanionImages(for: companion)
+            await refreshCompanionImages(for: companion)
         }
-        .onChange(of: companion.cutoutData, initial: true) { _, _ in
-            refreshCompanionImages(for: companion)
+        .onChange(of: companion.cutoutData) { _, _ in
+            Task { await refreshCompanionImages(for: companion) }
         }
         .onChange(of: companion.cutoutRunAData) { _, _ in
-            refreshCompanionImages(for: companion)
+            Task { await refreshCompanionImages(for: companion) }
         }
         .onChange(of: companion.cutoutRunBData) { _, _ in
-            refreshCompanionImages(for: companion)
+            Task { await refreshCompanionImages(for: companion) }
         }
         .navigationTitle("专注")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
     }
 
-    private func refreshCompanionImages(for companion: Companion) {
-        if let data = companion.cutoutData,
-           let opaque = try? CutoutImageProcessor.opaqueCutout(from: data) {
-            sitImage = PlatformImage.from(data: opaque)
-        } else {
-            sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
-        }
+    private func refreshCompanionImages(for companion: Companion) async {
+        let cutoutData = companion.cutoutData
+        let opaqueData = await Task.detached(priority: .userInitiated) {
+            guard let cutoutData else { return nil as Data? }
+            if let opaque = try? CutoutImageProcessor.opaqueCutout(from: cutoutData) {
+                return opaque
+            }
+            return cutoutData
+        }.value
+
+        sitImage = opaqueData.flatMap { PlatformImage.from(data: $0) }
         runFrames = companion.poseCutouts.runFrameImages()
     }
 

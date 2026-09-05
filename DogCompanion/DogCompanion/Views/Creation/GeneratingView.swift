@@ -20,30 +20,34 @@ struct GeneratingView<VM>: View where VM: ComicGenerationFlow & Observable {
     @State private var timer: Timer?
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        ZStack {
+            PaperBackgroundView()
 
-            ProgressView()
-                .controlSize(.large)
+            VStack(spacing: 32) {
+                Spacer()
 
-            VStack(spacing: 8) {
-                Text(title)
-                    .font(.title2.bold())
-                Text(messages[messageIndex])
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .animation(.easeInOut, value: messageIndex)
+                ProgressView()
+                    .controlSize(.large)
+
+                VStack(spacing: 8) {
+                    Text(title)
+                        .font(.title2.bold())
+                    Text(messages[messageIndex])
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .animation(.easeInOut, value: messageIndex)
+                }
+
+                Label(StyleTemplate.default.displayName, systemImage: StyleTemplate.default.iconName)
+                    .font(.caption)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.accentColor.opacity(0.12), in: Capsule())
+
+                Spacer()
             }
-
-            Label(StyleTemplate.default.displayName, systemImage: StyleTemplate.default.iconName)
-                .font(.caption)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.accentColor.opacity(0.12), in: Capsule())
-
-            Spacer()
+            .padding()
         }
-        .padding()
         .onAppear {
             timer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { _ in
                 messageIndex = (messageIndex + 1) % messages.count
