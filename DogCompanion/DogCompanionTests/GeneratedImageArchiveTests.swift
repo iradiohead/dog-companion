@@ -36,5 +36,8 @@ final class GeneratedImageArchiveTests: XCTestCase {
         let directory = GeneratedImageArchive.defaultArchiveDirectory()
         XCTAssertTrue(directory.path.contains("DogCompanion"))
         XCTAssertTrue(directory.path.hasSuffix("hand-drawn-portraits"))
+        #if targetEnvironment(macCatalyst)
+        XCTAssertTrue(directory.path.contains("/Library/"))
+        #endif
     }
 }

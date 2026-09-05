@@ -28,14 +28,20 @@ enum GeneratedImageArchive {
         return directory
     }
 
-    /// Mac Catalyst: `~/Downloads/DogCompanion/hand-drawn-portraits/`
+    /// Mac Catalyst: `~/Library/.../DogCompanion/hand-drawn-portraits/` (see console log for full path)
     /// iPhone: `Documents/DogCompanion/hand-drawn-portraits/` (visible in Files app)
     static func defaultArchiveDirectory() -> URL {
+        let base: URL
         #if targetEnvironment(macCatalyst)
-        let base = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Downloads", isDirectory: true)
+        base = (try? FileManager.default.url(
+            for: .libraryDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )) ?? FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library", isDirectory: true)
         #else
-        let base = (try? FileManager.default.url(
+        base = (try? FileManager.default.url(
             for: .documentDirectory,
             in: .userDomainMask,
             appropriateFor: nil,
