@@ -48,6 +48,7 @@ struct GenerationService {
             throw GenerationError.invalidImage
         }
         let cutoutData = try await mattingService.extractCutout(from: portraitImage)
+        archiveCutout(cutoutData, pose: .sit)
         return GenerationResult(
             comicPortraitData: portraitData,
             cutoutData: cutoutData,
@@ -70,7 +71,9 @@ struct GenerationService {
             pose: pose,
             apiKey: apiKey
         )
-        return try await downloadImage(from: imageURL)
+        let portraitData = try await downloadImage(from: imageURL)
+        archivePortrait(portraitData, pose: pose)
+        return portraitData
     }
 
     private func createWanxiangImage(
@@ -190,6 +193,26 @@ struct GenerationService {
         }
 
         throw lastError
+    }
+
+    private func archivePortrait(_ data: Data, pose: CompanionPose) {
+        do {
+            _ = try GeneratedImageArchive.savePortrait(data, pose: pose)
+        } catch {
+            #if DEBUG
+            print("GeneratedImageArchive portrait save failed: \(error)")
+            #endif
+        }
+    }
+
+    private func archiveCutout(_ data: Data, pose: CompanionPose) {
+        do {
+            _ = try GeneratedImageArchive.saveCutout(data, pose: pose)
+        } catch {
+            #if DEBUG
+            print("GeneratedImageArchive cutout save failed: \(error)")
+            #endif
+        }
     }
 
     private func validateHTTP(response: URLResponse, data: Data) throws {
