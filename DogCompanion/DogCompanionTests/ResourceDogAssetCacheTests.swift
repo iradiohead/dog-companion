@@ -36,4 +36,15 @@ final class ResourceDogAssetCacheTests: XCTestCase {
     func testDirectoryURLUsesOverrideRoot() {
         XCTAssertEqual(ResourceDogAssetCache.directoryURL(), tempDirectory)
     }
+
+    func testLogDirectoryOnLaunchCreatesFolderOnDisk() {
+        ResourceDogAssetCache.logDirectoryOnLaunch()
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: tempDirectory.path))
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: tempDirectory.appendingPathComponent(".keep").path
+            )
+        )
+    }
 }

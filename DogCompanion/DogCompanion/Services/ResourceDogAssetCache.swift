@@ -20,10 +20,25 @@ enum ResourceDogAssetCache {
 
     static func logDirectoryOnLaunch() {
         let directory = directoryURL()
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let message = "DogCompanion [ResourceDogAssetCache] 目录: \(directory.path)"
-        logger.info("\(message)")
-        print(message)
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let marker = directory.appendingPathComponent(".keep")
+            if !FileManager.default.fileExists(atPath: marker.path) {
+                try Data("# DogCompanion resource-cache\n".utf8).write(to: marker, options: .atomic)
+            }
+            let exists = FileManager.default.fileExists(atPath: directory.path)
+            let items = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+            let message = "DogCompanion [ResourceDogAssetCache] 目录: \(directory.path) exists=\(exists) contents=\(items)"
+            logger.info("\(message)")
+            print(message)
+            #if !targetEnvironment(macCatalyst)
+            print("DogCompanion [ResourceDogAssetCache] 这是 iPhone 沙盒路径，Mac Finder 打开同一地址不会有这个文件夹。请用 Xcode → Window → Devices and Simulators → 选中设备 → Download Container，再解压查看 Library/Application Support/DogCompanion/resource-cache。")
+            #endif
+        } catch {
+            let message = "DogCompanion [ResourceDogAssetCache] 创建失败: \(error) path=\(directory.path)"
+            logger.error("\(message)")
+            print(message)
+        }
     }
 
     static func portraitURL(for dogName: String, pose: CompanionPose = .sit) -> URL? {
