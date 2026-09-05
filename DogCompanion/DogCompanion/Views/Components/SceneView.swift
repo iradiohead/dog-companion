@@ -11,8 +11,7 @@ struct SceneView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let floorHeight = max(geo.size.height * 0.58, 250)
-            let wallHeight = geo.size.height - floorHeight
+            let (wallHeight, floorHeight) = SceneRoomLayout.wallAndFloorHeights(in: geo.size.height)
 
             ZStack(alignment: .top) {
                 SceneAmbientOverlay(
@@ -93,5 +92,13 @@ struct SceneView: View {
 
     private var rugColor: Color {
         scene.accentColor.opacity(0.85)
+    }
+}
+
+enum SceneRoomLayout {
+    static func wallAndFloorHeights(in height: CGFloat) -> (wall: CGFloat, floor: CGFloat) {
+        guard height.isFinite, height > 0 else { return (0, 0) }
+        let floor = min(height, max(height * 0.58, min(250, height)))
+        return (height - floor, floor)
     }
 }

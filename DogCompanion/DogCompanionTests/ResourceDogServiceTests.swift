@@ -123,21 +123,28 @@ final class ResourceDogServiceTests: XCTestCase {
         XCTAssertEqual(cutoutSpy.callCount, 0)
     }
 
-    func testLoadPlanUsesBundledGoldenRetrieverCutoutWithoutExtracting() throws {
+    func testLoadPlanExtractsCutoutWhenGoldenHasHandDrawnButNoForeground() throws {
         let dogFolder = tempRoot
             .appendingPathComponent("resource", isDirectory: true)
             .appendingPathComponent("金毛", isDirectory: true)
         try makeTinyPNG().write(to: dogFolder.appendingPathComponent("hand-drawn-sit.png"))
-        try makeSoftCutoutPNG().write(to: dogFolder.appendingPathComponent("foreground-dog-sit.png"))
 
         var service = ResourceDogService()
         service.catalog = catalog
         let plan = service.loadPlan(for: "金毛")
 
         XCTAssertFalse(plan.willGeneratePortrait)
-        XCTAssertFalse(plan.willExtractCutout)
-        XCTAssertTrue(plan.messages.contains(ResourceDogLoadStatus.readingCutout.message))
-        XCTAssertFalse(plan.messages.contains(ResourceDogLoadStatus.extractingCutout.message))
+        XCTAssertTrue(plan.willExtractCutout)
+        XCTAssertTrue(plan.messages.contains(ResourceDogLoadStatus.extractingCutout.message))
+        XCTAssertFalse(plan.messages.contains(ResourceDogLoadStatus.readingCutout.message))
+    }
+
+    func testChromaKeyExtractorReturnsCutoutData() async throws {
+        let image = makeDogOnWhiteBackground()
+        let data = try await ChromaKeyCutoutExtractor().extractCutout(from: image, pose: .sit)
+        XCTAssertFalse(data.isEmpty)
+        XCTAssertNotNil(UIImage(data: data))
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(data))
     }
 
     func testLoadPlanDoesNotClaimPortraitGenerationWhenBundleHasHandDrawn() throws {
@@ -240,14 +247,17 @@ final class ResourceDogServiceTests: XCTestCase {
     }
 
     private func makeSoftCutoutPNG() throws -> Data {
+        return try CutoutImageProcessor.chromaKeyCutout(from: makeDogOnWhiteBackground())
+    }
+
+    private func makeDogOnWhiteBackground() -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
-        let image = renderer.image { context in
+        return renderer.image { context in
             UIColor.white.setFill()
             context.fill(CGRect(x: 0, y: 0, width: 32, height: 32))
             UIColor.brown.setFill()
             context.fill(CGRect(x: 10, y: 10, width: 12, height: 12))
         }
-        return try CutoutImageProcessor.chromaKeyCutout(from: image)
     }
 
     private func makeTinyPNG() -> Data {

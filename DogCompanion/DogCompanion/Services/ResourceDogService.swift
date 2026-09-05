@@ -69,7 +69,7 @@ extension MattingService: ResourceDogCutoutExtracting {}
 struct ChromaKeyCutoutExtractor: ResourceDogCutoutExtracting {
     func extractCutout(from image: UIImage, pose: CompanionPose) async throws -> Data {
         _ = pose
-        try await Task.detached(priority: .userInitiated) {
+        return try await Task.detached(priority: .userInitiated) {
             let chroma = try CutoutImageProcessor.chromaKeyCutout(from: image)
             return CutoutImageProcessor.forceOpaqueCutout(from: chroma)
         }.value

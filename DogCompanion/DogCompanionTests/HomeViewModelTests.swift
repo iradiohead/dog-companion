@@ -99,3 +99,27 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.formattedRemainingTime.contains(":"))
     }
 }
+
+final class SceneRoomLayoutTests: XCTestCase {
+    func testZeroHeightDoesNotProduceNegativeFrames() {
+        let split = SceneRoomLayout.wallAndFloorHeights(in: 0)
+        XCTAssertEqual(split.wall, 0)
+        XCTAssertEqual(split.floor, 0)
+    }
+
+    func testShortHeightKeepsFloorWithinBounds() {
+        let split = SceneRoomLayout.wallAndFloorHeights(in: 200)
+        XCTAssertGreaterThanOrEqual(split.wall, 0)
+        XCTAssertGreaterThanOrEqual(split.floor, 0)
+        XCTAssertEqual(split.wall + split.floor, 200)
+        XCTAssertEqual(split.floor, 200)
+    }
+
+    func testTallHeightKeepsWallNonNegative() {
+        let split = SceneRoomLayout.wallAndFloorHeights(in: 580)
+        XCTAssertGreaterThan(split.wall, 0)
+        XCTAssertGreaterThan(split.floor, 0)
+        XCTAssertEqual(split.wall + split.floor, 580, accuracy: 0.001)
+        XCTAssertLessThan(split.floor, 580)
+    }
+}
