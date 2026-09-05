@@ -3,6 +3,7 @@ import SwiftUI
 struct DogCoverFlowPicker: View {
     let dogs: [String]
     @Binding var focusedDog: String?
+    var loadPreview: (String) async -> PlatformImage?
     var onConfirm: (String) -> Void
 
     var body: some View {
@@ -69,19 +70,24 @@ struct DogCoverFlowPicker: View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 16) {
                 ForEach(dogs, id: \.self) { dogName in
-                    DogCoverCard(dogName: dogName, size: cardSize, isFocused: focusedDog == dogName)
-                        .scrollTransition(axis: .horizontal) { content, phase in
-                            content
-                                .scaleEffect(phase.isIdentity ? 1.0 : 0.76)
-                                .rotation3DEffect(
-                                    .degrees(Double(phase.value) * -58),
-                                    axis: (x: 0, y: 1, z: 0),
-                                    perspective: 0.45
-                                )
-                                .opacity(phase.isIdentity ? 1.0 : max(0.4, 1.0 - abs(phase.value) * 0.55))
-                                .offset(y: abs(phase.value) * 10)
-                        }
-                        .id(dogName)
+                    DogCoverCard(
+                        dogName: dogName,
+                        size: cardSize,
+                        isFocused: focusedDog == dogName,
+                        loadPreview: loadPreview
+                    )
+                    .scrollTransition(axis: .horizontal) { content, phase in
+                        content
+                            .scaleEffect(phase.isIdentity ? 1.0 : 0.76)
+                            .rotation3DEffect(
+                                .degrees(Double(phase.value) * -58),
+                                axis: (x: 0, y: 1, z: 0),
+                                perspective: 0.45
+                            )
+                            .opacity(phase.isIdentity ? 1.0 : max(0.4, 1.0 - abs(phase.value) * 0.55))
+                            .offset(y: abs(phase.value) * 10)
+                    }
+                    .id(dogName)
                 }
             }
             .scrollTargetLayout()
@@ -97,6 +103,7 @@ private struct DogCoverCard: View {
     let dogName: String
     let size: CGFloat
     let isFocused: Bool
+    let loadPreview: (String) async -> PlatformImage?
 
     @State private var previewImage: PlatformImage?
 
@@ -153,26 +160,7 @@ private struct DogCoverCard: View {
         )
         .animation(.easeOut(duration: 0.2), value: isFocused)
         .task(id: dogName) {
-            previewImage = await ResourceDogPreviewLoader.load(for: dogName)
+            previewImage = await loadPreview(dogName)
         }
     }
-}
-
-#Preview {
-    struct PreviewHost: View {
-        @State private var focused: String? = "雪纳瑞"
-
-        var body: some View {
-            ZStack {
-                PaperBackgroundView()
-                DogCoverFlowPicker(
-                    dogs: ["雪纳瑞", "金毛"],
-                    focusedDog: $focused,
-                    onConfirm: { _ in }
-                )
-            }
-        }
-    }
-
-    return PreviewHost()
 }

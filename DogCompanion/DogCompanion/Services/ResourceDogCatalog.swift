@@ -49,33 +49,8 @@ struct ResourceDogCatalog {
         }
     }
 
-    fileprivate static func latestPrefixedFile(in files: [URL], prefix: String) -> URL? {
-        files
-            .filter { $0.lastPathComponent.hasPrefix(prefix) }
-            .sorted { $0.lastPathComponent > $1.lastPathComponent }
-            .first
-    }
-
     var bundle: Bundle = .main
-    /// Override in tests to point at a temporary `resource/` tree.
     var resourceRootOverride: URL?
-
-    func resourceRootURL() throws -> URL {
-        if let resourceRootOverride {
-            return resourceRootOverride
-        }
-        if let url = bundle.url(forResource: Self.resourceFolderName, withExtension: nil),
-           FileManager.default.fileExists(atPath: url.path) {
-            return url
-        }
-        if let resourceURL = bundle.resourceURL {
-            let nested = resourceURL.appendingPathComponent(Self.resourceFolderName, isDirectory: true)
-            if FileManager.default.fileExists(atPath: nested.path) {
-                return nested
-            }
-        }
-        throw ResourceDogError.missingResourceRoot
-    }
 
     func availableDogNames() -> [String] {
         guard let root = try? resourceRootURL() else { return [] }
@@ -93,14 +68,6 @@ struct ResourceDogCatalog {
         .sorted()
     }
 
-    func folderURL(for dogName: String) throws -> URL {
-        let url = try resourceRootURL().appendingPathComponent(dogName, isDirectory: true)
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            throw ResourceDogError.dogNotFound(dogName)
-        }
-        return url
-    }
-
     func folderContents(for dogName: String) throws -> FolderContents {
         let folderURL = try folderURL(for: dogName)
         return FolderContents(
@@ -110,31 +77,45 @@ struct ResourceDogCatalog {
         )
     }
 
-    func latestFile(in folderURL: URL, prefix: String) -> URL? {
-        Self.latestPrefixedFile(in: imageFiles(in: folderURL), prefix: prefix)
-    }
-
-    /// Any image in the folder that does **not** start with `hand-drawn` or `foreground-dog`
-    /// is treated as the original photo (e.g. `金毛寻回犬.jpg`).
-    func originalImageURL(in folderURL: URL) -> URL? {
-        let files = imageFiles(in: folderURL)
-        return files
-            .filter { !Self.isGeneratedAsset(fileName: $0.lastPathComponent) }
-            .sorted { $0.lastPathComponent > $1.lastPathComponent }
-            .first
-    }
-
-    func originalImageURL(for dogName: String) throws -> URL? {
-        try folderContents(for: dogName).originalURL
-    }
-
     func previewImageURL(for dogName: String) -> URL? {
         try? folderContents(for: dogName).previewURL
+    }
+
+    fileprivate static func latestPrefixedFile(in files: [URL], prefix: String) -> URL? {
+        files
+            .filter { $0.lastPathComponent.hasPrefix(prefix) }
+            .sorted { $0.lastPathComponent > $1.lastPathComponent }
+            .first
     }
 
     fileprivate static func isGeneratedAsset(fileName: String) -> Bool {
         let lower = fileName.lowercased()
         return lower.hasPrefix("hand-drawn") || lower.hasPrefix("foreground-dog")
+    }
+
+    private func resourceRootURL() throws -> URL {
+        if let resourceRootOverride {
+            return resourceRootOverride
+        }
+        if let url = bundle.url(forResource: Self.resourceFolderName, withExtension: nil),
+           FileManager.default.fileExists(atPath: url.path) {
+            return url
+        }
+        if let resourceURL = bundle.resourceURL {
+            let nested = resourceURL.appendingPathComponent(Self.resourceFolderName, isDirectory: true)
+            if FileManager.default.fileExists(atPath: nested.path) {
+                return nested
+            }
+        }
+        throw ResourceDogError.missingResourceRoot
+    }
+
+    private func folderURL(for dogName: String) throws -> URL {
+        let url = try resourceRootURL().appendingPathComponent(dogName, isDirectory: true)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw ResourceDogError.dogNotFound(dogName)
+        }
+        return url
     }
 
     private func imageFiles(in folderURL: URL) -> [URL] {

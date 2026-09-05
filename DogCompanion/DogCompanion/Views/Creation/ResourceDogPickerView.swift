@@ -8,32 +8,23 @@ struct ResourceDogPickerView: View {
         ZStack {
             PaperBackgroundView()
 
-            Group {
-                if viewModel.availableDogs.isEmpty {
-                    ContentUnavailableView(
-                        "没有可用的狗狗",
-                        systemImage: "dog.fill",
-                        description: Text("请在 App Bundle 的 resource/ 下添加以狗名命名的文件夹。")
-                    )
-                } else {
-                    DogCoverFlowPicker(
-                        dogs: viewModel.availableDogs,
-                        focusedDog: $focusedDog,
-                        onConfirm: { dogName in
-                            viewModel.selectDog(dogName)
-                        }
-                    )
-                }
+            if viewModel.availableDogs.isEmpty {
+                ContentUnavailableView(
+                    "没有可用的狗狗",
+                    systemImage: "dog.fill",
+                    description: Text("请在 resource/ 下添加以狗名命名的文件夹。")
+                )
+            } else {
+                DogCoverFlowPicker(
+                    dogs: viewModel.availableDogs,
+                    focusedDog: $focusedDog,
+                    loadPreview: viewModel.previewImage(for:),
+                    onConfirm: viewModel.selectDog
+                )
             }
         }
         .onAppear {
             viewModel.refreshAvailableDogs()
-            focusedDog = viewModel.availableDogs.first
-        }
-        .onChange(of: viewModel.availableDogs) { _, dogs in
-            if focusedDog == nil || !(focusedDog.map { dogs.contains($0) } ?? false) {
-                focusedDog = dogs.first
-            }
         }
         .overlay(alignment: .bottom) {
             if let error = viewModel.errorMessage {

@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import SwiftData
 
-enum CreationStep: Int, CaseIterable {
+enum CreationStep {
     case pickDog
     case generating
 }
@@ -22,38 +22,68 @@ final class CreationViewModel: ComicGenerationFlow {
     var availableDogs: [String] = []
     var selectedDogName: String?
 
-    private let catalog = ResourceDogCatalog()
-    private var resourceLoader: ResourceDogLoader {
-        ResourceDogLoader(catalog: catalog)
+    let mode: CreationMode = .current
+
+    private let resourceService = ResourceDogService()
+    private let generationService = GenerationService()
+
+    var generatingTitle: String {
+        switch mode {
+        case .resourceCatalog:
+            return "正在准备 \(selectedDogName ?? "你的狗狗")"
+        case .photo:
+            return "正在生成你的专注伙伴"
+        }
+    }
+
+    var generatingStatusMessages: [String] {
+        switch mode {
+        case .resourceCatalog:
+            return [
+                "正在读取狗狗资源…",
+                "正在生成手绘形象…",
+                "正在准备前景图层…",
+                "马上就好啦…"
+            ]
+        case .photo:
+            return [
+                "正在认出它的样子…",
+                "正在画成你的狗…",
+                "正在抠出透明图层…",
+                "马上就好啦…"
+            ]
+        }
     }
 
     func refreshAvailableDogs() {
-        availableDogs = catalog.availableDogNames()
-        ResourceDogPreviewLoader.preload(for: availableDogs, catalog: catalog)
+        availableDogs = resourceService.availableDogs()
+        resourceService.preloadPreviews(for: availableDogs)
+    }
+
+    func previewImage(for dogName: String) async -> PlatformImage? {
+        await resourceService.previewImage(for: dogName)
     }
 
     func selectDog(_ name: String) {
         selectedDogName = name
         companionName = name
-        sourceImage = nil
-        selectedStyle = .default
         errorMessage = nil
         step = .generating
     }
 
     func selectPhoto(_ image: UIImage) {
-        guard !CompanionCreationConfig.useResourceCatalog else { return }
+        guard mode == .photo else { return }
         sourceImage = image
-        selectedStyle = .default
         errorMessage = nil
         step = .generating
     }
 
     func startGeneration() async {
-        if CompanionCreationConfig.useResourceCatalog {
-            await startResourceGeneration()
-        } else {
-            await startPhotoGeneration()
+        switch mode {
+        case .resourceCatalog:
+            await generateFromResource()
+        case .photo:
+            await generateFromPhoto()
         }
     }
 
@@ -70,66 +100,65 @@ final class CreationViewModel: ComicGenerationFlow {
         }
     }
 
-    private func startResourceGeneration() async {
+    func goBackToPhoto() {
+        errorMessage = nil
+        step = .pickDog
+    }
+
+    private func generateFromResource() async {
         guard let dogName = selectedDogName else {
-            errorMessage = "请先选择一只狗狗"
-            step = .pickDog
+            failGeneration("请先选择一只狗狗")
             return
         }
 
-        isGenerating = true
-        errorMessage = nil
-
-        do {
-            let assets = try await resourceLoader.loadAssets(for: dogName)
+        await runGeneration {
+            let assets = try await resourceService.loadAssets(for: dogName)
             generatedPortraitData = assets.portraitData
             generatedCutoutData = assets.cutoutData
             selectedPalette = assets.coatPalette
             companionName = dogName
-        } catch {
-            errorMessage = error.localizedDescription
-            step = .pickDog
         }
-
-        isGenerating = false
     }
 
-    private func startPhotoGeneration() async {
+    private func generateFromPhoto() async {
         guard let image = sourceImage else {
-            errorMessage = "请先选择照片"
-            step = .pickDog
+            failGeneration("请先选择照片")
             return
         }
 
-        let generationService = GenerationService()
-        isGenerating = true
-        errorMessage = nil
-
-        do {
+        await runGeneration {
             let result = try await generationService.generateCompanionAssets(from: image, style: selectedStyle)
             generatedPortraitData = result.comicPortraitData
             generatedCutoutData = result.cutoutData
             selectedPalette = result.coatPalette
             sourceImage = nil
-        } catch {
-            errorMessage = error.localizedDescription
-            step = .pickDog
         }
+    }
 
+    private func runGeneration(_ work: () async throws -> Void) async {
+        isGenerating = true
+        errorMessage = nil
+        do {
+            try await work()
+        } catch {
+            failGeneration(error.localizedDescription)
+        }
         isGenerating = false
     }
 
-    func saveCompanion(context: ModelContext) throws {
+    private func failGeneration(_ message: String) {
+        errorMessage = message
+        step = .pickDog
+    }
+
+    private func saveCompanion(context: ModelContext) throws {
         let trimmed = companionName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            errorMessage = "缺少狗狗名字"
-            return
+            throw CreationError.missingName
         }
         guard let portraitData = generatedPortraitData,
               let cutoutData = generatedCutoutData else {
-            errorMessage = "缺少生成数据，请重新选择"
-            step = .pickDog
-            return
+            throw CreationError.missingAssets
         }
 
         let companion = Companion(
@@ -144,10 +173,9 @@ final class CreationViewModel: ComicGenerationFlow {
         reset()
     }
 
-    func reset() {
+    private func reset() {
         step = .pickDog
         sourceImage = nil
-        selectedStyle = .default
         generatedPortraitData = nil
         generatedCutoutData = nil
         selectedPalette = .brown
@@ -156,9 +184,16 @@ final class CreationViewModel: ComicGenerationFlow {
         isGenerating = false
         errorMessage = nil
     }
+}
 
-    func goBackToPhoto() {
-        errorMessage = nil
-        step = .pickDog
+enum CreationError: LocalizedError {
+    case missingName
+    case missingAssets
+
+    var errorDescription: String? {
+        switch self {
+        case .missingName: return "缺少狗狗名字"
+        case .missingAssets: return "缺少生成数据，请重新选择"
+        }
     }
 }

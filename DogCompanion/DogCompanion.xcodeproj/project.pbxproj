@@ -37,8 +37,7 @@
 		A1000000000000000000002E /* GeneratedImageArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002E /* GeneratedImageArchive.swift */; };
 		A1000000000000000000002F /* CompanionCreationConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* CompanionCreationConfig.swift */; };
 		A10000000000000000000030 /* ResourceDogCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* ResourceDogCatalog.swift */; };
-		A10000000000000000000031 /* ResourceDogLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* ResourceDogLoader.swift */; };
-		A10000000000000000000035 /* ResourceDogPreviewLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* ResourceDogPreviewLoader.swift */; };
+		A10000000000000000000036 /* ResourceDogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* ResourceDogService.swift */; };
 		A10000000000000000000032 /* ResourceDogPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* ResourceDogPickerView.swift */; };
 		A10000000000000000000034 /* DogCoverFlowPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* DogCoverFlowPicker.swift */; };
 		A10000000000000000000033 /* resource in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* resource */; };
@@ -48,7 +47,6 @@
 		A1000000000000000000000A /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* SharedComponents.swift */; };
 		A1000000000000000000000B /* PhotoPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* PhotoPickerView.swift */; };
 		A1000000000000000000000D /* GeneratingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* GeneratingView.swift */; };
-		A1000000000000000000000E /* NamingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* NamingView.swift */; };
 		A1000000000000000000000F /* CreationFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* CreationFlowView.swift */; };
 		A10000000000000000000010 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* HomeView.swift */; };
 		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Assets.xcassets */; };
@@ -88,8 +86,7 @@
 		A2000000000000000000002E /* GeneratedImageArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratedImageArchive.swift; sourceTree = "<group>"; };
 		A2000000000000000000002F /* CompanionCreationConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionCreationConfig.swift; sourceTree = "<group>"; };
 		A20000000000000000000030 /* ResourceDogCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogCatalog.swift; sourceTree = "<group>"; };
-		A20000000000000000000031 /* ResourceDogLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogLoader.swift; sourceTree = "<group>"; };
-		A20000000000000000000035 /* ResourceDogPreviewLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogPreviewLoader.swift; sourceTree = "<group>"; };
+		A20000000000000000000036 /* ResourceDogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogService.swift; sourceTree = "<group>"; };
 		A20000000000000000000032 /* ResourceDogPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogPickerView.swift; sourceTree = "<group>"; };
 		A20000000000000000000034 /* DogCoverFlowPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogCoverFlowPicker.swift; sourceTree = "<group>"; };
 		A20000000000000000000033 /* resource */ = {isa = PBXFileReference; lastKnownFileType = folder; name = resource; path = ../resource; sourceTree = SOURCE_ROOT; };
@@ -119,7 +116,6 @@
 		A2000000000000000000000A /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		A2000000000000000000000B /* PhotoPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPickerView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000D /* GeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratingView.swift; sourceTree = "<group>"; };
-		A2000000000000000000000E /* NamingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamingView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000F /* CreationFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationFlowView.swift; sourceTree = "<group>"; };
 		A20000000000000000000010 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -217,8 +213,7 @@
 				A20000000000000000000005 /* GenerationService.swift */,
 				A2000000000000000000002E /* GeneratedImageArchive.swift */,
 				A20000000000000000000030 /* ResourceDogCatalog.swift */,
-				A20000000000000000000031 /* ResourceDogLoader.swift */,
-				A20000000000000000000035 /* ResourceDogPreviewLoader.swift */,
+				A20000000000000000000036 /* ResourceDogService.swift */,
 				A20000000000000000000006 /* SecretsProvider.swift */,
 				A20000000000000000000018 /* MattingService.swift */,
 			);
@@ -287,7 +282,6 @@
 				A20000000000000000000034 /* DogCoverFlowPicker.swift */,
 				A2000000000000000000000B /* PhotoPickerView.swift */,
 				A2000000000000000000000D /* GeneratingView.swift */,
-				A2000000000000000000000E /* NamingView.swift */,
 			);
 			path = Creation;
 			sourceTree = "<group>";
@@ -461,8 +455,7 @@
 				A1000000000000000000002E /* GeneratedImageArchive.swift in Sources */,
 				A1000000000000000000002F /* CompanionCreationConfig.swift in Sources */,
 				A10000000000000000000030 /* ResourceDogCatalog.swift in Sources */,
-				A10000000000000000000031 /* ResourceDogLoader.swift in Sources */,
-				A10000000000000000000035 /* ResourceDogPreviewLoader.swift in Sources */,
+				A10000000000000000000036 /* ResourceDogService.swift in Sources */,
 				A10000000000000000000006 /* SecretsProvider.swift in Sources */,
 				A10000000000000000000017 /* MattingService.swift in Sources */,
 				A10000000000000000000018 /* SceneCatalog.swift in Sources */,
@@ -492,7 +485,6 @@
 				A10000000000000000000032 /* ResourceDogPickerView.swift in Sources */,
 				A10000000000000000000034 /* DogCoverFlowPicker.swift in Sources */,
 				A1000000000000000000000D /* GeneratingView.swift in Sources */,
-				A1000000000000000000000E /* NamingView.swift in Sources */,
 				A1000000000000000000000F /* CreationFlowView.swift in Sources */,
 				A10000000000000000000010 /* HomeView.swift in Sources */,
 				A10000000000000000000013 /* ComicGenerationFlow.swift in Sources */,

@@ -138,7 +138,7 @@ private struct SettingsSheet: View {
                 Section("伙伴") {
                     LabeledContent("名字", value: companion.name)
                 }
-                if !CompanionCreationConfig.useResourceCatalog {
+                if CreationMode.current == .photo {
                     Section {
                         Button("换造型") {
                             dismiss()

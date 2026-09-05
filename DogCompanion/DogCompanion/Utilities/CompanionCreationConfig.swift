@@ -1,6 +1,14 @@
 import Foundation
 
-/// Temporary product flags while photo upload is disabled.
+enum CreationMode {
+    case resourceCatalog
+    case photo
+
+    static var current: CreationMode {
+        CompanionCreationConfig.useResourceCatalog ? .resourceCatalog : .photo
+    }
+}
+
 enum CompanionCreationConfig {
     static let useResourceCatalog = true
 }

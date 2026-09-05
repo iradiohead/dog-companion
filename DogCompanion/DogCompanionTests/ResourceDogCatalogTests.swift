@@ -12,14 +12,10 @@ final class ResourceDogCatalogTests: XCTestCase {
         let dogFolder = resourceRoot.appendingPathComponent("雪纳瑞", isDirectory: true)
         try FileManager.default.createDirectory(at: dogFolder, withIntermediateDirectories: true)
 
-        let handDrawn = dogFolder.appendingPathComponent("hand-drawn-sit-old.png")
-        let handDrawnNew = dogFolder.appendingPathComponent("hand-drawn-sit-new.png")
-        let foreground = dogFolder.appendingPathComponent("foreground-dog-sit-a.png")
-        let original = dogFolder.appendingPathComponent("original.jpg")
-        try Data([0x01]).write(to: handDrawn)
-        try Data([0x02]).write(to: handDrawnNew)
-        try Data([0x03]).write(to: foreground)
-        try Data([0x04]).write(to: original)
+        try Data([0x01]).write(to: dogFolder.appendingPathComponent("hand-drawn-sit-old.png"))
+        try Data([0x02]).write(to: dogFolder.appendingPathComponent("hand-drawn-sit-new.png"))
+        try Data([0x03]).write(to: dogFolder.appendingPathComponent("foreground-dog-sit-a.png"))
+        try Data([0x04]).write(to: dogFolder.appendingPathComponent("original.jpg"))
 
         catalog = ResourceDogCatalog(resourceRootOverride: resourceRoot)
     }
@@ -32,31 +28,24 @@ final class ResourceDogCatalogTests: XCTestCase {
         XCTAssertEqual(catalog.availableDogNames(), ["雪纳瑞"])
     }
 
-    func testLatestFilePicksLexicographicallyLatestName() throws {
-        let folder = try catalog.folderURL(for: "雪纳瑞")
-        let latestHandDrawn = catalog.latestFile(in: folder, prefix: "hand-drawn")
-        XCTAssertEqual(latestHandDrawn?.lastPathComponent, "hand-drawn-sit-new.png")
+    func testFolderContentsPicksLatestHandDrawn() throws {
+        let contents = try catalog.folderContents(for: "雪纳瑞")
+        XCTAssertEqual(contents.handDrawnURL?.lastPathComponent, "hand-drawn-sit-new.png")
+        XCTAssertEqual(contents.foregroundURL?.lastPathComponent, "foreground-dog-sit-a.png")
+        XCTAssertEqual(contents.originalURL?.lastPathComponent, "original.jpg")
     }
 
-    func testOriginalImageURLPrefersFixedOriginalName() throws {
-        let folder = try catalog.folderURL(for: "雪纳瑞")
-        let original = catalog.originalImageURL(in: folder)
-        XCTAssertEqual(original?.lastPathComponent, "original.jpg")
-    }
-
-    func testOriginalImageURLAcceptsArbitraryFileName() throws {
+    func testOriginalURLAcceptsArbitraryFileName() throws {
         let resourceRoot = tempRoot.appendingPathComponent("resource", isDirectory: true)
         let dogFolder = resourceRoot.appendingPathComponent("金毛", isDirectory: true)
         try FileManager.default.createDirectory(at: dogFolder, withIntermediateDirectories: true)
-        let photo = dogFolder.appendingPathComponent("金毛寻回犬.jpg")
-        try Data([0x05]).write(to: photo)
+        try Data([0x05]).write(to: dogFolder.appendingPathComponent("金毛寻回犬.jpg"))
 
-        let folder = try catalog.folderURL(for: "金毛")
-        let original = catalog.originalImageURL(in: folder)
-        XCTAssertEqual(original?.lastPathComponent, "金毛寻回犬.jpg")
+        let contents = try catalog.folderContents(for: "金毛")
+        XCTAssertEqual(contents.originalURL?.lastPathComponent, "金毛寻回犬.jpg")
     }
 
-    func testOriginalImageURLIgnoresHandDrawnAndForeground() throws {
+    func testOriginalURLOnlyUsesNonGeneratedFiles() throws {
         let resourceRoot = tempRoot.appendingPathComponent("resource", isDirectory: true)
         let dogFolder = resourceRoot.appendingPathComponent("测试犬", isDirectory: true)
         try FileManager.default.createDirectory(at: dogFolder, withIntermediateDirectories: true)
@@ -64,22 +53,12 @@ final class ResourceDogCatalogTests: XCTestCase {
         try Data([0x02]).write(to: dogFolder.appendingPathComponent("foreground-dog-sit.png"))
         try Data([0x03]).write(to: dogFolder.appendingPathComponent("我的狗.jpg"))
 
-        let folder = try catalog.folderURL(for: "测试犬")
-        XCTAssertEqual(catalog.originalImageURL(in: folder)?.lastPathComponent, "我的狗.jpg")
+        let contents = try catalog.folderContents(for: "测试犬")
+        XCTAssertEqual(contents.originalURL?.lastPathComponent, "我的狗.jpg")
     }
 
     func testPreviewImageURLPrefersHandDrawn() throws {
-        let folder = try catalog.folderURL(for: "雪纳瑞")
-        XCTAssertEqual(
-            catalog.previewImageURL(for: "雪纳瑞")?.lastPathComponent,
-            catalog.latestFile(in: folder, prefix: "hand-drawn")?.lastPathComponent
-        )
-    }
-
-    func testFolderContentsScansDirectoryOnce() throws {
         let contents = try catalog.folderContents(for: "雪纳瑞")
-        XCTAssertEqual(contents.handDrawnURL?.lastPathComponent, "hand-drawn-sit-new.png")
-        XCTAssertEqual(contents.foregroundURL?.lastPathComponent, "foreground-dog-sit-a.png")
-        XCTAssertEqual(contents.originalURL?.lastPathComponent, "original.jpg")
+        XCTAssertEqual(catalog.previewImageURL(for: "雪纳瑞"), contents.handDrawnURL)
     }
 }

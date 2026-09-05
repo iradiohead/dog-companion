@@ -10,25 +10,12 @@ struct CreationFlowView: View {
             Group {
                 switch viewModel.step {
                 case .pickDog:
-                    if CompanionCreationConfig.useResourceCatalog {
-                        ResourceDogPickerView(viewModel: viewModel)
-                    } else {
-                        PhotoPickerView(viewModel: viewModel)
-                    }
+                    pickerView
                 case .generating:
                     GeneratingView(
                         viewModel: viewModel,
-                        title: CompanionCreationConfig.useResourceCatalog
-                            ? "正在准备 \(viewModel.selectedDogName ?? "你的狗狗")"
-                            : "正在生成你的专注伙伴",
-                        statusMessages: CompanionCreationConfig.useResourceCatalog
-                            ? [
-                                "正在读取狗狗资源…",
-                                "正在生成手绘形象…",
-                                "正在准备前景图层…",
-                                "马上就好啦…"
-                            ]
-                            : nil,
+                        title: viewModel.generatingTitle,
+                        statusMessages: viewModel.generatingStatusMessages,
                         performGeneration: {
                             await viewModel.startGeneration(context: modelContext)
                         }
@@ -37,6 +24,16 @@ struct CreationFlowView: View {
             }
             .navigationTitle("狗狗伙伴")
             .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    @ViewBuilder
+    private var pickerView: some View {
+        switch viewModel.mode {
+        case .resourceCatalog:
+            ResourceDogPickerView(viewModel: viewModel)
+        case .photo:
+            PhotoPickerView(viewModel: viewModel)
         }
     }
 }
