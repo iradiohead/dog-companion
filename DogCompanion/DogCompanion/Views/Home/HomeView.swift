@@ -89,7 +89,12 @@ struct HomeView: View {
     }
 
     private func refreshCompanionImages(for companion: Companion) {
-        sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
+        if let data = companion.cutoutData,
+           let opaque = try? CutoutImageProcessor.opaqueCutout(from: data) {
+            sitImage = PlatformImage.from(data: opaque)
+        } else {
+            sitImage = companion.cutoutData.flatMap { PlatformImage.from(data: $0) }
+        }
         runFrames = companion.poseCutouts.runFrameImages()
     }
 

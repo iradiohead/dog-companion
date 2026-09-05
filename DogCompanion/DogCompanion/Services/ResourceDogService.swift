@@ -73,7 +73,8 @@ struct ResourceDogService {
 
         let cutoutData: Data
         if let foregroundURL = contents.foregroundURL {
-            cutoutData = try Data(contentsOf: foregroundURL)
+            let raw = try Data(contentsOf: foregroundURL)
+            cutoutData = try CutoutImageProcessor.opaqueCutout(from: raw)
         } else {
             cutoutData = try await mattingService.extractCutout(from: portraitImage, pose: .sit)
         }

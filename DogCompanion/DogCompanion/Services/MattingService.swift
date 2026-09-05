@@ -115,8 +115,11 @@ enum CutoutImageProcessor {
             throw MattingError.exportFailed
         }
 
+        var output = trimmed.pixels
+        solidifyForeground(in: &output)
+
         return try pngData(
-            pixels: trimmed.pixels,
+            pixels: output,
             width: trimmed.width,
             height: trimmed.height
         )
@@ -170,11 +173,50 @@ enum CutoutImageProcessor {
             throw MattingError.exportFailed
         }
 
+        var output = trimmed.pixels
+        solidifyForeground(in: &output)
+
         return try pngData(
-            pixels: trimmed.pixels,
+            pixels: output,
             width: trimmed.width,
             height: trimmed.height
         )
+    }
+
+    /// Bundled or cached cutouts may keep feathered alpha; make the subject fully opaque.
+    static func opaqueCutout(from data: Data) throws -> Data {
+        guard let image = UIImage(data: data),
+              var pixels = rgbaPixels(from: image),
+              let cgImage = image.cgImage,
+              !pixels.isEmpty else {
+            throw MattingError.invalidImage
+        }
+
+        let width = cgImage.width
+        let height = cgImage.height
+        guard pixels.count == width * height else {
+            throw MattingError.invalidImage
+        }
+
+        solidifyForeground(in: &pixels)
+        return try pngData(pixels: pixels, width: width, height: height)
+    }
+
+    /// Pixels that are visibly part of the dog become fully opaque so furniture does not show through.
+    static func solidifyForeground(in pixels: inout [RGBA], minimumVisible: UInt8 = 40) {
+        for index in pixels.indices {
+            var pixel = pixels[index]
+            guard pixel.a > minimumVisible else { continue }
+
+            let alpha = Double(pixel.a)
+            if alpha < 255 {
+                pixel.r = UInt8(clamping: Int((Double(pixel.r) * 255.0 / alpha).rounded()))
+                pixel.g = UInt8(clamping: Int((Double(pixel.g) * 255.0 / alpha).rounded()))
+                pixel.b = UInt8(clamping: Int((Double(pixel.b) * 255.0 / alpha).rounded()))
+            }
+            pixel.a = 255
+            pixels[index] = pixel
+        }
     }
 
     private static func estimateBackgroundColor(
