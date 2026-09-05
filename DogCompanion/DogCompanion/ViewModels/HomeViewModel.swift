@@ -94,7 +94,8 @@ final class HomeViewModel {
             return
         }
         do {
-            companion.cutoutData = try await MattingService().extractCutout(from: portrait)
+            let extracted = try await MattingService().extractCutout(from: portrait)
+            companion.cutoutData = try CutoutImageProcessor.opaqueCutout(from: extracted)
         } catch {
             return
         }

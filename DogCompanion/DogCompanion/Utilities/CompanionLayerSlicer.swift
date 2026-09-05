@@ -110,15 +110,21 @@ enum CompanionLayerSlicer {
     }
 
     private static func solidPixel(_ pixel: RGBA) -> RGBA {
-        guard pixel.a >= 12 else {
+        guard pixel.a >= 4 else {
             return RGBA(r: 0, g: 0, b: 0, a: 0)
         }
         var solid = pixel
         if solid.a < 255 {
             let alpha = Double(solid.a)
-            solid.r = UInt8(clamping: Int((Double(solid.r) * 255.0 / alpha).rounded()))
-            solid.g = UInt8(clamping: Int((Double(solid.g) * 255.0 / alpha).rounded()))
-            solid.b = UInt8(clamping: Int((Double(solid.b) * 255.0 / alpha).rounded()))
+            let looksPremultiplied =
+                Int(solid.r) <= Int(solid.a) + 2 &&
+                Int(solid.g) <= Int(solid.a) + 2 &&
+                Int(solid.b) <= Int(solid.a) + 2
+            if looksPremultiplied {
+                solid.r = UInt8(clamping: Int((Double(solid.r) * 255.0 / alpha).rounded()))
+                solid.g = UInt8(clamping: Int((Double(solid.g) * 255.0 / alpha).rounded()))
+                solid.b = UInt8(clamping: Int((Double(solid.b) * 255.0 / alpha).rounded()))
+            }
         }
         solid.a = 255
         return solid
@@ -247,7 +253,7 @@ enum CompanionLayerSlicer {
     }
 
     private static func rgbaPixels(from image: UIImage) -> [RGBA]? {
-        guard let cgImage = image.cgImage else { return nil }
+        guard let cgImage = CutoutImageProcessor.normalizedCGImage(from: image) else { return nil }
         let width = cgImage.width
         let height = cgImage.height
         let bytesPerRow = 4 * width

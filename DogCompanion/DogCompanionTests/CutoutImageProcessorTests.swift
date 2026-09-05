@@ -59,6 +59,13 @@ final class CutoutImageProcessorTests: XCTestCase {
         XCTAssertGreaterThan(countOpaquePixels(in: opaque), countOpaquePixels(in: refined))
     }
 
+    func testVisionLikeLightFurNeedsRefreshBeforeOpaque() throws {
+        let visionLike = try makeVisionLikeLightDogCutout()
+        XCTAssertTrue(CutoutImageProcessor.needsCutoutRefresh(visionLike))
+        let opaque = try CutoutImageProcessor.opaqueCutout(from: visionLike)
+        XCTAssertFalse(CutoutImageProcessor.needsCutoutRefresh(opaque))
+    }
+
     private func makeVisionLikeLightDogCutout() throws -> Data {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32))
         let image = renderer.image { context in

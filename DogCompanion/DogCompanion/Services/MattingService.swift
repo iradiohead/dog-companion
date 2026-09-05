@@ -52,6 +52,10 @@ enum CutoutImageProcessor {
         let height = cgImage.height
         guard width > 0, height > 0 else { return true }
 
+        if hasSemiTransparentForeground(pixels: pixels, width: width, height: height) {
+            return true
+        }
+
         let cornerSamples = [
             pixels[0],
             pixels[width - 1],
@@ -64,6 +68,42 @@ enum CutoutImageProcessor {
 
         let opaqueCount = pixels.filter { $0.a > 220 }.count
         return Double(opaqueCount) / Double(pixels.count) > 0.72
+    }
+
+    /// Vision masks on device often leave light fur at alpha 20–200; treat as stale cutout.
+    private static func hasSemiTransparentForeground(
+        pixels: [RGBA],
+        width: Int,
+        height: Int
+    ) -> Bool {
+        var minX = width
+        var minY = height
+        var maxX = 0
+        var maxY = 0
+        for y in 0..<height {
+            for x in 0..<width where pixels[y * width + x].a > 12 {
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
+            }
+        }
+        guard maxX > minX, maxY > minY else { return false }
+
+        var foreground = 0
+        var soft = 0
+        for y in minY...maxY {
+            for x in minX...maxX {
+                let alpha = pixels[y * width + x].a
+                guard alpha > 12 else { continue }
+                foreground += 1
+                if alpha < 245 {
+                    soft += 1
+                }
+            }
+        }
+        guard foreground > 0 else { return false }
+        return Double(soft) / Double(foreground) > 0.02
     }
 
     static func refineCutout(from image: UIImage) throws -> Data {
@@ -203,16 +243,22 @@ enum CutoutImageProcessor {
     }
 
     /// Pixels that are visibly part of the dog become fully opaque so furniture does not show through.
-    static func solidifyForeground(in pixels: inout [RGBA], minimumVisible: UInt8 = 16) {
+    static func solidifyForeground(in pixels: inout [RGBA], minimumVisible: UInt8 = 4) {
         for index in pixels.indices {
             var pixel = pixels[index]
             guard pixel.a > minimumVisible else { continue }
 
             let alpha = Double(pixel.a)
             if alpha < 255 {
-                pixel.r = UInt8(clamping: Int((Double(pixel.r) * 255.0 / alpha).rounded()))
-                pixel.g = UInt8(clamping: Int((Double(pixel.g) * 255.0 / alpha).rounded()))
-                pixel.b = UInt8(clamping: Int((Double(pixel.b) * 255.0 / alpha).rounded()))
+                let looksPremultiplied =
+                    Int(pixel.r) <= Int(pixel.a) + 2 &&
+                    Int(pixel.g) <= Int(pixel.a) + 2 &&
+                    Int(pixel.b) <= Int(pixel.a) + 2
+                if looksPremultiplied {
+                    pixel.r = UInt8(clamping: Int((Double(pixel.r) * 255.0 / alpha).rounded()))
+                    pixel.g = UInt8(clamping: Int((Double(pixel.g) * 255.0 / alpha).rounded()))
+                    pixel.b = UInt8(clamping: Int((Double(pixel.b) * 255.0 / alpha).rounded()))
+                }
             }
             pixel.a = 255
             pixels[index] = pixel
@@ -380,7 +426,7 @@ enum CutoutImageProcessor {
     }
 
     private static func rgbaPixels(from image: UIImage) -> [RGBA]? {
-        guard let cgImage = image.cgImage else { return nil }
+        guard let cgImage = normalizedCGImage(from: image) else { return nil }
 
         let width = cgImage.width
         let height = cgImage.height
@@ -417,6 +463,18 @@ enum CutoutImageProcessor {
             )
         }
         return pixels
+    }
+
+    /// Draws through a bitmap context so device color spaces / oriented images decode consistently.
+    static func normalizedCGImage(from image: UIImage) -> CGImage? {
+        if image.imageOrientation == .up, let cgImage = image.cgImage {
+            return cgImage
+        }
+        let renderer = UIGraphicsImageRenderer(size: image.size)
+        let normalized = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: image.size))
+        }
+        return normalized.cgImage
     }
 
     private static func pngData(pixels: [RGBA], width: Int, height: Int) throws -> Data {
@@ -557,10 +615,15 @@ struct MattingService {
 
             for x in 0..<width {
                 let maskX = min(maskWidth - 1, x * maskWidth / width)
-                let maskValue = maskRow[maskX]
+                let maskValue = Int(maskRow[maskX])
                 let offset = y * bytesPerRow + x * 4
+                for channel in 0..<3 {
+                    pixelData[offset + channel] = UInt8(
+                        (Int(pixelData[offset + channel]) * maskValue) / 255
+                    )
+                }
                 pixelData[offset + 3] = UInt8(
-                    (Int(pixelData[offset + 3]) * Int(maskValue)) / 255
+                    (Int(pixelData[offset + 3]) * maskValue) / 255
                 )
             }
         }

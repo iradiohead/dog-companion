@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
+    @Environment(\.modelContext) private var modelContext
     @Bindable var companion: Companion
     var onBackToDogPicker: () -> Void
     @State private var viewModel = HomeViewModel()
@@ -103,6 +104,11 @@ struct HomeView: View {
 
         sitImage = opaqueData.flatMap { PlatformImage.from(data: $0) }
         runFrames = companion.poseCutouts.runFrameImages()
+
+        if let opaqueData, opaqueData != cutoutData {
+            companion.cutoutData = opaqueData
+            try? modelContext.save()
+        }
     }
 
     private var topBar: some View {
