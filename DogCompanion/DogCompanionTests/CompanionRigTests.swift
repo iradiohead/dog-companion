@@ -223,6 +223,46 @@ final class CompanionRigTests: XCTestCase {
         XCTAssertLessThan(Self.opaqueCountInTopQuarter(body), Self.opaqueCountInTopQuarter(head))
     }
 
+    func testSlicerAssignsEveryVisiblePixelWithoutAlphaHoles() throws {
+        let blob = Self.makeSitBlob()
+        let sourceOpaque = Self.opaqueCount(blob)
+        let layers = try XCTUnwrap(CompanionLayerSlicer.slice(blob))
+
+        var combined = 0
+        for part in CompanionPart.allCases {
+            guard let image = layers.image(for: part) else { continue }
+            combined += Self.opaqueCount(image)
+            XCTAssertTrue(Self.usesSolidOpaquePixels(image))
+        }
+        XCTAssertEqual(combined, sourceOpaque)
+    }
+
+    private static func usesSolidOpaquePixels(_ image: UIImage) -> Bool {
+        guard let cgImage = image.cgImage else { return false }
+        let width = cgImage.width
+        let height = cgImage.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        guard let context = CGContext(
+            data: &data,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        ) else {
+            return false
+        }
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        for index in stride(from: 3, to: data.count, by: 4) {
+            let alpha = data[index]
+            if alpha > 20 {
+                guard alpha == 255 else { return false }
+            }
+        }
+        return true
+    }
+
     private static func makeSitBlob() -> UIImage {
         let size = CGSize(width: 48, height: 72)
         let format = UIGraphicsImageRendererFormat()

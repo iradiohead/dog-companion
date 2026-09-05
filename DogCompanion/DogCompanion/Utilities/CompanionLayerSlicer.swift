@@ -45,20 +45,44 @@ enum CompanionLayerSlicer {
         }
 
         let tailOnLeft = tailIsOnLeft(pixels: pixels, width: width, bounds: bounds)
-        var images: [CompanionPart: UIImage] = [:]
-        for part in CompanionPart.allCases {
-            if let png = render(
-                pixels: pixels,
-                width: width,
-                height: height,
-                scale: image.scale,
-                weight: { nx, ny in
-                    weight(for: part, nx: nx, ny: ny, tailOnLeft: tailOnLeft)
-                },
-                bounds: bounds
-            ) {
-                images[part] = png
+        let spanX = max(1, bounds.maxX - bounds.minX)
+        let spanY = max(1, bounds.maxY - bounds.minY)
+        let parts = CompanionPart.allCases
+        var partBuffers: [CompanionPart: [UInt8]] = Dictionary(
+            uniqueKeysWithValues: parts.map { ($0, [UInt8](repeating: 0, count: width * height * 4)) }
+        )
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixel = pixels[y * width + x]
+                guard pixel.a >= 12 else { continue }
+
+                let nx = Float(x - bounds.minX) / Float(spanX)
+                let ny = Float(y - bounds.minY) / Float(spanY)
+                let winner = winningPart(
+                    nx: nx,
+                    ny: ny,
+                    tailOnLeft: tailOnLeft
+                )
+                let solid = solidPixel(pixel)
+                let offset = (y * width + x) * 4
+                var buffer = partBuffers[winner]!
+                buffer[offset] = solid.r
+                buffer[offset + 1] = solid.g
+                buffer[offset + 2] = solid.b
+                buffer[offset + 3] = solid.a
+                partBuffers[winner] = buffer
             }
+        }
+
+        var images: [CompanionPart: UIImage] = [:]
+        for part in parts {
+            guard let buffer = partBuffers[part],
+                  opaqueCount(in: buffer) > 8,
+                  let png = image(from: buffer, width: width, height: height, scale: image.scale) else {
+                continue
+            }
+            images[part] = png
         }
         guard images[.head] != nil || images[.body] != nil else {
             return nil
@@ -70,6 +94,42 @@ enum CompanionLayerSlicer {
             images: images,
             tailOnLeft: tailOnLeft
         )
+    }
+
+    private static func winningPart(nx: Float, ny: Float, tailOnLeft: Bool) -> CompanionPart {
+        var bestPart = CompanionPart.body
+        var bestWeight: Float = -1
+        for part in CompanionPart.allCases {
+            let value = weight(for: part, nx: nx, ny: ny, tailOnLeft: tailOnLeft)
+            if value > bestWeight {
+                bestWeight = value
+                bestPart = part
+            }
+        }
+        return bestPart
+    }
+
+    private static func solidPixel(_ pixel: RGBA) -> RGBA {
+        guard pixel.a >= 12 else {
+            return RGBA(r: 0, g: 0, b: 0, a: 0)
+        }
+        var solid = pixel
+        if solid.a < 255 {
+            let alpha = Double(solid.a)
+            solid.r = UInt8(clamping: Int((Double(solid.r) * 255.0 / alpha).rounded()))
+            solid.g = UInt8(clamping: Int((Double(solid.g) * 255.0 / alpha).rounded()))
+            solid.b = UInt8(clamping: Int((Double(solid.b) * 255.0 / alpha).rounded()))
+        }
+        solid.a = 255
+        return solid
+    }
+
+    private static func opaqueCount(in buffer: [UInt8]) -> Int {
+        var count = 0
+        for offset in stride(from: 3, to: buffer.count, by: 4) where buffer[offset] > 200 {
+            count += 1
+        }
+        return count
     }
 
     static func weight(
@@ -123,50 +183,6 @@ enum CompanionLayerSlicer {
             return vertical * band(nx, -0.02, 0.0, 0.16, 0.28)
         }
         return vertical * band(nx, 0.72, 0.84, 1.0, 1.02)
-    }
-
-    private static func render(
-        pixels: [RGBA],
-        width: Int,
-        height: Int,
-        scale: CGFloat,
-        weight: (Float, Float) -> Float,
-        bounds: (minX: Int, minY: Int, maxX: Int, maxY: Int)
-    ) -> UIImage? {
-        let spanX = max(1, bounds.maxX - bounds.minX)
-        let spanY = max(1, bounds.maxY - bounds.minY)
-        var output = [UInt8](repeating: 0, count: width * height * 4)
-        var opaque = 0
-
-        for y in 0..<height {
-            for x in 0..<width {
-                let pixel = pixels[y * width + x]
-                if pixel.a < 12 {
-                    continue
-                }
-                let nx = Float(x - bounds.minX) / Float(spanX)
-                let ny = Float(y - bounds.minY) / Float(spanY)
-                let mask = weight(nx, ny)
-                if mask < 0.02 {
-                    continue
-                }
-                let factor = Double(mask)
-                let offset = (y * width + x) * 4
-                output[offset] = channel(pixel.r, factor)
-                output[offset + 1] = channel(pixel.g, factor)
-                output[offset + 2] = channel(pixel.b, factor)
-                output[offset + 3] = channel(pixel.a, factor)
-                opaque += 1
-            }
-        }
-
-        guard opaque > 8 else { return nil }
-        return image(from: output, width: width, height: height, scale: scale)
-    }
-
-    private static func channel(_ value: UInt8, _ factor: Double) -> UInt8 {
-        let scaled = Double(value) * min(1.0, max(0.0, factor))
-        return UInt8(min(255.0, max(0.0, scaled.rounded())))
     }
 
     private static func tailIsOnLeft(
