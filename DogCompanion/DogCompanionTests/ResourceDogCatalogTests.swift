@@ -43,4 +43,28 @@ final class ResourceDogCatalogTests: XCTestCase {
         let original = catalog.originalImageURL(in: folder)
         XCTAssertEqual(original?.lastPathComponent, "original.jpg")
     }
+
+    func testOriginalImageURLAcceptsArbitraryFileName() throws {
+        let resourceRoot = tempRoot.appendingPathComponent("resource", isDirectory: true)
+        let dogFolder = resourceRoot.appendingPathComponent("金毛", isDirectory: true)
+        try FileManager.default.createDirectory(at: dogFolder, withIntermediateDirectories: true)
+        let photo = dogFolder.appendingPathComponent("金毛寻回犬.jpg")
+        try Data([0x05]).write(to: photo)
+
+        let folder = try catalog.folderURL(for: "金毛")
+        let original = catalog.originalImageURL(in: folder)
+        XCTAssertEqual(original?.lastPathComponent, "金毛寻回犬.jpg")
+    }
+
+    func testOriginalImageURLIgnoresHandDrawnAndForeground() throws {
+        let resourceRoot = tempRoot.appendingPathComponent("resource", isDirectory: true)
+        let dogFolder = resourceRoot.appendingPathComponent("测试犬", isDirectory: true)
+        try FileManager.default.createDirectory(at: dogFolder, withIntermediateDirectories: true)
+        try Data([0x01]).write(to: dogFolder.appendingPathComponent("hand-drawn-sit.png"))
+        try Data([0x02]).write(to: dogFolder.appendingPathComponent("foreground-dog-sit.png"))
+        try Data([0x03]).write(to: dogFolder.appendingPathComponent("我的狗.jpg"))
+
+        let folder = try catalog.folderURL(for: "测试犬")
+        XCTAssertEqual(catalog.originalImageURL(in: folder)?.lastPathComponent, "我的狗.jpg")
+    }
 }

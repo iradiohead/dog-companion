@@ -13,7 +13,7 @@ enum ResourceDogError: LocalizedError {
         case .dogNotFound(let name):
             return "未找到狗狗资源：\(name)"
         case .missingOriginal(let name):
-            return "「\(name)」缺少 hand-drawn 图片，且没有原图（original.jpg/png 或其他非生成图）。"
+            return "「\(name)」缺少 hand-drawn 图片，且目录里没有可作为原图的图片（需为非 hand-drawn、非 foreground-dog 开头的图片文件）。"
         case .invalidImage(let name):
             return "无法读取「\(name)」的图片文件。"
         }
@@ -76,22 +76,18 @@ struct ResourceDogCatalog {
             .first
     }
 
+    /// Any image in the folder that does **not** start with `hand-drawn` or `foreground-dog`
+    /// is treated as the original photo (e.g. `金毛寻回犬.jpg`).
     func originalImageURL(in folderURL: URL) -> URL? {
-        for name in ["original.jpg", "original.jpeg", "original.png", "original.heic"] {
-            let url = folderURL.appendingPathComponent(name)
-            if FileManager.default.fileExists(atPath: url.path) {
-                return url
-            }
-        }
-
-        return imageFiles(in: folderURL)
-            .filter { url in
-                let fileName = url.lastPathComponent.lowercased()
-                return !fileName.hasPrefix("hand-drawn")
-                    && !fileName.hasPrefix("foreground-dog")
-            }
+        imageFiles(in: folderURL)
+            .filter { !Self.isGeneratedAsset(fileName: $0.lastPathComponent) }
             .sorted { $0.lastPathComponent > $1.lastPathComponent }
             .first
+    }
+
+    private static func isGeneratedAsset(fileName: String) -> Bool {
+        let lower = fileName.lowercased()
+        return lower.hasPrefix("hand-drawn") || lower.hasPrefix("foreground-dog")
     }
 
     private func imageFiles(in folderURL: URL) -> [URL] {
