@@ -63,6 +63,8 @@
 		B10000000000000000000007 /* CoatPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000007 /* CoatPaletteTests.swift */; };
 		B10000000000000000000008 /* GeneratedImageArchiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000008 /* GeneratedImageArchiveTests.swift */; };
 		B10000000000000000000009 /* ResourceDogCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000009 /* ResourceDogCatalogTests.swift */; };
+		B1000000000000000000000A /* RunInEntranceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000A /* RunInEntranceTests.swift */; };
+		B1000000000000000000000B /* HomeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000B /* HomeViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,6 +136,8 @@
 		B20000000000000000000007 /* CoatPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoatPaletteTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000008 /* GeneratedImageArchiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratedImageArchiveTests.swift; sourceTree = "<group>"; };
 		B20000000000000000000009 /* ResourceDogCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDogCatalogTests.swift; sourceTree = "<group>"; };
+		B2000000000000000000000A /* RunInEntranceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunInEntranceTests.swift; sourceTree = "<group>"; };
+		B2000000000000000000000B /* HomeViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModelTests.swift; sourceTree = "<group>"; };
 		B30000000000000000000001 /* DogCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DogCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -329,6 +333,8 @@
 				B20000000000000000000007 /* CoatPaletteTests.swift */,
 				B20000000000000000000008 /* GeneratedImageArchiveTests.swift */,
 				B20000000000000000000009 /* ResourceDogCatalogTests.swift */,
+				B2000000000000000000000A /* RunInEntranceTests.swift */,
+				B2000000000000000000000B /* HomeViewModelTests.swift */,
 			);
 			path = DogCompanionTests;
 			sourceTree = "<group>";
@@ -506,6 +512,8 @@
 				B10000000000000000000007 /* CoatPaletteTests.swift in Sources */,
 				B10000000000000000000008 /* GeneratedImageArchiveTests.swift in Sources */,
 				B10000000000000000000009 /* ResourceDogCatalogTests.swift in Sources */,
+				B1000000000000000000000A /* RunInEntranceTests.swift in Sources */,
+				B1000000000000000000000B /* HomeViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

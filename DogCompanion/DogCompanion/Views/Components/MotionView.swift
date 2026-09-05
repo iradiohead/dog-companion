@@ -35,9 +35,11 @@ struct MotionView: View {
 
     private func character(_ snapshot: PoseSnapshot, elapsed: TimeInterval) -> some View {
         let travel = snapshot.travel
-        let showRunFlipbook = motionState == .runningIn
-            && travel.facingScaleX < 0
-            && !runFrames.isEmpty
+        let showRunFlipbook = RunInPresentation.showsFlipbook(
+            motion: motionState,
+            facingScaleX: travel.facingScaleX,
+            hasRunFrames: !runFrames.isEmpty
+        )
         return ZStack(alignment: .bottom) {
             Ellipse()
                 .fill(Color.black.opacity(travel.shadowOpacity * travel.opacity))

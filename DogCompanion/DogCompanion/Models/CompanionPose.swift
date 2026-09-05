@@ -275,3 +275,14 @@ enum PosePlayback {
         CGFloat(value)
     }
 }
+
+/// When the owner run flipbook replaces the mirrored sit cutout during entrance.
+enum RunInPresentation {
+    static func showsFlipbook(
+        motion: CompanionMotionState,
+        facingScaleX: CGFloat,
+        hasRunFrames: Bool
+    ) -> Bool {
+        motion == .runningIn && facingScaleX < 0 && hasRunFrames
+    }
+}

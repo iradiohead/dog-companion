@@ -1,0 +1,95 @@
+import XCTest
+@testable import DogCompanion
+
+@MainActor
+final class HomeViewModelTests: XCTestCase {
+    private func makeCompanion() -> Companion {
+        Companion(
+            name: "TestDog",
+            comicPortraitData: nil,
+            cutoutData: nil,
+            styleTemplate: .default
+        )
+    }
+
+    func testInitialStateIsIdleAndHidden() {
+        let viewModel = HomeViewModel()
+        XCTAssertEqual(viewModel.phase, .idle)
+        XCTAssertEqual(viewModel.motionState, .idle)
+        XCTAssertFalse(viewModel.isFocusActive)
+    }
+
+    func testStartFocusEntersRunningIn() {
+        let viewModel = HomeViewModel()
+        viewModel.startFocus(with: makeCompanion())
+
+        XCTAssertEqual(viewModel.phase, .running)
+        XCTAssertEqual(viewModel.motionState, .runningIn)
+        XCTAssertTrue(viewModel.isFocusActive)
+    }
+
+    func testCancelFocusHidesCompanion() {
+        let viewModel = HomeViewModel()
+        viewModel.startFocus(with: makeCompanion())
+        viewModel.cancelFocus()
+
+        XCTAssertEqual(viewModel.phase, .idle)
+        XCTAssertEqual(viewModel.motionState, .away)
+        XCTAssertFalse(viewModel.isFocusActive)
+    }
+
+    func testReactDuringRunInIsAllowed() async {
+        let viewModel = HomeViewModel()
+        viewModel.startFocus(with: makeCompanion())
+        XCTAssertEqual(viewModel.motionState, .runningIn)
+
+        viewModel.reactToTap()
+        XCTAssertEqual(viewModel.motionState, .reacting)
+
+        try? await Task.sleep(nanoseconds: 950_000_000)
+        XCTAssertEqual(viewModel.motionState, .idle)
+    }
+
+    func testReactIgnoredWhileCelebrating() {
+        let viewModel = HomeViewModel()
+        let companion = makeCompanion()
+        viewModel.startFocus(with: companion)
+        viewModel.completeFocus(for: companion)
+
+        XCTAssertEqual(viewModel.motionState, .celebrating)
+        viewModel.reactToTap()
+        XCTAssertEqual(viewModel.motionState, .celebrating)
+    }
+
+    func testRunInCompletesToIdleAfterAnimation() async {
+        let viewModel = HomeViewModel()
+        viewModel.startFocus(with: makeCompanion())
+        XCTAssertEqual(viewModel.motionState, .runningIn)
+
+        let wait = PosePlayback.runningInDuration + 0.12
+        try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+
+        XCTAssertEqual(viewModel.motionState, .idle)
+        XCTAssertEqual(viewModel.phase, .running, "Timer should still be running after run-in")
+    }
+
+    func testDismissGiftReturnsToAway() {
+        let viewModel = HomeViewModel()
+        let companion = makeCompanion()
+        viewModel.startFocus(with: companion)
+        viewModel.completeFocus(for: companion)
+        XCTAssertTrue(viewModel.showGiftReveal)
+
+        viewModel.dismissGift()
+        XCTAssertFalse(viewModel.showGiftReveal)
+        XCTAssertEqual(viewModel.phase, .idle)
+        XCTAssertEqual(viewModel.motionState, .away)
+    }
+
+    func testFormattedRemainingTimeShowsMinutesAndSeconds() {
+        let viewModel = HomeViewModel()
+        viewModel.startFocus(with: makeCompanion())
+        XCTAssertFalse(viewModel.formattedRemainingTime.isEmpty)
+        XCTAssertTrue(viewModel.formattedRemainingTime.contains(":"))
+    }
+}
